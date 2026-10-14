@@ -159,15 +159,15 @@ try {
     <!-- TOP HEADER -->
     <div class="top-nav-bar">
         <div class="logo-circle">
-            <a href="Home_Page.php">
-                <img src="Logo Website Draft✨    Ashiee - Reyn (1).png" alt="STT Logo">
+            <a href="home_page.php">
+                <img src="images/Logo Website Draft✨    Ashiee - Reyn (1).png" alt="STT Logo">
             </a>
         </div>
 
         <div class="nav-buttons-group">
-            <a href="Home_Page.php" class="btn-rect">Home</a>
-            <a href="Menu.php" class="btn-rect">Menu</a>
-            <a href="Order.php" class="btn-rect active">Order Now</a>
+            <a href="home_page.php" class="btn-rect">Home</a>
+            <a href="menu.php" class="btn-rect">Menu</a>
+            <a href="order.php" class="btn-rect active">Order Now</a>
             <a href="tambay_caps.php" target="_blank" class="btn-rect">Tambay Caps</a>
         </div>
     </div>
@@ -226,11 +226,11 @@ try {
                     <!-- Store Info & GCash Payment -->
                     <div class="border-top border-secondary border-opacity-25 pt-3 mb-4">
                         <h6 class="text-gold fw-bold mb-2"><i class="fa-solid fa-clock me-2"></i>24/7 Operations</h6>
-                        <p class="small text-muted mb-2">Open all day & late nights for shift workers.</p>
+                        <p class="small text-white mb-2">Open all day & late nights for shift workers.</p>
 
                         <h6 class="text-gold fw-bold mb-2"><i class="fa-solid fa-wallet me-2"></i>GCash Details</h6>
                         <p class="small text-light mb-0"><strong>Number:</strong> 09270466231</p>
-                        <p class="small text-muted"><strong>Account Name:</strong> Sarippudin Aming</p>
+                        <p class="small text-white"><strong>Account Name:</strong> Sarippudin Aming</p>
                     </div>
 
                     <!-- Proceed Button -->

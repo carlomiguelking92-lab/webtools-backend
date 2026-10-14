@@ -164,13 +164,10 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
                     <a class="nav-link active" href="menu.php">Menu</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="milktea.php">Milk Tea</a>
+                    <a class="nav-link" href="order.php">Order Now</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="tambay_caps.php">Tambay Caps</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="food_packs.php">Food Packs</a>
                 </li>
             </ul>
         </nav>
@@ -178,7 +175,7 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
         <!-- Header -->
         <header class="text-center mb-4">
             <h1 class="display-5 fw-bold text-gold">SAIRENE TEPHTEPH TAPSILOGAN</h1>
-            <p class="lead text-muted">A Taste of Comfort • Interactive Menu</p>
+            <p class="lead text-white">A Taste of Comfort • Interactive Menu</p>
         </header>
 
         <!-- Arrow Buttons -->

@@ -140,14 +140,14 @@ try {
     <div class="top-nav-bar">
         <!-- Circle Logo -->
         <div class="logo-circle">
-            <a href="index.php">
-                <img src="Logo Website Draft✨    Ashiee - Reyn (1).png" alt="STT Logo">
+            <a href="home_page.php">
+                <img src="images/Logo Website Draft✨    Ashiee - Reyn (1).png" alt="STT Logo">
             </a>
         </div>
 
         <!-- 4 Rectangular Nav Buttons -->
         <div class="nav-buttons-group">
-            <a href="index.php" class="btn-rect active">Home</a>
+            <a href="home_page.php" class="btn-rect active">Home</a>
             <a href="menu.php" class="btn-rect">Menu</a>
             <a href="order.php" class="btn-rect">Order Now</a>
             <a href="tambay_caps.php" target="_blank" class="btn-rect">Tambay Caps</a>
@@ -167,22 +167,22 @@ try {
 
         <!-- History Content Area -->
         <section id="history" class="my-4">
-            <h3 class="text-center text-gold mb-3 fw-bold">Brief History of the Tapsilogan</h3>
+            <h3 class="text-center text-warning mb-3 fw-bold">Brief History of the Tapsilogan</h3>
             <div class="history-card max-w-3xl mx-auto">
-                <p class="mb-3">
-                    At <strong>Sairene TephTeph Tapsilogan</strong>, we built our spot for one main reason: to feed hungry people delicious, authentic Pinoy comfort food whenever they need it most. We're proud to be the trusted go-to haven for late-night workers, night shift crews, and friends looking for a satisfying meal to wrap up the day. No matter how late it gets, if you're hungry, we're ready to serve you hot, flavorful silog meals made to fuel your night.
+                <p class="text-white mb-3">
+                    At <strong class="text-warning">Sairene TephTeph Tapsilogan</strong>, we built our spot for one main reason: to feed hungry people delicious, authentic Pinoy comfort food whenever they need it most. We're proud to be the trusted go-to haven for late-night workers, night shift crews, and friends looking for a satisfying meal to wrap up the day. No matter how late it gets, if you're hungry, we're ready to serve you hot, flavorful silog meals made to fuel your night.
                 </p>
-                <p class="mb-0">
-                    Specializing in classic Pinoy <em>silog</em> meals—from savory marinated beef <strong>Tapa</strong> to crispy <strong>Tocino</strong> and juicy <strong>Longganisa</strong> paired with garlic fried rice and perfectly cooked eggs—we take pride in serving high-quality, delicious meals at affordable prices.
+                <p class="text-white mb-0">
+                    Specializing in classic Pinoy <em>silog</em> meals—from savory marinated beef <strong class="text-warning">Tapa</strong> to crispy <strong class="text-warning">Tocino</strong> and juicy <strong class="text-warning">Longganisa</strong> paired with garlic fried rice and perfectly cooked eggs—we take pride in serving high-quality, delicious meals at affordable prices.
                 </p>
             </div>
         </section>
 
         <!-- Experience Section -->
         <section class="text-center my-5">
-            <h4 class="text-gold fw-bold">The Tapsilogan Experience</h4>
-            <p class="text-muted max-w-xl mx-auto mt-2">
-                More than just a place to eat, <strong>Sairene TephTeph Tapsilogan</strong> is designed as a cozy community hub. Whether you're catching up with friends, taking a study break, or grabbing a late-night bite, our doors are always open.
+            <h4 class="text-warning fw-bold">The Tapsilogan Experience</h4>
+            <p class="text-white max-w-xl mx-auto mt-2">
+                More than just a place to eat, <strong class="text-warning">Sairene TephTeph Tapsilogan</strong> is designed as a cozy community hub. Whether you're catching up with friends, taking a study break, or grabbing a late-night bite, our doors are always open.
             </p>
         </section>
 
