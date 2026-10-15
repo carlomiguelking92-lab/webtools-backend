@@ -2,81 +2,11 @@
 session_start();
 require_once 'config/db.php';
 
-// --- AJAX / POST HANDLERS ---
+// --- AJAX / POST HANDLERS (Orders Only) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     header('Content-Type: application/json');
 
-    // 1. Sign Up Handler
-    if ($_POST['action'] === 'signup') {
-        try {
-            global $pdo;
-            $fullname = trim($_POST['fullname'] ?? '');
-            $email = trim($_POST['email'] ?? '');
-            $password = $_POST['password'] ?? '';
-
-            if (empty($fullname) || empty($email) || empty($password)) {
-                echo json_encode(['success' => false, 'message' => 'All fields are required.']);
-                exit;
-            }
-
-            // Check if email already exists
-            $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
-            $stmt->execute([$email]);
-            if ($stmt->fetch()) {
-                echo json_encode(['success' => false, 'message' => 'Email address is already in use.']);
-                exit;
-            }
-
-            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare("INSERT INTO users (fullname, email, password, role) VALUES (?, ?, ?, 'customer')");
-            $stmt->execute([$fullname, $email, $hashedPassword]);
-
-            // Auto login upon successful signup
-            $_SESSION['user_id'] = $pdo->lastInsertId();
-            $_SESSION['fullname'] = $fullname;
-
-            echo json_encode(['success' => true]);
-            exit;
-        } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
-            exit;
-        }
-    }
-
-    // 2. Login Handler
-    if ($_POST['action'] === 'login') {
-        try {
-            global $pdo;
-            $email = trim($_POST['email'] ?? '');
-            $password = $_POST['password'] ?? '';
-
-            $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
-            $stmt->execute([$email]);
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($user && password_verify($password, $user['password'])) {
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['fullname'] = $user['fullname'];
-                echo json_encode(['success' => true]);
-            } else {
-                echo json_encode(['success' => false, 'message' => 'Invalid email or password.']);
-            }
-            exit;
-        } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
-            exit;
-        }
-    }
-
-    // 3. Logout Handler
-    if ($_POST['action'] === 'logout') {
-        session_unset();
-        session_destroy();
-        echo json_encode(['success' => true]);
-        exit;
-    }
-
-    // 4. Place Order Handler (Restricted to Logged-In Users)
+    // 1. Place Order Handler (Restricted to Logged-In Users)
     if ($_POST['action'] === 'place_order') {
         if (!isset($_SESSION['user_id'])) {
             echo json_encode(['success' => false, 'message' => 'You must be logged in to place an order.']);
@@ -127,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
     }
 
-    // 5. Complete Order Handler
+    // 2. Complete Order Handler
     if ($_POST['action'] === 'complete_order') {
         try {
             global $pdo;
@@ -174,7 +104,6 @@ try {
     // Database tables might not be fully migrated yet
 }
 
-// Page Selection
 $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1; 
 ?>
 <!DOCTYPE html>
@@ -182,31 +111,81 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sairene Tephteph Tapsilogan - Digital Menu</title>
+    <title>Sairene TephTeph Tapsilogan - Digital Menu</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     
-    <!-- CSS Part -->
+    <!-- CSS Part matching Homepage & Tambay Caps -->
     <style>
         body {
-            background-color: #121212;
+            background-color: #fcfcfc;
+            color: #333333;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #f8f9fa;
+            margin: 0;
+            padding: 30px 20px;
         }
 
-        .text-gold {
-            color: #ffc107;
+        /* Top Navigation Box matching Tambay Caps */
+        .top-nav-box {
+            background: #ffffff;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            max-width: 950px;
+            margin: 0 auto 30px auto;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+        }
+
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 35px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #222222;
+            font-weight: 800;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: #d39e00;
+        }
+
+        /* Main Wrapper Container matching reference */
+        .main-wrapper-box {
+            background: #ffffff;
+            border: 2px solid #ffc107;
+            border-radius: 12px;
+            padding: 40px 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        }
+
+        .page-title {
+            color: #d4a000;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
         }
 
         .btn-gold {
             background-color: #ffc107;
-            color: #000;
-            border: none;
+            color: #121212;
+            border: 2px solid #ffc107;
             font-weight: bold;
             border-radius: 50px;
-            padding: 10px 18px;
+            padding: 8px 18px;
             transition: all 0.2s ease-in-out;
             text-decoration: none;
             display: inline-flex;
@@ -216,42 +195,15 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
 
         .btn-gold:hover {
             background-color: #e0a800;
-            color: #000;
+            color: #121212;
             transform: scale(1.05);
         }
 
         .btn-gold.active {
-            background-color: #ffffff;
-            color: #000;
-            box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
-        }
-
-        /* Navigation Bar Styles */
-        .main-navbar {
-            background-color: rgba(20, 20, 20, 0.95);
-            border: 1px solid #ffc107;
-            border-radius: 50px;
-            padding: 8px 16px;
-            max-width: 900px;
-            margin: 0 auto 25px auto;
-        }
-
-        .main-navbar .nav-link {
-            color: #ffffff;
-            font-weight: 600;
-            padding: 8px 18px;
-            border-radius: 25px;
-            transition: all 0.2s ease-in-out;
-        }
-
-        .main-navbar .nav-link:hover {
+            background-color: #121212;
             color: #ffc107;
-            background-color: rgba(255, 193, 7, 0.15);
-        }
-
-        .main-navbar .nav-link.active {
-            color: #000000;
-            background-color: #ffc107;
+            border-color: #121212;
+            box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
         }
 
         /* Menu Container */
@@ -265,7 +217,9 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
             width: 100%;
             overflow: hidden;
             border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            border: 2px solid #ffc107;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            background-color: #ffffff;
         }
 
         .menu-board-img {
@@ -286,9 +240,8 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
-        /* Hover Glow Effect */
         .hotspot:hover, .hotspot:focus {
-            box-shadow: 0 0 15px rgba(255, 193, 7, 0.6);
+            box-shadow: 0 0 15px rgba(255, 193, 7, 0.8);
             transform: scale(1.03);
         }
 
@@ -341,30 +294,10 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
             font-weight: bold;
         }
 
-        /* Floating Auth Button (Upper Left Sticky) */
-        .floating-auth-btn {
-            position: fixed;
-            top: 25px;
-            left: 25px;
-            z-index: 1050;
-            border-radius: 50px;
-            padding: 10px 22px;
-            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
-            font-weight: bold;
-        }
-
-        /* Floating Toast Notification Containers */
         #toast-container {
             position: fixed;
             bottom: 25px;
             right: 25px;
-            z-index: 1100;
-        }
-
-        #auth-toast-container {
-            position: fixed;
-            bottom: 25px;
-            left: 25px;
             z-index: 1100;
         }
 
@@ -384,28 +317,26 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
             opacity: 0;
         }
 
-        /* Cart & Auth Modal Blur Backdrop & Transparency */
         .modal-backdrop.show {
             backdrop-filter: blur(5px);
             background-color: rgba(0, 0, 0, 0.6);
         }
 
         .cart-modal-content {
-            background-color: rgba(20, 20, 20, 0.92) !important;
-            border: 1px solid #ffc107;
-            color: #ffffff;
+            background-color: #ffffff !important;
+            border: 2px solid #ffc107;
+            color: #121212;
             border-radius: 12px;
         }
 
-        /* Cart Tabs */
         .cart-tab-btn {
             flex: 1;
             text-align: center;
             border-radius: 8px;
             padding: 8px;
-            color: #e0e0e0;
-            background: #212529;
-            border: 1px solid #343a40;
+            color: #495057;
+            background: #f8f9fa;
+            border: 1px solid #ced4da;
             cursor: pointer;
             transition: all 0.3s ease;
             font-size: 0.85rem;
@@ -414,15 +345,14 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
 
         .cart-tab-btn.active {
             background: #ffc107;
-            color: #000;
+            color: #121212;
             font-weight: bold;
             border-color: #ffc107;
         }
 
-        /* Slide-to-Delete Cart Item Card */
         .cart-item-card {
-            background: #212529;
-            border: 1px solid #343a40;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
             border-radius: 8px;
             margin-bottom: 8px;
             padding: 12px;
@@ -434,7 +364,7 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
 
         .subtext-info {
             font-size: 0.78rem;
-            color: #9ca3af;
+            color: #6c757d;
             display: block;
             margin-top: 2px;
         }
@@ -442,7 +372,7 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
         .qty-btn {
             background: transparent;
             border: 1px solid #ffc107;
-            color: #ffc107;
+            color: #d39e00;
             width: 26px;
             height: 26px;
             border-radius: 5px;
@@ -452,58 +382,45 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
             padding: 0;
             font-weight: bold;
         }
+
+        footer {
+            text-align: center;
+            color: #777777;
+            font-size: 0.85rem;
+            margin-top: 35px;
+        }
     </style>
 </head>
-<body class="bg-dark text-light">
+<body>
 
-    <!-- Sticky Upper Left Floating Auth Button -->
-    <?php if ($is_logged_in): ?>
-        <button class="btn btn-outline-warning floating-auth-btn" onclick="confirmLogout()">
-            <i class="fa-solid fa-right-from-bracket me-2"></i>Logout (<?= htmlspecialchars($_SESSION['fullname']) ?>)
-        </button>
-    <?php else: ?>
-        <button class="btn btn-gold floating-auth-btn" onclick="openAuthModal('login')">
-            <i class="fa-solid fa-user me-2"></i>Login
-        </button>
-    <?php endif; ?>
+    <!-- Top Navigation Box -->
+    <nav class="top-nav-box">
+        <ul class="nav-links">
+            <li><a href="home_page.php">HOME</a></li>
+            <li><a href="menu.php" class="active">MENU</a></li>
+            <li><a href="order.php">ORDER NOW</a></li>
+            <li><a href="tambay_caps.php">TAMBAY CAPS</a></li>
+        </ul>
+    </nav>
 
     <!-- Sticky Upper Right Floating Cart Button -->
     <button class="btn btn-gold floating-cart-btn" onclick="toggleCartModal()">
         <i class="fa-solid fa-cart-shopping me-2"></i>Cart (<span id="cart-count">0</span>)
     </button>
 
-    <!-- Lower Right Notification Container (Cart / Orders) -->
+    <!-- Lower Right Notification Container -->
     <div id="toast-container"></div>
-    <!-- Lower Left Notification Container (Auth) -->
-    <div id="auth-toast-container"></div>
 
-    <div class="container py-4">
-        <!-- Navigation Bar -->
-        <nav class="main-navbar">
-            <ul class="nav justify-content-center gap-1">
-                <li class="nav-item">
-                    <a class="nav-link" href="home_page.php">Home</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link active" href="menu.php">Menu</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="milktea.php">Milk Tea</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="tambay_caps.php">Tambay Caps</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="food_packs.php">Food Packs</a>
-                </li>
-            </ul>
-        </nav>
-
+    <!-- Main Wrapper Box -->
+    <main class="main-wrapper-box">
+        
         <!-- Header -->
         <header class="text-center mb-4">
-            <h1 class="display-5 fw-bold text-gold">SAIRENE TEPHTEPH TAPSILOGAN</h1>
-            <p class="lead text-light">A Taste of Comfort • Interactive Menu</p>
+            <h1 class="display-6 page-title">Sairene Tephteph Tapsilogan</h1>
+            <p class="text-muted small mt-1">A Taste of Comfort • Interactive Digital Menu</p>
         </header>
+
+        <hr class="border-warning opacity-25 my-4">
 
         <!-- Arrow Buttons -->
         <div class="d-flex justify-content-center align-items-center gap-3 mb-4">
@@ -523,7 +440,6 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
                 <div id="menu-page-1" class="menu-board-container">
                     <img src="images/menu_page_1.png" alt="Sairene Tapsilogan Silog Meals" class="img-fluid menu-board-img">
 
-                    <!-- Row 1 -->
                     <div class="hotspot" style="top: 40.85%; left: 9.03%; width: 16.97%; height: 11.99%;" tabindex="0" onclick="openItemModal('Tapsilog', 90, true)">
                         <div class="popover-detail-card">
                             <h5>Tapsilog (₱90)</h5>
@@ -545,7 +461,6 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
                         </div>
                     </div>
 
-                    <!-- Row 2 -->
                     <div class="hotspot" style="top: 60.00%; left: 9.19%; width: 16.70%; height: 11.84%;" tabindex="0" onclick="openItemModal('Bagnetsilog', 90, true)">
                         <div class="popover-detail-card">
                             <h5>Bagnetsilog (₱90)</h5>
@@ -567,7 +482,6 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
                         </div>
                     </div>
 
-                    <!-- Row 3 -->
                     <div class="hotspot" style="top: 75.44%; left: 24.74%; width: 16.76%; height: 12%;" tabindex="0" onclick="openItemModal('Hotdogsilog', 80, true)">
                         <div class="popover-detail-card">
                             <h5>Hotdogsilog (₱80)</h5>
@@ -589,7 +503,6 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
                 <div id="menu-page-2" class="menu-board-container">
                     <img src="images/menu_page_2.png" alt="Sairene Tapsilogan Combos and Ala Carte" class="img-fluid menu-board-img">
 
-                    <!-- Combo Meals Row 1 -->
                     <div class="hotspot" style="top: 14.25%; left: 7.41%; width: 19.02%; height: 13.45%;" tabindex="0" onclick="openItemModal('Bagnet + Hungarian', 140, true)">
                         <div class="popover-detail-card">
                             <h5>Bagnet + Hungarian (₱140)</h5>
@@ -611,7 +524,6 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
                         </div>
                     </div>
 
-                    <!-- Combo Meals Row 2 -->
                     <div class="hotspot" style="top: 32.02%; left: 19.82%; width: 20.79%; height: 14.70%;" tabindex="0" onclick="openItemModal('Liempo + Hungarian', 140, true)">
                         <div class="popover-detail-card">
                             <h5>Liempo + Hungarian (₱140)</h5>
@@ -626,7 +538,6 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
                         </div>
                     </div>
 
-                    <!-- Ala Carte Row 1 -->
                     <div class="hotspot" style="top: 56.30%; left: 7.74%; width: 17.41%; height: 12.31%;" tabindex="0" onclick="openItemModal('Special Tapa', 130, false)">
                         <div class="popover-detail-card">
                             <h5>Special Tapa (₱130)</h5>
@@ -648,7 +559,6 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
                         </div>
                     </div>
 
-                    <!-- Ala Carte Row 2 -->
                     <div class="hotspot" style="top: 75.33%; left: 8.14%; width: 16.92%; height: 11.97%;" tabindex="0" onclick="openItemModal('Hungarian Sausage', 130, false)">
                         <div class="popover-detail-card">
                             <h5>Hungarian Sausage (₱130)</h5>
@@ -680,112 +590,67 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
             <?php endif; ?>
         </div>
 
-        <!-- Footer -->
-        <footer class="text-center mt-4 text-light small">
-            <p class="mb-1">MRB Condominium C5, Taguig City</p>
-            <p class="mb-0">GCash Payments Accepted: 09270466231 (Sarippudin Aming)</p>
-        </footer>
-    </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; <?php echo date('Y'); ?> Sairene TephTeph Tapsilogan &bull; Digital Menu</p>
+    </footer>
 
     <!-- MIDDLE POPUP MODAL FOR ITEM CUSTOMIZATION -->
     <div class="modal fade" id="itemModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content cart-modal-content p-2">
                 <div class="modal-header border-secondary">
-                    <h5 class="modal-title text-gold fw-bold" id="modalItemName">Dish Name</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title fw-bold text-dark" id="modalItemName">Dish Name</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="text-light mb-2"><strong class="text-gold">Ingredients:</strong> <span id="modalItemDescription">Description of ingredients...</span></p>
-                    <p class="fs-5 text-white fw-bold">Price: ₱<span id="modalItemPrice">0</span></p>
+                    <p class="text-secondary mb-2"><strong>Ingredients:</strong> <span id="modalItemDescription">Description of ingredients...</span></p>
+                    <p class="fs-5 text-dark fw-bold">Price: ₱<span id="modalItemPrice">0</span></p>
                     
                     <!-- Choose Your Egg Section -->
                     <div class="mb-3" id="eggSection">
-                        <label class="form-label text-gold fw-semibold">Choose Your Egg:</label>
+                        <label class="form-label fw-semibold text-dark">Choose Your Egg:</label>
                         <div class="d-flex flex-column gap-2">
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="eggChoice" id="eggSunny" value="Sunny Side Up" checked>
-                                <label class="form-check-label text-light" for="eggSunny">Sunny Side Up</label>
+                                <label class="form-check-label text-dark" for="eggSunny">Sunny Side Up</label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="eggChoice" id="eggScrambled" value="Scrambled">
-                                <label class="form-check-label text-light" for="eggScrambled">Scrambled</label>
+                                <label class="form-check-label text-dark" for="eggScrambled">Scrambled</label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="eggChoice" id="eggWellDone" value="Well Done">
-                                <label class="form-check-label text-light" for="eggWellDone">Well Done</label>
+                                <label class="form-check-label text-dark" for="eggWellDone">Well Done</label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="eggChoice" id="eggNone" value="No Egg">
-                                <label class="form-check-label text-light" for="eggNone">No Egg / Don't Want Egg</label>
+                                <label class="form-check-label text-dark" for="eggNone">No Egg / Don't Want Egg</label>
                             </div>
                         </div>
                     </div>
 
                     <!-- Quantity -->
                     <div class="mb-3">
-                        <label class="form-label text-gold fw-semibold">Quantity</label>
+                        <label class="form-label fw-semibold text-dark">Quantity</label>
                         <div class="input-group" style="width: 140px;">
-                            <button class="btn btn-outline-warning btn-sm" type="button" onclick="adjustModalQty(-1)">-</button>
-                            <input type="text" id="modalItemQty" class="form-control bg-dark text-light text-center border-secondary form-control-sm" value="1" readonly>
-                            <button class="btn btn-outline-warning btn-sm" type="button" onclick="adjustModalQty(1)">+</button>
+                            <button class="btn btn-outline-warning btn-sm text-dark" type="button" onclick="adjustModalQty(-1)">-</button>
+                            <input type="text" id="modalItemQty" class="form-control bg-light text-dark text-center border-secondary form-control-sm" value="1" readonly>
+                            <button class="btn btn-outline-warning btn-sm text-dark" type="button" onclick="adjustModalQty(1)">+</button>
                         </div>
                     </div>
 
                     <!-- Notes -->
                     <div class="mb-3">
-                        <label class="form-label text-gold fw-semibold">Notes / Special Instructions</label>
-                        <textarea id="modalItemNotes" class="form-control bg-dark text-light border-secondary" rows="2" placeholder="e.g. Extra spicy, separate sauce..."></textarea>
+                        <label class="form-label fw-semibold text-dark">Notes / Special Instructions</label>
+                        <textarea id="modalItemNotes" class="form-control bg-light text-dark border-secondary" rows="2" placeholder="e.g. Extra spicy, separate sauce..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer border-secondary">
                     <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-gold" onclick="addCurrentItemToCart()">Add to Cart</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- LOGIN / SIGNUP MODAL -->
-    <div class="modal fade" id="authModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content cart-modal-content p-3">
-                <div class="modal-header border-secondary">
-                    <h5 class="modal-title text-gold fw-bold" id="authModalTitle">Login to Your Account</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <!-- Login Form -->
-                    <form id="loginForm" onsubmit="submitAuthForm(event, 'login')">
-                        <div class="mb-3">
-                            <label class="form-label text-light small">Email Address</label>
-                            <input type="email" id="loginEmail" class="form-control bg-dark text-light border-secondary" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label text-light small">Password</label>
-                            <input type="password" id="loginPassword" class="form-control bg-dark text-light border-secondary" required>
-                        </div>
-                        <button type="submit" class="btn btn-gold w-100 fw-bold mb-2">Login</button>
-                        <p class="text-center text-light small mb-0">Don't have an account? <a href="#" class="text-gold text-decoration-none" onclick="switchAuthMode('signup')">Sign Up</a></p>
-                    </form>
-
-                    <!-- Sign Up Form -->
-                    <form id="signupForm" class="d-none" onsubmit="submitAuthForm(event, 'signup')">
-                        <div class="mb-3">
-                            <label class="form-label text-light small">Full Name</label>
-                            <input type="text" id="signupFullname" class="form-control bg-dark text-light border-secondary" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label text-light small">Email Address</label>
-                            <input type="email" id="signupEmail" class="form-control bg-dark text-light border-secondary" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label text-light small">Password</label>
-                            <input type="password" id="signupPassword" class="form-control bg-dark text-light border-secondary" required>
-                        </div>
-                        <button type="submit" class="btn btn-gold w-100 fw-bold mb-2">Sign Up</button>
-                        <p class="text-center text-light small mb-0">Already have an account? <a href="#" class="text-gold text-decoration-none" onclick="switchAuthMode('login')">Login</a></p>
-                    </form>
                 </div>
             </div>
         </div>
@@ -801,19 +666,19 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
                         <div class="cart-tab-btn" id="tab-btn-ongoing" onclick="switchCartTab('ongoing')">Ongoing Orders</div>
                         <div class="cart-tab-btn" id="tab-btn-past" onclick="switchCartTab('past')">Past Orders</div>
                     </div>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body pt-3">
                     
                     <!-- TAB 1: CURRENT CART -->
                     <div id="tab-current" class="cart-tab-content">
-                        <p class="text-light small mb-2"><i class="fa-solid fa-info-circle me-1"></i> Tip: Slide item left by 1/3 or use the delete button to remove.</p>
+                        <p class="text-muted small mb-2"><i class="fa-solid fa-info-circle me-1"></i> Tip: Slide item left by 1/3 or use the delete button to remove.</p>
                         <div id="cart-items-list" class="mb-3" style="max-height: 250px; overflow-y: auto;">
                             <!-- Dynamic Cart Items -->
                         </div>
                         
                         <div class="border-top border-secondary pt-3">
-                            <div class="d-flex justify-content-between fs-4 fw-bold text-gold mb-3">
+                            <div class="d-flex justify-content-between fs-4 fw-bold text-dark mb-3">
                                 <span>Total Bill:</span>
                                 <span>₱<span id="cart-total">0.00</span></span>
                             </div>
@@ -822,8 +687,8 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
                                 <button type="button" class="btn btn-gold w-100 fw-bold py-2" onclick="proceedToCheckoutForm()">Order Now</button>
                             </div>
 
-                            <div id="payment-delivery-form" class="d-none mt-3 p-3 bg-secondary bg-opacity-10 border border-secondary rounded">
-                                <h6 class="text-gold fw-bold mb-3"><i class="fa-solid fa-wallet me-2"></i>Checkout & GCash Payment</h6>
+                            <div id="payment-delivery-form" class="d-none mt-3 p-3 bg-light border border-warning rounded">
+                                <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-wallet me-2 text-warning"></i>Checkout & GCash Payment</h6>
                                 
                                 <div class="alert alert-warning py-2 small mb-3">
                                     <strong>GCash Details:</strong> 09270466231 (Sarippudin Aming)<br>
@@ -832,24 +697,24 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
 
                                 <form id="orderSubmitForm" class="row g-2">
                                     <div class="col-md-6">
-                                        <label class="form-label text-light small mb-1">Customer Name</label>
-                                        <input type="text" id="custName" class="form-control form-control-sm bg-dark text-light border-secondary" required placeholder="Juan Dela Cruz">
+                                        <label class="form-label text-dark small mb-1">Customer Name</label>
+                                        <input type="text" id="custName" class="form-control form-control-sm bg-light text-dark border-secondary" required placeholder="Juan Dela Cruz">
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label text-light small mb-1">Contact Number</label>
-                                        <input type="text" id="custPhone" class="form-control form-control-sm bg-dark text-light border-secondary" required placeholder="09123456789">
+                                        <label class="form-label text-dark small mb-1">Contact Number</label>
+                                        <input type="text" id="custPhone" class="form-control form-control-sm bg-light text-dark border-secondary" required placeholder="09123456789">
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label text-light small mb-1">Delivery Area</label>
-                                        <input type="text" id="custArea" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="e.g. Taguig">
+                                        <label class="form-label text-dark small mb-1">Delivery Area</label>
+                                        <input type="text" id="custArea" class="form-control form-control-sm bg-light text-dark border-secondary" placeholder="e.g. Taguig">
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label text-light small mb-1">Address / Landmark</label>
-                                        <input type="text" id="custAddress" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Unit / Street / Subdivision" required>
+                                        <label class="form-label text-dark small mb-1">Address / Landmark</label>
+                                        <input type="text" id="custAddress" class="form-control form-control-sm bg-light text-dark border-secondary" placeholder="Unit / Street / Subdivision" required>
                                     </div>
                                     <div class="col-12 mt-2">
-                                        <label class="form-label text-gold small mb-1">Upload GCash Payment Screenshot Proof</label>
-                                        <input type="file" id="paymentProof" class="form-control form-control-sm bg-dark text-light border-secondary" accept="image/*" required>
+                                        <label class="form-label text-dark small mb-1">Upload GCash Payment Screenshot Proof</label>
+                                        <input type="file" id="paymentProof" class="form-control form-control-sm bg-light text-dark border-secondary" accept="image/*" required>
                                     </div>
                                     <div class="col-12 mt-3">
                                         <button type="button" class="btn btn-gold w-100 fw-bold" onclick="submitFinalOrder()">Finish Order</button>
@@ -862,42 +727,41 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
                     <!-- TAB 2: ONGOING ORDERS -->
                     <div id="tab-ongoing" class="cart-tab-content d-none">
                         <?php if (!$is_logged_in): ?>
-                            <p class="text-light text-center my-4">Please <a href="#" class="text-gold" onclick="openAuthModal('login')">login</a> to view your ongoing orders.</p>
+                            <p class="text-muted text-center my-4">Please <a href="home_page.php" class="text-warning fw-bold text-decoration-none">login from the homepage</a> to view your ongoing orders.</p>
                         <?php elseif (empty($ongoing_orders)): ?>
-                            <p class="text-light text-center my-4">No ongoing active orders found.</p>
+                            <p class="text-muted text-center my-4">No ongoing active orders found.</p>
                         <?php else: ?>
                             <?php foreach ($ongoing_orders as $ord): ?>
-                                <div class="card bg-dark border border-secondary mb-3 p-3 text-light">
+                                <div class="card bg-light border border-warning mb-3 p-3 text-dark">
                                     <div class="d-flex justify-content-between align-items-center mb-2" style="cursor: pointer;" onclick="toggleOrderDetails(<?= $ord['id'] ?>)">
                                         <div>
-                                            <span class="fw-bold text-gold">Order #<?= $ord['id'] ?> - <?= htmlspecialchars($ord['customer_name']) ?></span>
-                                            <div class="small text-light">Placed: <?= $ord['created_at'] ?? 'Just now' ?></div>
+                                            <span class="fw-bold text-dark">Order #<?= $ord['id'] ?> - <?= htmlspecialchars($ord['customer_name']) ?></span>
+                                            <div class="small text-muted">Placed: <?= $ord['created_at'] ?? 'Just now' ?></div>
                                         </div>
                                         <div>
                                             <span class="badge bg-warning text-dark me-2"><?= strtoupper($ord['order_status']) ?></span>
-                                            <i class="fa-solid fa-chevron-down text-gold small"></i>
+                                            <i class="fa-solid fa-chevron-down text-dark small"></i>
                                         </div>
                                     </div>
 
-                                    <!-- Collapsible Detail View -->
-                                    <div id="orderDetails<?= $ord['id'] ?>" class="d-none border-top border-secondary pt-2 mt-2 small text-light">
+                                    <div id="orderDetails<?= $ord['id'] ?>" class="d-none border-top border-warning pt-2 mt-2 small text-dark">
                                         <p class="mb-1"><strong>Delivery Area:</strong> <?= htmlspecialchars($ord['delivery_area']) ?></p>
                                         <p class="mb-1"><strong>Address:</strong> <?= htmlspecialchars($ord['address']) ?></p>
                                         <p class="mb-1"><strong>Contact:</strong> <?= htmlspecialchars($ord['phone']) ?></p>
-                                        <p class="mb-2 text-gold"><strong>Items Ordered:</strong></p>
-                                        <ul class="ps-3 mb-2 text-light">
+                                        <p class="mb-2 text-warning fw-bold">Items Ordered:</p>
+                                        <ul class="ps-3 mb-2 text-dark">
                                             <?php foreach ($ord['items'] as $it): ?>
                                                 <li><?= htmlspecialchars($it['item_name']) ?> (x<?= $it['quantity'] ?>) - ₱<?= number_format($it['price'] * $it['quantity'], 2) ?> 
-                                                    <?php if(!empty($it['egg_choice'])): ?><span class="text-gold">[Egg: <?= htmlspecialchars($it['egg_choice']) ?>]</span><?php endif; ?>
+                                                    <?php if(!empty($it['egg_choice'])): ?><span class="text-muted">[Egg: <?= htmlspecialchars($it['egg_choice']) ?>]</span><?php endif; ?>
                                                 </li>
                                             <?php endforeach; ?>
                                         </ul>
-                                        <p class="mb-0 fw-bold text-gold">Total Amount: ₱<?= number_format($ord['total_amount'], 2) ?></p>
+                                        <p class="mb-0 fw-bold text-dark">Total Amount: ₱<?= number_format($ord['total_amount'], 2) ?></p>
                                     </div>
 
                                     <div class="form-check form-switch mt-2 border-top border-secondary pt-2">
                                         <input class="form-check-input" type="checkbox" role="switch" id="receivedOrder<?= $ord['id'] ?>" onchange="markOrderCompleted(<?= $ord['id'] ?>)">
-                                        <label class="form-check-label text-light small fw-semibold" for="receivedOrder<?= $ord['id'] ?>">Toggle when you've already gotten your order</label>
+                                        <label class="form-check-label text-dark small fw-semibold" for="receivedOrder<?= $ord['id'] ?>">Toggle when you've already gotten your order</label>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -907,34 +771,33 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
                     <!-- TAB 3: PAST ORDERS -->
                     <div id="tab-past" class="cart-tab-content d-none">
                         <?php if (!$is_logged_in): ?>
-                            <p class="text-light text-center my-4">Please <a href="#" class="text-gold" onclick="openAuthModal('login')">login</a> to view your past orders.</p>
+                            <p class="text-muted text-center my-4">Please <a href="home_page.php" class="text-warning fw-bold text-decoration-none">login from the homepage</a> to view your past orders.</p>
                         <?php elseif (empty($past_orders)): ?>
-                            <p class="text-light text-center my-4">No past completed orders found.</p>
+                            <p class="text-muted text-center my-4">No past completed orders found.</p>
                         <?php else: ?>
                             <?php foreach ($past_orders as $ord): ?>
-                                <div class="card bg-dark border border-secondary mb-3 p-3 text-light">
+                                <div class="card bg-light border border-secondary mb-3 p-3 text-dark">
                                     <div class="d-flex justify-content-between align-items-center mb-1" style="cursor: pointer;" onclick="toggleOrderDetails(<?= $ord['id'] ?>)">
                                         <div>
-                                            <span class="fw-bold text-light">Order #<?= $ord['id'] ?> - <?= htmlspecialchars($ord['customer_name']) ?></span>
-                                            <div class="small text-light">Placed: <?= $ord['created_at'] ?? 'Recently' ?></div>
+                                            <span class="fw-bold text-dark">Order #<?= $ord['id'] ?> - <?= htmlspecialchars($ord['customer_name']) ?></span>
+                                            <div class="small text-muted">Placed: <?= $ord['created_at'] ?? 'Recently' ?></div>
                                         </div>
                                         <div>
                                             <span class="badge bg-success me-2">COMPLETED</span>
-                                            <i class="fa-solid fa-chevron-down text-gold small"></i>
+                                            <i class="fa-solid fa-chevron-down text-dark small"></i>
                                         </div>
                                     </div>
 
-                                    <!-- Collapsible Detail View with High Contrast Text -->
-                                    <div id="orderDetails<?= $ord['id'] ?>" class="d-none border-top border-secondary pt-2 mt-2 small text-light">
+                                    <div id="orderDetails<?= $ord['id'] ?>" class="d-none border-top border-warning pt-2 mt-2 small text-dark">
                                         <p class="mb-1"><strong>Received Time:</strong> <?= $ord['updated_at'] ?? $ord['created_at'] ?? 'Completed' ?></p>
                                         <p class="mb-1"><strong>Delivery Area:</strong> <?= htmlspecialchars($ord['delivery_area']) ?></p>
-                                        <p class="mb-2 text-gold"><strong>Order Summary:</strong></p>
-                                        <ul class="ps-3 mb-2 text-light">
+                                        <p class="mb-2 text-warning fw-bold">Order Summary:</p>
+                                        <ul class="ps-3 mb-2 text-dark">
                                             <?php foreach ($ord['items'] as $it): ?>
                                                 <li><?= htmlspecialchars($it['item_name']) ?> (x<?= $it['quantity'] ?>) - ₱<?= number_format($it['price'] * $it['quantity'], 2) ?></li>
                                             <?php endforeach; ?>
                                         </ul>
-                                        <p class="mb-0 fw-bold text-gold">Total Paid: ₱<?= number_format($ord['total_amount'], 2) ?></p>
+                                        <p class="mb-0 fw-bold text-dark">Total Paid: ₱<?= number_format($ord['total_amount'], 2) ?></p>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -955,7 +818,6 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
 
         const itemModal = new bootstrap.Modal(document.getElementById('itemModal'));
         const cartModal = new bootstrap.Modal(document.getElementById('cartModal'));
-        const authModal = new bootstrap.Modal(document.getElementById('authModal'));
 
         const itemDescriptions = {
             'Tapsilog': 'Marinated Beef Tapa, Garlic Rice, Fried Egg.',
@@ -1047,19 +909,6 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
             }, 3000);
         }
 
-        function showAuthToast(message) {
-            const container = document.getElementById('auth-toast-container');
-            const toast = document.createElement('div');
-            toast.className = 'custom-toast';
-            toast.innerText = message;
-            container.appendChild(toast);
-
-            setTimeout(() => {
-                toast.classList.add('fade-out');
-                setTimeout(() => toast.remove(), 1000);
-            }, 3000);
-        }
-
         function updateCartUI() {
             const countSpan = document.getElementById('cart-count');
             const listDiv = document.getElementById('cart-items-list');
@@ -1070,7 +919,7 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
             listDiv.innerHTML = '';
 
             if (cart.length === 0) {
-                listDiv.innerHTML = '<p class="text-light text-center my-3">Your cart is empty.</p>';
+                listDiv.innerHTML = '<p class="text-muted text-center my-3">Your cart is empty.</p>';
             } else {
                 cart.forEach((item, index) => {
                     totalQty += item.qty;
@@ -1086,15 +935,15 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
                     row.className = 'cart-item-card d-flex justify-content-between align-items-center';
                     row.innerHTML = `
                         <div>
-                            <h6 class="fw-bold text-white mb-0">${item.name}</h6>
+                            <h6 class="fw-bold text-dark mb-0">${item.name}</h6>
                             ${subtextFormatted}
-                            <div class="text-gold small fw-bold mt-1">
+                            <div class="text-warning small fw-bold mt-1">
                                 ₱${item.price.toFixed(2)} x ${item.qty} = ₱${itemSubtotal.toFixed(2)}
                             </div>
                         </div>
                         <div class="d-flex align-items-center gap-2">
                             <button class="qty-btn" onclick="updateQty(${index}, -1)">-</button>
-                            <span class="text-white fw-bold px-1 small">${item.qty}</span>
+                            <span class="text-dark fw-bold px-1 small">${item.qty}</span>
                             <button class="qty-btn" onclick="updateQty(${index}, 1)">+</button>
                             <button class="btn btn-outline-danger btn-sm ms-2" onclick="removeFromCart(${index}, true)" title="Delete Item"><i class="fa-solid fa-trash"></i></button>
                         </div>
@@ -1204,87 +1053,11 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
             }
         }
 
-        // Auth Modal Controls
-        function openAuthModal(mode) {
-            switchAuthMode(mode);
-            authModal.show();
-        }
-
-        function switchAuthMode(mode) {
-            const loginForm = document.getElementById('loginForm');
-            const signupForm = document.getElementById('signupForm');
-            const title = document.getElementById('authModalTitle');
-
-            if (mode === 'login') {
-                loginForm.classList.remove('d-none');
-                signupForm.classList.add('d-none');
-                title.innerText = 'Login to Your Account';
-            } else {
-                loginForm.classList.add('d-none');
-                signupForm.classList.remove('d-none');
-                title.innerText = 'Create an Account';
-            }
-        }
-
-        function submitAuthForm(event, action) {
-            event.preventDefault();
-            const formData = new FormData();
-            formData.append('action', action);
-
-            if (action === 'login') {
-                formData.append('email', document.getElementById('loginEmail').value.trim());
-                formData.append('password', document.getElementById('loginPassword').value);
-            } else {
-                formData.append('fullname', document.getElementById('signupFullname').value.trim());
-                formData.append('email', document.getElementById('signupEmail').value.trim());
-                formData.append('password', document.getElementById('signupPassword').value);
-            }
-
-            fetch('menu.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    authModal.hide();
-                    let successMsg = action === 'login' ? 'Logged in successfully!' : 'Account created & logged in successfully!';
-                    showAuthToast(successMsg);
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    alert(data.message);
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                alert('Authentication request failed.');
-            });
-        }
-
-        function confirmLogout() {
-            if (confirm('Are you sure you really want to log out?')) {
-                const formData = new FormData();
-                formData.append('action', 'logout');
-
-                fetch('menu.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        showAuthToast('Logged out successfully!');
-                        setTimeout(() => location.reload(), 1500);
-                    }
-                });
-            }
-        }
-
         function proceedToCheckoutForm() {
             if (!isLoggedIn) {
                 cartModal.hide();
-                alert('Please log in or sign up first before placing an order.');
-                openAuthModal('login');
+                alert('Please log in first from the homepage before placing an order.');
+                window.location.href = 'home_page.php';
                 return;
             }
 
