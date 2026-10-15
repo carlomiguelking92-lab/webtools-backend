@@ -403,6 +403,7 @@ $menu_page = isset($_GET['menu_page']) && $_GET['menu_page'] == 2 ? 2 : 1;
                 <a href="Home_Page.php" class="nav-link-custom text-warning">HOME</a>
                 <a href="menu.php" class="nav-link-custom">MENU</a>
                 <a href="order.php" class="nav-link-custom">ORDER NOW</a>
+                <a href="food_packs.php" class="nav-link-custom">FOOD PACKS</a>
                 <a href="tambay_caps.php" target="_blank" class="nav-link-custom">TAMBAY CAPS</a>
             </nav>
         </div>
