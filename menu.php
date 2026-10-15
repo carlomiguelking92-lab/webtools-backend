@@ -2,81 +2,11 @@
 session_start();
 require_once 'config/db.php';
 
-// --- AJAX / POST HANDLERS ---
+// --- AJAX / POST HANDLERS (Orders Only) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     header('Content-Type: application/json');
 
-    // 1. Sign Up Handler
-    if ($_POST['action'] === 'signup') {
-        try {
-            global $pdo;
-            $fullname = trim($_POST['fullname'] ?? '');
-            $email = trim($_POST['email'] ?? '');
-            $password = $_POST['password'] ?? '';
-
-            if (empty($fullname) || empty($email) || empty($password)) {
-                echo json_encode(['success' => false, 'message' => 'All fields are required.']);
-                exit;
-            }
-
-            // Check if email already exists
-            $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
-            $stmt->execute([$email]);
-            if ($stmt->fetch()) {
-                echo json_encode(['success' => false, 'message' => 'Email address is already in use.']);
-                exit;
-            }
-
-            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare("INSERT INTO users (fullname, email, password, role) VALUES (?, ?, ?, 'customer')");
-            $stmt->execute([$fullname, $email, $hashedPassword]);
-
-            // Auto login upon successful signup
-            $_SESSION['user_id'] = $pdo->lastInsertId();
-            $_SESSION['fullname'] = $fullname;
-
-            echo json_encode(['success' => true]);
-            exit;
-        } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
-            exit;
-        }
-    }
-
-    // 2. Login Handler
-    if ($_POST['action'] === 'login') {
-        try {
-            global $pdo;
-            $email = trim($_POST['email'] ?? '');
-            $password = $_POST['password'] ?? '';
-
-            $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
-            $stmt->execute([$email]);
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($user && password_verify($password, $user['password'])) {
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['fullname'] = $user['fullname'];
-                echo json_encode(['success' => true]);
-            } else {
-                echo json_encode(['success' => false, 'message' => 'Invalid email or password.']);
-            }
-            exit;
-        } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
-            exit;
-        }
-    }
-
-    // 3. Logout Handler
-    if ($_POST['action'] === 'logout') {
-        session_unset();
-        session_destroy();
-        echo json_encode(['success' => true]);
-        exit;
-    }
-
-    // 4. Place Order Handler (Restricted to Logged-In Users)
+    // 1. Place Order Handler (Restricted to Logged-In Users)
     if ($_POST['action'] === 'place_order') {
         if (!isset($_SESSION['user_id'])) {
             echo json_encode(['success' => false, 'message' => 'You must be logged in to place an order.']);
@@ -127,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
     }
 
-    // 5. Complete Order Handler
+    // 2. Complete Order Handler
     if ($_POST['action'] === 'complete_order') {
         try {
             global $pdo;
@@ -174,7 +104,6 @@ try {
     // Database tables might not be fully migrated yet
 }
 
-// Page Selection
 $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1; 
 ?>
 <!DOCTYPE html>
@@ -286,7 +215,6 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
-        /* Hover Glow Effect */
         .hotspot:hover, .hotspot:focus {
             box-shadow: 0 0 15px rgba(255, 193, 7, 0.6);
             transform: scale(1.03);
@@ -341,30 +269,10 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
             font-weight: bold;
         }
 
-        /* Floating Auth Button (Upper Left Sticky) */
-        .floating-auth-btn {
-            position: fixed;
-            top: 25px;
-            left: 25px;
-            z-index: 1050;
-            border-radius: 50px;
-            padding: 10px 22px;
-            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
-            font-weight: bold;
-        }
-
-        /* Floating Toast Notification Containers */
         #toast-container {
             position: fixed;
             bottom: 25px;
             right: 25px;
-            z-index: 1100;
-        }
-
-        #auth-toast-container {
-            position: fixed;
-            bottom: 25px;
-            left: 25px;
             z-index: 1100;
         }
 
@@ -384,7 +292,6 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
             opacity: 0;
         }
 
-        /* Cart & Auth Modal Blur Backdrop & Transparency */
         .modal-backdrop.show {
             backdrop-filter: blur(5px);
             background-color: rgba(0, 0, 0, 0.6);
@@ -397,7 +304,6 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
             border-radius: 12px;
         }
 
-        /* Cart Tabs */
         .cart-tab-btn {
             flex: 1;
             text-align: center;
@@ -419,7 +325,6 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
             border-color: #ffc107;
         }
 
-        /* Slide-to-Delete Cart Item Card */
         .cart-item-card {
             background: #212529;
             border: 1px solid #343a40;
@@ -456,26 +361,13 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
 </head>
 <body class="bg-dark text-light">
 
-    <!-- Sticky Upper Left Floating Auth Button -->
-    <?php if ($is_logged_in): ?>
-        <button class="btn btn-outline-warning floating-auth-btn" onclick="confirmLogout()">
-            <i class="fa-solid fa-right-from-bracket me-2"></i>Logout (<?= htmlspecialchars($_SESSION['fullname']) ?>)
-        </button>
-    <?php else: ?>
-        <button class="btn btn-gold floating-auth-btn" onclick="openAuthModal('login')">
-            <i class="fa-solid fa-user me-2"></i>Login
-        </button>
-    <?php endif; ?>
-
     <!-- Sticky Upper Right Floating Cart Button -->
     <button class="btn btn-gold floating-cart-btn" onclick="toggleCartModal()">
         <i class="fa-solid fa-cart-shopping me-2"></i>Cart (<span id="cart-count">0</span>)
     </button>
 
-    <!-- Lower Right Notification Container (Cart / Orders) -->
+    <!-- Lower Right Notification Container -->
     <div id="toast-container"></div>
-    <!-- Lower Left Notification Container (Auth) -->
-    <div id="auth-toast-container"></div>
 
     <div class="container py-4">
         <!-- Navigation Bar -->
@@ -488,13 +380,10 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
                     <a class="nav-link active" href="menu.php">Menu</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="milktea.php">Milk Tea</a>
+                    <a class="nav-link" href="food_packs.php">Food Packs</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="tambay_caps.php">Tambay Caps</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="food_packs.php">Food Packs</a>
                 </li>
             </ul>
         </nav>
@@ -521,9 +410,8 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
             <?php if ($page == 1): ?>
                 <!-- PAGE 1: SILOG MEALS -->
                 <div id="menu-page-1" class="menu-board-container">
-                    <img src="menu_page_1.png" alt="Sairene Tapsilogan Silog Meals" class="img-fluid menu-board-img">
+                    <img src="images/menu_page_1.png" alt="Sairene Tapsilogan Silog Meals" class="img-fluid menu-board-img">
 
-                    <!-- Row 1 -->
                     <div class="hotspot" style="top: 40.85%; left: 9.03%; width: 16.97%; height: 11.99%;" tabindex="0" onclick="openItemModal('Tapsilog', 90, true)">
                         <div class="popover-detail-card">
                             <h5>Tapsilog (₱90)</h5>
@@ -545,7 +433,6 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
                         </div>
                     </div>
 
-                    <!-- Row 2 -->
                     <div class="hotspot" style="top: 60.00%; left: 9.19%; width: 16.70%; height: 11.84%;" tabindex="0" onclick="openItemModal('Bagnetsilog', 90, true)">
                         <div class="popover-detail-card">
                             <h5>Bagnetsilog (₱90)</h5>
@@ -567,7 +454,6 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
                         </div>
                     </div>
 
-                    <!-- Row 3 -->
                     <div class="hotspot" style="top: 75.44%; left: 24.74%; width: 16.76%; height: 12%;" tabindex="0" onclick="openItemModal('Hotdogsilog', 80, true)">
                         <div class="popover-detail-card">
                             <h5>Hotdogsilog (₱80)</h5>
@@ -587,9 +473,8 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
 
                 <!-- PAGE 2: COMBO MEALS & ALA CARTE -->
                 <div id="menu-page-2" class="menu-board-container">
-                    <img src="menu_page_2.png" alt="Sairene Tapsilogan Combos and Ala Carte" class="img-fluid menu-board-img">
+                    <img src="images/menu_page_2.png" alt="Sairene Tapsilogan Combos and Ala Carte" class="img-fluid menu-board-img">
 
-                    <!-- Combo Meals Row 1 -->
                     <div class="hotspot" style="top: 14.25%; left: 7.41%; width: 19.02%; height: 13.45%;" tabindex="0" onclick="openItemModal('Bagnet + Hungarian', 140, true)">
                         <div class="popover-detail-card">
                             <h5>Bagnet + Hungarian (₱140)</h5>
@@ -611,7 +496,6 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
                         </div>
                     </div>
 
-                    <!-- Combo Meals Row 2 -->
                     <div class="hotspot" style="top: 32.02%; left: 19.82%; width: 20.79%; height: 14.70%;" tabindex="0" onclick="openItemModal('Liempo + Hungarian', 140, true)">
                         <div class="popover-detail-card">
                             <h5>Liempo + Hungarian (₱140)</h5>
@@ -626,7 +510,6 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
                         </div>
                     </div>
 
-                    <!-- Ala Carte Row 1 -->
                     <div class="hotspot" style="top: 56.30%; left: 7.74%; width: 17.41%; height: 12.31%;" tabindex="0" onclick="openItemModal('Special Tapa', 130, false)">
                         <div class="popover-detail-card">
                             <h5>Special Tapa (₱130)</h5>
@@ -648,7 +531,6 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
                         </div>
                     </div>
 
-                    <!-- Ala Carte Row 2 -->
                     <div class="hotspot" style="top: 75.33%; left: 8.14%; width: 16.92%; height: 11.97%;" tabindex="0" onclick="openItemModal('Hungarian Sausage', 130, false)">
                         <div class="popover-detail-card">
                             <h5>Hungarian Sausage (₱130)</h5>
@@ -746,51 +628,6 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
         </div>
     </div>
 
-    <!-- LOGIN / SIGNUP MODAL -->
-    <div class="modal fade" id="authModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content cart-modal-content p-3">
-                <div class="modal-header border-secondary">
-                    <h5 class="modal-title text-gold fw-bold" id="authModalTitle">Login to Your Account</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <!-- Login Form -->
-                    <form id="loginForm" onsubmit="submitAuthForm(event, 'login')">
-                        <div class="mb-3">
-                            <label class="form-label text-light small">Email Address</label>
-                            <input type="email" id="loginEmail" class="form-control bg-dark text-light border-secondary" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label text-light small">Password</label>
-                            <input type="password" id="loginPassword" class="form-control bg-dark text-light border-secondary" required>
-                        </div>
-                        <button type="submit" class="btn btn-gold w-100 fw-bold mb-2">Login</button>
-                        <p class="text-center text-light small mb-0">Don't have an account? <a href="#" class="text-gold text-decoration-none" onclick="switchAuthMode('signup')">Sign Up</a></p>
-                    </form>
-
-                    <!-- Sign Up Form -->
-                    <form id="signupForm" class="d-none" onsubmit="submitAuthForm(event, 'signup')">
-                        <div class="mb-3">
-                            <label class="form-label text-light small">Full Name</label>
-                            <input type="text" id="signupFullname" class="form-control bg-dark text-light border-secondary" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label text-light small">Email Address</label>
-                            <input type="email" id="signupEmail" class="form-control bg-dark text-light border-secondary" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label text-light small">Password</label>
-                            <input type="password" id="signupPassword" class="form-control bg-dark text-light border-secondary" required>
-                        </div>
-                        <button type="submit" class="btn btn-gold w-100 fw-bold mb-2">Sign Up</button>
-                        <p class="text-center text-light small mb-0">Already have an account? <a href="#" class="text-gold text-decoration-none" onclick="switchAuthMode('login')">Login</a></p>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- CART & ORDER MANAGEMENT MODAL -->
     <div class="modal fade" id="cartModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -862,7 +699,7 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
                     <!-- TAB 2: ONGOING ORDERS -->
                     <div id="tab-ongoing" class="cart-tab-content d-none">
                         <?php if (!$is_logged_in): ?>
-                            <p class="text-light text-center my-4">Please <a href="#" class="text-gold" onclick="openAuthModal('login')">login</a> to view your ongoing orders.</p>
+                            <p class="text-light text-center my-4">Please <a href="home_page.php" class="text-gold">login from the homepage</a> to view your ongoing orders.</p>
                         <?php elseif (empty($ongoing_orders)): ?>
                             <p class="text-light text-center my-4">No ongoing active orders found.</p>
                         <?php else: ?>
@@ -879,7 +716,6 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
                                         </div>
                                     </div>
 
-                                    <!-- Collapsible Detail View -->
                                     <div id="orderDetails<?= $ord['id'] ?>" class="d-none border-top border-secondary pt-2 mt-2 small text-light">
                                         <p class="mb-1"><strong>Delivery Area:</strong> <?= htmlspecialchars($ord['delivery_area']) ?></p>
                                         <p class="mb-1"><strong>Address:</strong> <?= htmlspecialchars($ord['address']) ?></p>
@@ -907,7 +743,7 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
                     <!-- TAB 3: PAST ORDERS -->
                     <div id="tab-past" class="cart-tab-content d-none">
                         <?php if (!$is_logged_in): ?>
-                            <p class="text-light text-center my-4">Please <a href="#" class="text-gold" onclick="openAuthModal('login')">login</a> to view your past orders.</p>
+                            <p class="text-light text-center my-4">Please <a href="home_page.php" class="text-gold">login from the homepage</a> to view your past orders.</p>
                         <?php elseif (empty($past_orders)): ?>
                             <p class="text-light text-center my-4">No past completed orders found.</p>
                         <?php else: ?>
@@ -924,7 +760,6 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
                                         </div>
                                     </div>
 
-                                    <!-- Collapsible Detail View with High Contrast Text -->
                                     <div id="orderDetails<?= $ord['id'] ?>" class="d-none border-top border-secondary pt-2 mt-2 small text-light">
                                         <p class="mb-1"><strong>Received Time:</strong> <?= $ord['updated_at'] ?? $ord['created_at'] ?? 'Completed' ?></p>
                                         <p class="mb-1"><strong>Delivery Area:</strong> <?= htmlspecialchars($ord['delivery_area']) ?></p>
@@ -955,7 +790,6 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
 
         const itemModal = new bootstrap.Modal(document.getElementById('itemModal'));
         const cartModal = new bootstrap.Modal(document.getElementById('cartModal'));
-        const authModal = new bootstrap.Modal(document.getElementById('authModal'));
 
         const itemDescriptions = {
             'Tapsilog': 'Marinated Beef Tapa, Garlic Rice, Fried Egg.',
@@ -1036,19 +870,6 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
 
         function showToast(message) {
             const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = 'custom-toast';
-            toast.innerText = message;
-            container.appendChild(toast);
-
-            setTimeout(() => {
-                toast.classList.add('fade-out');
-                setTimeout(() => toast.remove(), 1000);
-            }, 3000);
-        }
-
-        function showAuthToast(message) {
-            const container = document.getElementById('auth-toast-container');
             const toast = document.createElement('div');
             toast.className = 'custom-toast';
             toast.innerText = message;
@@ -1204,87 +1025,11 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
             }
         }
 
-        // Auth Modal Controls
-        function openAuthModal(mode) {
-            switchAuthMode(mode);
-            authModal.show();
-        }
-
-        function switchAuthMode(mode) {
-            const loginForm = document.getElementById('loginForm');
-            const signupForm = document.getElementById('signupForm');
-            const title = document.getElementById('authModalTitle');
-
-            if (mode === 'login') {
-                loginForm.classList.remove('d-none');
-                signupForm.classList.add('d-none');
-                title.innerText = 'Login to Your Account';
-            } else {
-                loginForm.classList.add('d-none');
-                signupForm.classList.remove('d-none');
-                title.innerText = 'Create an Account';
-            }
-        }
-
-        function submitAuthForm(event, action) {
-            event.preventDefault();
-            const formData = new FormData();
-            formData.append('action', action);
-
-            if (action === 'login') {
-                formData.append('email', document.getElementById('loginEmail').value.trim());
-                formData.append('password', document.getElementById('loginPassword').value);
-            } else {
-                formData.append('fullname', document.getElementById('signupFullname').value.trim());
-                formData.append('email', document.getElementById('signupEmail').value.trim());
-                formData.append('password', document.getElementById('signupPassword').value);
-            }
-
-            fetch('menu.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    authModal.hide();
-                    let successMsg = action === 'login' ? 'Logged in successfully!' : 'Account created & logged in successfully!';
-                    showAuthToast(successMsg);
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    alert(data.message);
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                alert('Authentication request failed.');
-            });
-        }
-
-        function confirmLogout() {
-            if (confirm('Are you sure you really want to log out?')) {
-                const formData = new FormData();
-                formData.append('action', 'logout');
-
-                fetch('menu.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        showAuthToast('Logged out successfully!');
-                        setTimeout(() => location.reload(), 1500);
-                    }
-                });
-            }
-        }
-
         function proceedToCheckoutForm() {
             if (!isLoggedIn) {
                 cartModal.hide();
-                alert('Please log in or sign up first before placing an order.');
-                openAuthModal('login');
+                alert('Please log in first from the homepage before placing an order.');
+                window.location.href = 'home_page.php';
                 return;
             }
 
