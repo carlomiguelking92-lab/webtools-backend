@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'config/db.php';
+require_once 'db.php';
 
 // --- AJAX / POST HANDLERS ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
@@ -521,7 +521,7 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
             <?php if ($page == 1): ?>
                 <!-- PAGE 1: SILOG MEALS -->
                 <div id="menu-page-1" class="menu-board-container">
-                    <img src="menu_page_1.png" alt="Sairene Tapsilogan Silog Meals" class="img-fluid menu-board-img">
+                    <img src="images/menu_page_1.png" alt="Sairene Tapsilogan Silog Meals" class="img-fluid menu-board-img">
 
                     <!-- Row 1 -->
                     <div class="hotspot" style="top: 40.85%; left: 9.03%; width: 16.97%; height: 11.99%;" tabindex="0" onclick="openItemModal('Tapsilog', 90, true)">
@@ -587,7 +587,7 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
 
                 <!-- PAGE 2: COMBO MEALS & ALA CARTE -->
                 <div id="menu-page-2" class="menu-board-container">
-                    <img src="menu_page_2.png" alt="Sairene Tapsilogan Combos and Ala Carte" class="img-fluid menu-board-img">
+                    <img src="images/menu_page_2.png" alt="Sairene Tapsilogan Combos and Ala Carte" class="img-fluid menu-board-img">
 
                     <!-- Combo Meals Row 1 -->
                     <div class="hotspot" style="top: 14.25%; left: 7.41%; width: 19.02%; height: 13.45%;" tabindex="0" onclick="openItemModal('Bagnet + Hungarian', 140, true)">
