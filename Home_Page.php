@@ -1,5 +1,90 @@
 <?php
+session_start();
 require_once 'config/db.php';
+
+// --- AJAX / POST HANDLERS FOR AUTHENTICATION ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    header('Content-Type: application/json');
+
+    // 1. Sign Up Handler
+    if ($_POST['action'] === 'signup') {
+        try {
+            global $pdo;
+            $fullname = trim($_POST['fullname'] ?? '');
+            $email    = trim($_POST['email'] ?? '');
+            $password = $_POST['password'] ?? '';
+
+            if (empty($fullname) || empty($email) || empty($password)) {
+                echo json_encode(['success' => false, 'message' => 'All fields are required.']);
+                exit;
+            }
+
+            // Check if email already exists
+            $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+            $stmt->execute([$email]);
+            if ($stmt->fetch()) {
+                echo json_encode(['success' => false, 'message' => 'Email address is already in use.']);
+                exit;
+            }
+
+            // Hash password and insert user into database
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            $stmt = $pdo->prepare("INSERT INTO users (fullname, email, password, role) VALUES (?, ?, ?, 'customer')");
+            $stmt->execute([$fullname, $email, $hashedPassword]);
+
+            // Auto-login upon successful sign up
+            $_SESSION['user_id']  = $pdo->lastInsertId();
+            $_SESSION['fullname'] = $fullname;
+
+            echo json_encode(['success' => true]);
+            exit;
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+            exit;
+        }
+    }
+
+    // 2. Login Handler
+    if ($_POST['action'] === 'login') {
+        try {
+            global $pdo;
+            $email    = trim($_POST['email'] ?? '');
+            $password = $_POST['password'] ?? '';
+
+            if (empty($email) || empty($password)) {
+                echo json_encode(['success' => false, 'message' => 'Please fill in both email and password.']);
+                exit;
+            }
+
+            $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
+            $stmt->execute([$email]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($user && password_verify($password, $user['password'])) {
+                $_SESSION['user_id']  = $user['id'];
+                $_SESSION['fullname'] = $user['fullname'];
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Invalid email or password.']);
+            }
+            exit;
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+            exit;
+        }
+    }
+
+    // 3. Logout Handler
+    if ($_POST['action'] === 'logout') {
+        session_unset();
+        session_destroy();
+        echo json_encode(['success' => true]);
+        exit;
+    }
+}
+
+// Check logged in session status
+$is_logged_in = isset($_SESSION['user_id']);
 
 // Page selection for interactive menu inside home page
 $menu_page = isset($_GET['menu_page']) && $_GET['menu_page'] == 2 ? 2 : 1;
@@ -26,6 +111,34 @@ $menu_page = isset($_GET['menu_page']) && $_GET['menu_page'] == 2 ? 2 : 1;
             padding: 20px;
         }
 
+        /* TOP-LEFT FIXED LOGIN BUTTON */
+        .top-left-login-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1050;
+            background-color: #212529;
+            color: #ffc107;
+            border: 2px solid #212529;
+            border-radius: 50px;
+            padding: 8px 20px;
+            font-weight: bold;
+            font-size: 0.88rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .top-left-login-btn:hover {
+            background-color: #ffc107;
+            color: #212529;
+            border-color: #212529;
+            transform: translateY(-2px);
+        }
+
         /* Large Outer Border Box */
         .page-outer-frame {
             border: 2px solid #ffc107;
@@ -34,7 +147,7 @@ $menu_page = isset($_GET['menu_page']) && $_GET['menu_page'] == 2 ? 2 : 1;
             background-color: #ffffff;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
             max-width: 1200px;
-            margin: 0 auto;
+            margin: 40px auto 0 auto;
         }
 
         /* TOP FEATURED BANNER SPOT */
@@ -199,13 +312,8 @@ $menu_page = isset($_GET['menu_page']) && $_GET['menu_page'] == 2 ? 2 : 1;
             color: #121212;
         }
 
-        .arrow-left {
-            left: 10px;
-        }
-
-        .arrow-right {
-            right: 10px;
-        }
+        .arrow-left { left: 10px; }
+        .arrow-right { right: 10px; }
 
         /* Right Split Box */
         .right-info-box {
@@ -239,19 +347,24 @@ $menu_page = isset($_GET['menu_page']) && $_GET['menu_page'] == 2 ? 2 : 1;
                 text-align: center;
                 gap: 15px;
             }
-            .banner-text-content {
-                padding: 0;
-            }
-            .banner-badges {
-                justify-content: center;
-            }
-            .split-container {
-                flex-direction: column;
-            }
+            .banner-text-content { padding: 0; }
+            .banner-badges { justify-content: center; }
+            .split-container { flex-direction: column; }
         }
     </style>
 </head>
 <body>
+
+    <!-- TOP-LEFT CORNER LOGIN / LOGOUT BUTTON -->
+    <?php if ($is_logged_in): ?>
+        <button type="button" class="top-left-login-btn" onclick="confirmLogout()">
+            <i class="fa-solid fa-right-from-bracket me-2"></i>Logout (<?= htmlspecialchars($_SESSION['fullname']) ?>)
+        </button>
+    <?php else: ?>
+        <button type="button" class="top-left-login-btn" onclick="openAuthModal('login')">
+            <i class="fa-solid fa-user me-2"></i>Login / Register
+        </button>
+    <?php endif; ?>
 
     <!-- Large Outer Wireframe Frame -->
     <div class="page-outer-frame">
@@ -363,7 +476,124 @@ $menu_page = isset($_GET['menu_page']) && $_GET['menu_page'] == 2 ? 2 : 1;
 
     </div>
 
-    <!-- Bootstrap 5 JS Bundle -->
+    <!-- LOGIN & SIGNUP POPUP MODAL -->
+    <div class="modal fade" id="authModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-3 border-warning bg-dark text-white">
+                <div class="modal-header border-warning">
+                    <h5 class="modal-title fw-bold text-warning" id="authModalTitle">Customer Login</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <!-- Login Form -->
+                    <form id="loginForm" onsubmit="handleAuthSubmit(event, 'login')">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-white">Email Address</label>
+                            <input type="email" id="loginEmail" class="form-control" placeholder="name@example.com" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-white">Password</label>
+                            <input type="password" id="loginPassword" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-warning w-100 fw-bold text-dark mb-3">Login</button>
+                        <p class="small text-center mb-0">Don't have an account? <button type="button" onclick="toggleAuthForm('signup')" class="btn btn-link text-warning fw-bold p-0 text-decoration-none">Sign Up</button></p>
+                    </form>
+
+                    <!-- Signup Form -->
+                    <form id="signupForm" class="d-none" onsubmit="handleAuthSubmit(event, 'signup')">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-white">Full Name</label>
+                            <input type="text" id="signupName" class="form-control" placeholder="Juan Dela Cruz" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-white">Email Address</label>
+                            <input type="email" id="signupEmail" class="form-control" placeholder="name@example.com" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-white">Password</label>
+                            <input type="password" id="signupPassword" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-warning w-100 fw-bold text-dark mb-3">Create Account</button>
+                        <p class="small text-center mb-0">Already have an account? <button type="button" onclick="toggleAuthForm('login')" class="btn btn-link text-warning fw-bold p-0 text-decoration-none">Login</button></p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOOTSTRAP 5 JS BUNDLE -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/bootstrap.bundle.min.js"></script>
+
+    <!-- AUTHENTICATION JAVASCRIPT HANDLERS -->
+    <script>
+        function openAuthModal(type) {
+            toggleAuthForm(type);
+            var modalEl = document.getElementById('authModal');
+            if (typeof bootstrap !== 'undefined') {
+                var modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                modal.show();
+            } else {
+                modalEl.classList.add('show');
+                modalEl.style.display = 'block';
+            }
+        }
+
+        function toggleAuthForm(type) {
+            let loginForm = document.getElementById('loginForm');
+            let signupForm = document.getElementById('signupForm');
+            let modalTitle = document.getElementById('authModalTitle');
+
+            if (type === 'signup') {
+                loginForm.classList.add('d-none');
+                signupForm.classList.remove('d-none');
+                modalTitle.innerText = 'Create Account';
+            } else {
+                signupForm.classList.add('d-none');
+                loginForm.classList.remove('d-none');
+                modalTitle.innerText = 'Customer Login';
+            }
+        }
+
+        function handleAuthSubmit(e, action) {
+            e.preventDefault();
+            let formData = new FormData();
+            formData.append('action', action);
+
+            if (action === 'login') {
+                formData.append('email', document.getElementById('loginEmail').value);
+                formData.append('password', document.getElementById('loginPassword').value);
+            } else if (action === 'signup') {
+                formData.append('fullname', document.getElementById('signupName').value);
+                formData.append('email', document.getElementById('signupEmail').value);
+                formData.append('password', document.getElementById('signupPassword').value);
+            }
+
+            fetch('Home_Page.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'An error occurred during authentication.');
+                }
+            })
+            .catch(err => console.error(err));
+        }
+
+        function confirmLogout() {
+            if (confirm('Are you sure you want to log out?')) {
+                let formData = new FormData();
+                formData.append('action', 'logout');
+                fetch('Home_Page.php', { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) location.reload();
+                });
+            }
+        }
+    </script>
 </body>
 </html>
