@@ -463,8 +463,8 @@ try {
         <ul class="nav-links">
             <li><a href="home_page.php" id="homeNavLink">HOME</a></li>
             <li><a href="menu.php" id="menuNavLink" class="active">MENU</a></li>
-            <li><a href="food_packs.php" id="foodPacksNavLink">FOOD PACKS</a></li>
             <li><a href="order.php" id="orderNavLink">ORDER NOW</a></li>
+            <li><a href="food_packs.php" id="foodPacksNavLink">FOOD PACKS</a></li>
             <li><a href="tambay_caps.php" id="tambayNavLink">TAMBAY CAPS</a></li>
         </ul>
     </nav>
