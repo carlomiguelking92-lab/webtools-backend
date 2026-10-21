@@ -103,84 +103,171 @@ try {
 } catch (Exception $e) {
     // Database tables might not be fully migrated yet
 }
-
-$page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1; 
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sairene Tephteph Tapsilogan - Digital Menu</title>
+    <title>Sairene TephTeph Tapsilogan - Digital Menu</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     
-    <!-- CSS Part -->
     <style>
         body {
-            background-color: #121212;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url('images/Best Seller (Landscape) (1) (1).png');
+            background-size: 100% 100%;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            color: #ffffff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #f8f9fa;
+            margin: 0;
+            padding: 30px 20px;
         }
 
-        .text-gold {
+        /* Top Navigation Box with Frosted Glass */
+        .top-nav-box {
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(4px);
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            max-width: 950px;
+            margin: 0 auto 30px auto;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1090;
+        }
+
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 35px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+            font-weight: 800;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+            transition: all 0.25s ease;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: 1px solid transparent;
+        }
+
+        .nav-links a.active {
             color: #ffc107;
+            border-color: #ffc107;
+        }
+
+        /* 1. Home Button Hover Preview */
+        #homeNavLink:hover {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/Best Seller (Landscape) (1) (1).png');
+            background-size: cover;
+            background-position: center;
+            color: #ffc107 !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+            border: 1px solid #ffc107;
+        }
+
+        /* 2. Menu Button Hover Preview */
+        #menuNavLink:hover {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/menu_page_1.png');
+            background-size: cover;
+            background-position: center;
+            color: #ffc107 !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+            border: 1px solid #ffc107;
+        }
+
+        /* 3. Order Now Button Hover Preview */
+        #orderNavLink:hover {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/Best Seller (Landscape) (1) (1).png');
+            background-size: cover;
+            background-position: center;
+            color: #ffc107 !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+            border: 1px solid #ffc107;
+        }
+
+        /* 4. Food Packs Button Hover Preview */
+        #foodPacksNavLink:hover {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/bannerko.png');
+            background-size: cover;
+            background-position: center;
+            color: #ffc107 !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+            border: 1px solid #ffc107;
+        }
+
+        /* 5. Tambay Caps Button Hover Preview */
+        #tambayNavLink:hover {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/tambay5.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: #ffc107 !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+            border: 1px solid #ffc107;
+        }
+
+        /* Main Wrapper Container with Frosted Glass */
+        .main-wrapper-box {
+            background: rgba(255, 255, 255, 0.22);
+            backdrop-filter: blur(8px);
+            border: 2px solid #ffc107;
+            border-radius: 12px;
+            padding: 40px 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+
+        .page-title {
+            color: #ffd700;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
         }
 
         .btn-gold {
             background-color: #ffc107;
-            color: #000;
-            border: none;
+            color: #121212;
+            border: 2px solid #ffc107;
             font-weight: bold;
             border-radius: 50px;
-            padding: 10px 18px;
+            padding: 8px 18px;
             transition: all 0.2s ease-in-out;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            cursor: pointer;
         }
 
         .btn-gold:hover {
             background-color: #e0a800;
-            color: #000;
+            color: #121212;
             transform: scale(1.05);
         }
 
         .btn-gold.active {
-            background-color: #ffffff;
-            color: #000;
-            box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
-        }
-
-        /* Navigation Bar Styles */
-        .main-navbar {
-            background-color: rgba(20, 20, 20, 0.95);
-            border: 1px solid #ffc107;
-            border-radius: 50px;
-            padding: 8px 16px;
-            max-width: 900px;
-            margin: 0 auto 25px auto;
-        }
-
-        .main-navbar .nav-link {
-            color: #ffffff;
-            font-weight: 600;
-            padding: 8px 18px;
-            border-radius: 25px;
-            transition: all 0.2s ease-in-out;
-        }
-
-        .main-navbar .nav-link:hover {
+            background-color: #121212;
             color: #ffc107;
-            background-color: rgba(255, 193, 7, 0.15);
-        }
-
-        .main-navbar .nav-link.active {
-            color: #000000;
-            background-color: #ffc107;
+            border-color: #121212;
+            box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
         }
 
         /* Menu Container */
@@ -194,7 +281,9 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
             width: 100%;
             overflow: hidden;
             border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            border: 2px solid #ffc107;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background-color: rgba(255, 255, 255, 0.2);
         }
 
         .menu-board-img {
@@ -216,7 +305,7 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
         }
 
         .hotspot:hover, .hotspot:focus {
-            box-shadow: 0 0 15px rgba(255, 193, 7, 0.6);
+            box-shadow: 0 0 15px rgba(255, 193, 7, 0.8);
             transform: scale(1.03);
         }
 
@@ -298,9 +387,9 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
         }
 
         .cart-modal-content {
-            background-color: rgba(20, 20, 20, 0.92) !important;
-            border: 1px solid #ffc107;
-            color: #ffffff;
+            background-color: #ffffff !important;
+            border: 2px solid #ffc107;
+            color: #121212;
             border-radius: 12px;
         }
 
@@ -309,9 +398,9 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
             text-align: center;
             border-radius: 8px;
             padding: 8px;
-            color: #e0e0e0;
-            background: #212529;
-            border: 1px solid #343a40;
+            color: #495057;
+            background: #f8f9fa;
+            border: 1px solid #ced4da;
             cursor: pointer;
             transition: all 0.3s ease;
             font-size: 0.85rem;
@@ -320,14 +409,14 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
 
         .cart-tab-btn.active {
             background: #ffc107;
-            color: #000;
+            color: #121212;
             font-weight: bold;
             border-color: #ffc107;
         }
 
         .cart-item-card {
-            background: #212529;
-            border: 1px solid #343a40;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
             border-radius: 8px;
             margin-bottom: 8px;
             padding: 12px;
@@ -339,7 +428,7 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
 
         .subtext-info {
             font-size: 0.78rem;
-            color: #9ca3af;
+            color: #6c757d;
             display: block;
             margin-top: 2px;
         }
@@ -347,7 +436,7 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
         .qty-btn {
             background: transparent;
             border: 1px solid #ffc107;
-            color: #ffc107;
+            color: #d39e00;
             width: 26px;
             height: 26px;
             border-radius: 5px;
@@ -357,9 +446,28 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
             padding: 0;
             font-weight: bold;
         }
+
+        footer {
+            text-align: center;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+            font-size: 0.85rem;
+            margin-top: 35px;
+        }
     </style>
 </head>
-<body class="bg-dark text-light">
+<body>
+
+    <!-- Top Navigation Box -->
+    <nav class="top-nav-box">
+        <ul class="nav-links">
+            <li><a href="home_page.php" id="homeNavLink">HOME</a></li>
+            <li><a href="menu.php" id="menuNavLink" class="active">MENU</a></li>
+            <li><a href="food_packs.php" id="foodPacksNavLink">FOOD PACKS</a></li>
+            <li><a href="order.php" id="orderNavLink">ORDER NOW</a></li>
+            <li><a href="tambay_caps.php" id="tambayNavLink">TAMBAY CAPS</a></li>
+        </ul>
+    </nav>
 
     <!-- Sticky Upper Right Floating Cart Button -->
     <button class="btn btn-gold floating-cart-btn" onclick="toggleCartModal()">
@@ -369,255 +477,238 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
     <!-- Lower Right Notification Container -->
     <div id="toast-container"></div>
 
-    <div class="container py-4">
-        <!-- Navigation Bar -->
-        <nav class="main-navbar">
-            <ul class="nav justify-content-center gap-1">
-                <li class="nav-item">
-                    <a class="nav-link" href="home_page.php">Home</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link active" href="menu.php">Menu</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="food_packs.php">Food Packs</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="tambay_caps.php">Tambay Caps</a>
-                </li>
-            </ul>
-        </nav>
-
+    <!-- Main Wrapper Box -->
+    <main class="main-wrapper-box">
+        
         <!-- Header -->
         <header class="text-center mb-4">
-            <h1 class="display-5 fw-bold text-gold">SAIRENE TEPHTEPH TAPSILOGAN</h1>
-            <p class="lead text-light">A Taste of Comfort • Interactive Menu</p>
+            <h1 class="display-6 page-title">Sairene Tephteph Tapsilogan</h1>
+            <p class="text-white small mt-1" style="text-shadow: 0 1px 2px rgba(0,0,0,0.6);">A Taste of Comfort • Interactive Digital Menu</p>
         </header>
 
-        <!-- Arrow Buttons -->
+        <hr class="border-warning opacity-50 my-4">
+
+        <!-- Instant Page Switch Buttons (No Reload) -->
         <div class="d-flex justify-content-center align-items-center gap-3 mb-4">
-            <a href="menu.php?page=1" class="btn btn-gold <?php echo $page == 1 ? 'active' : ''; ?>" aria-label="Previous Page">
+            <button type="button" id="btn-page-1" class="btn btn-gold active" onclick="switchMenuPage(1)" aria-label="Page 1">
                 <i class="fa-solid fa-chevron-left fs-5"></i>
-            </a>
-            
-            <a href="menu.php?page=2" class="btn btn-gold <?php echo $page == 2 ? 'active' : ''; ?>" aria-label="Next Page">
+            </button>
+            <button type="button" id="btn-page-2" class="btn btn-gold" onclick="switchMenuPage(2)" aria-label="Page 2">
                 <i class="fa-solid fa-chevron-right fs-5"></i>
-            </a>
+            </button>
         </div>
 
-        <!-- Menu Container -->
+        <!-- Menu Container (Both pages pre-loaded in DOM for instant toggle) -->
         <div class="menu-wrapper">
-            <?php if ($page == 1): ?>
-                <!-- PAGE 1: SILOG MEALS -->
-                <div id="menu-page-1" class="menu-board-container">
-                    <img src="images/menu_page_1.png" alt="Sairene Tapsilogan Silog Meals" class="img-fluid menu-board-img">
+            
+            <!-- PAGE 1: SILOG MEALS -->
+            <div id="menu-page-1" class="menu-board-container">
+                <img src="images/menu_page_1.png" alt="Sairene Tapsilogan Silog Meals" class="img-fluid menu-board-img">
 
-                    <div class="hotspot" style="top: 40.85%; left: 9.03%; width: 16.97%; height: 11.99%;" tabindex="0" onclick="openItemModal('Tapsilog', 90, true)">
-                        <div class="popover-detail-card">
-                            <h5>Tapsilog (₱90)</h5>
-                            <p>Marinated Beef Tapa, Garlic Rice, Fried Egg.</p>
-                        </div>
-                    </div>
-
-                    <div class="hotspot" style="top: 40.85%; left: 39.81%; width: 16.76%; height: 11.97%;" tabindex="0" onclick="openItemModal('Malingsilog', 90, true)">
-                        <div class="popover-detail-card">
-                            <h5>Malingsilog (₱90)</h5>
-                            <p>Fried Luncheon Meat, Garlic Rice, Fried Egg.</p>
-                        </div>
-                    </div>
-
-                    <div class="hotspot" style="top: 40.80%; left: 70.27%; width: 17.08%; height: 12.08%;" tabindex="0" onclick="openItemModal('Liemposilog', 90, true)">
-                        <div class="popover-detail-card">
-                            <h5>Liemposilog (₱90)</h5>
-                            <p>Grilled Pork Belly, Garlic Rice, Fried Egg.</p>
-                        </div>
-                    </div>
-
-                    <div class="hotspot" style="top: 60.00%; left: 9.19%; width: 16.70%; height: 11.84%;" tabindex="0" onclick="openItemModal('Bagnetsilog', 90, true)">
-                        <div class="popover-detail-card">
-                            <h5>Bagnetsilog (₱90)</h5>
-                            <p>Crispy Pork Bagnet, Garlic Rice, Fried Egg.</p>
-                        </div>
-                    </div>
-
-                    <div class="hotspot" style="top: 59.94%; left: 39.48%; width: 16.92%; height: 12.04%;" tabindex="0" onclick="openItemModal('Tocilog', 90, true)">
-                        <div class="popover-detail-card">
-                            <h5>Tocilog (₱90)</h5>
-                            <p>Sweet Pork Tocino, Garlic Rice, Fried Egg.</p>
-                        </div>
-                    </div>
-
-                    <div class="hotspot" style="top: 59.89%; left: 72.10%; width: 16.76%; height: 12.03%;" tabindex="0" onclick="openItemModal('Hungariansilog', 90, true)">
-                        <div class="popover-detail-card">
-                            <h5>Hungariansilog (₱90)</h5>
-                            <p>Hungarian Sausage, Garlic Rice, Fried Egg.</p>
-                        </div>
-                    </div>
-
-                    <div class="hotspot" style="top: 75.44%; left: 24.74%; width: 16.76%; height: 12%;" tabindex="0" onclick="openItemModal('Hotdogsilog', 80, true)">
-                        <div class="popover-detail-card">
-                            <h5>Hotdogsilog (₱80)</h5>
-                            <p>Juicy Hotdog, Garlic Rice, Fried Egg.</p>
-                        </div>
-                    </div>
-
-                    <div class="hotspot" style="top: 76.01%; left: 56.57%; width: 16.76%; height: 12%;" tabindex="0" onclick="openItemModal('Sisigsilog', 90, true)">
-                        <div class="popover-detail-card">
-                            <h5>Sisigsilog (₱90)</h5>
-                            <p>Savory Pork Sisig, Garlic Rice, Fried Egg.</p>
-                        </div>
+                <div class="hotspot" style="top: 40.85%; left: 9.03%; width: 16.97%; height: 11.99%;" tabindex="0" onclick="openItemModal('Tapsilog', 90, true)">
+                    <div class="popover-detail-card">
+                        <h5>Tapsilog (₱90)</h5>
+                        <p>Marinated Beef Tapa, Garlic Rice, Fried Egg.</p>
                     </div>
                 </div>
 
-            <?php else: ?>
-
-                <!-- PAGE 2: COMBO MEALS & ALA CARTE -->
-                <div id="menu-page-2" class="menu-board-container">
-                    <img src="images/menu_page_2.png" alt="Sairene Tapsilogan Combos and Ala Carte" class="img-fluid menu-board-img">
-
-                    <div class="hotspot" style="top: 14.25%; left: 7.41%; width: 19.02%; height: 13.45%;" tabindex="0" onclick="openItemModal('Bagnet + Hungarian', 140, true)">
-                        <div class="popover-detail-card">
-                            <h5>Bagnet + Hungarian (₱140)</h5>
-                            <p>Crispy Bagnet, Hungarian Sausage, Rice, Egg.</p>
-                        </div>
-                    </div>
-
-                    <div class="hotspot" style="top: 13.79%; left: 36.66%; width: 19.34%; height: 13.68%;" tabindex="0" onclick="openItemModal('Tapa + Hungarian', 140, true)">
-                        <div class="popover-detail-card">
-                            <h5>Tapa + Hungarian (₱140)</h5>
-                            <p>Beef Tapa, Hungarian Sausage, Rice, Egg.</p>
-                        </div>
-                    </div>
-
-                    <div class="hotspot" style="top: 13.39%; left: 66.80%; width: 19.18%; height: 13.56%;" tabindex="0" onclick="openItemModal('Tapa + Bagnet Silog', 140, true)">
-                        <div class="popover-detail-card">
-                            <h5>Tapa + Bagnet Silog (₱140)</h5>
-                            <p>Beef Tapa, Crispy Bagnet, Rice, Egg.</p>
-                        </div>
-                    </div>
-
-                    <div class="hotspot" style="top: 32.02%; left: 19.82%; width: 20.79%; height: 14.70%;" tabindex="0" onclick="openItemModal('Liempo + Hungarian', 140, true)">
-                        <div class="popover-detail-card">
-                            <h5>Liempo + Hungarian (₱140)</h5>
-                            <p>Grilled Liempo, Hungarian Sausage, Rice, Egg.</p>
-                        </div>
-                    </div>
-
-                    <div class="hotspot" style="top: 32.99%; left: 53.99%; width: 20.31%; height: 14.36%;" tabindex="0" onclick="openItemModal('Sisig + Hungarian', 140, true)">
-                        <div class="popover-detail-card">
-                            <h5>Sisig + Hungarian (₱140)</h5>
-                            <p>Pork Sisig, Hungarian Sausage, Rice, Egg.</p>
-                        </div>
-                    </div>
-
-                    <div class="hotspot" style="top: 56.30%; left: 7.74%; width: 17.41%; height: 12.31%;" tabindex="0" onclick="openItemModal('Special Tapa', 130, false)">
-                        <div class="popover-detail-card">
-                            <h5>Special Tapa (₱130)</h5>
-                            <p>Ala Carte Portion Marinated Beef Tapa.</p>
-                        </div>
-                    </div>
-
-                    <div class="hotspot" style="top: 56.58%; left: 34.73%; width: 17.57%; height: 12.42%;" tabindex="0" onclick="openItemModal('Special Bagnet', 130, false)">
-                        <div class="popover-detail-card">
-                            <h5>Special Bagnet (₱130)</h5>
-                            <p>Ala Carte Serving Crispy Pork Bagnet.</p>
-                        </div>
-                    </div>
-
-                    <div class="hotspot" style="top: 57.21%; left: 67.85%; width: 17.41%; height: 12.31%;" tabindex="0" onclick="openItemModal('Special Sisig', 130, false)">
-                        <div class="popover-detail-card">
-                            <h5>Special Sisig (₱130)</h5>
-                            <p>Ala Carte Serving Savory Pork Sisig.</p>
-                        </div>
-                    </div>
-
-                    <div class="hotspot" style="top: 75.33%; left: 8.14%; width: 16.92%; height: 11.97%;" tabindex="0" onclick="openItemModal('Hungarian Sausage', 130, false)">
-                        <div class="popover-detail-card">
-                            <h5>Hungarian Sausage (₱130)</h5>
-                            <p>Single Hungarian Sausage Portion.</p>
-                        </div>
-                    </div>
-
-                    <div class="hotspot" style="top: 75.84%; left: 35.29%; width: 16.60%; height: 11.74%;" tabindex="0" onclick="openItemModal('Plain Rice', 15, false)">
-                        <div class="popover-detail-card">
-                            <h5>Plain Rice (₱15)</h5>
-                            <p>Steamed White Rice.</p>
-                        </div>
-                    </div>
-
-                    <div class="hotspot" style="top: 75.38%; left: 58.66%; width: 16.76%; height: 11.85%;" tabindex="0" onclick="openItemModal('Garlic Rice', 20, false)">
-                        <div class="popover-detail-card">
-                            <h5>Garlic Rice (₱20)</h5>
-                            <p>Garlic Fried Rice.</p>
-                        </div>
-                    </div>
-
-                    <div class="hotspot" style="top: 75.21%; left: 78.97%; width: 16.92%; height: 11.97%;" tabindex="0" onclick="openItemModal('Extra Egg', 15, false)">
-                        <div class="popover-detail-card">
-                            <h5>Extra Egg (₱15)</h5>
-                            <p>Fried Egg (Sunny Side Up / Well Done / Scrambled).</p>
-                        </div>
+                <div class="hotspot" style="top: 40.85%; left: 39.81%; width: 16.76%; height: 11.97%;" tabindex="0" onclick="openItemModal('Malingsilog', 90, true)">
+                    <div class="popover-detail-card">
+                        <h5>Malingsilog (₱90)</h5>
+                        <p>Fried Luncheon Meat, Garlic Rice, Fried Egg.</p>
                     </div>
                 </div>
-            <?php endif; ?>
+
+                <div class="hotspot" style="top: 40.80%; left: 70.27%; width: 17.08%; height: 12.08%;" tabindex="0" onclick="openItemModal('Liemposilog', 90, true)">
+                    <div class="popover-detail-card">
+                        <h5>Liemposilog (₱90)</h5>
+                        <p>Grilled Pork Belly, Garlic Rice, Fried Egg.</p>
+                    </div>
+                </div>
+
+                <div class="hotspot" style="top: 60.00%; left: 9.19%; width: 16.70%; height: 11.84%;" tabindex="0" onclick="openItemModal('Bagnetsilog', 90, true)">
+                    <div class="popover-detail-card">
+                        <h5>Bagnetsilog (₱90)</h5>
+                        <p>Crispy Pork Bagnet, Garlic Rice, Fried Egg.</p>
+                    </div>
+                </div>
+
+                <div class="hotspot" style="top: 59.94%; left: 39.48%; width: 16.92%; height: 12.04%;" tabindex="0" onclick="openItemModal('Tocilog', 90, true)">
+                    <div class="popover-detail-card">
+                        <h5>Tocilog (₱90)</h5>
+                        <p>Sweet Pork Tocino, Garlic Rice, Fried Egg.</p>
+                    </div>
+                </div>
+
+                <div class="hotspot" style="top: 59.89%; left: 72.10%; width: 16.76%; height: 12.03%;" tabindex="0" onclick="openItemModal('Hungariansilog', 90, true)">
+                    <div class="popover-detail-card">
+                        <h5>Hungariansilog (₱90)</h5>
+                        <p>Hungarian Sausage, Garlic Rice, Fried Egg.</p>
+                    </div>
+                </div>
+
+                <div class="hotspot" style="top: 75.44%; left: 24.74%; width: 16.76%; height: 12%;" tabindex="0" onclick="openItemModal('Hotdogsilog', 80, true)">
+                    <div class="popover-detail-card">
+                        <h5>Hotdogsilog (₱80)</h5>
+                        <p>Juicy Hotdog, Garlic Rice, Fried Egg.</p>
+                    </div>
+                </div>
+
+                <div class="hotspot" style="top: 76.01%; left: 56.57%; width: 16.76%; height: 12%;" tabindex="0" onclick="openItemModal('Sisigsilog', 90, true)">
+                    <div class="popover-detail-card">
+                        <h5>Sisigsilog (₱90)</h5>
+                        <p>Savory Pork Sisig, Garlic Rice, Fried Egg.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGE 2: COMBO MEALS & ALA CARTE (Initially Hidden) -->
+            <div id="menu-page-2" class="menu-board-container d-none">
+                <img src="images/menu_page_2.png" alt="Sairene Tapsilogan Combos and Ala Carte" class="img-fluid menu-board-img">
+
+                <div class="hotspot" style="top: 14.25%; left: 7.41%; width: 19.02%; height: 13.45%;" tabindex="0" onclick="openItemModal('Bagnet + Hungarian', 140, true)">
+                    <div class="popover-detail-card">
+                        <h5>Bagnet + Hungarian (₱140)</h5>
+                        <p>Crispy Bagnet, Hungarian Sausage, Rice, Egg.</p>
+                    </div>
+                </div>
+
+                <div class="hotspot" style="top: 13.79%; left: 36.66%; width: 19.34%; height: 13.68%;" tabindex="0" onclick="openItemModal('Tapa + Hungarian', 140, true)">
+                    <div class="popover-detail-card">
+                        <h5>Tapa + Hungarian (₱140)</h5>
+                        <p>Beef Tapa, Hungarian Sausage, Rice, Egg.</p>
+                    </div>
+                </div>
+
+                <div class="hotspot" style="top: 13.39%; left: 66.80%; width: 19.18%; height: 13.56%;" tabindex="0" onclick="openItemModal('Tapa + Bagnet Silog', 140, true)">
+                    <div class="popover-detail-card">
+                        <h5>Tapa + Bagnet Silog (₱140)</h5>
+                        <p>Beef Tapa, Crispy Bagnet, Rice, Egg.</p>
+                    </div>
+                </div>
+
+                <div class="hotspot" style="top: 32.02%; left: 19.82%; width: 20.79%; height: 14.70%;" tabindex="0" onclick="openItemModal('Liempo + Hungarian', 140, true)">
+                    <div class="popover-detail-card">
+                        <h5>Liempo + Hungarian (₱140)</h5>
+                        <p>Grilled Liempo, Hungarian Sausage, Rice, Egg.</p>
+                    </div>
+                </div>
+
+                <div class="hotspot" style="top: 32.99%; left: 53.99%; width: 20.31%; height: 14.36%;" tabindex="0" onclick="openItemModal('Sisig + Hungarian', 140, true)">
+                    <div class="popover-detail-card">
+                        <h5>Sisig + Hungarian (₱140)</h5>
+                        <p>Pork Sisig, Hungarian Sausage, Rice, Egg.</p>
+                    </div>
+                </div>
+
+                <div class="hotspot" style="top: 56.30%; left: 7.74%; width: 17.41%; height: 12.31%;" tabindex="0" onclick="openItemModal('Special Tapa', 130, false)">
+                    <div class="popover-detail-card">
+                        <h5>Special Tapa (₱130)</h5>
+                        <p>Ala Carte Portion Marinated Beef Tapa.</p>
+                    </div>
+                </div>
+
+                <div class="hotspot" style="top: 56.58%; left: 34.73%; width: 17.57%; height: 12.42%;" tabindex="0" onclick="openItemModal('Special Bagnet', 130, false)">
+                    <div class="popover-detail-card">
+                        <h5>Special Bagnet (₱130)</h5>
+                        <p>Ala Carte Serving Crispy Pork Bagnet.</p>
+                    </div>
+                </div>
+
+                <div class="hotspot" style="top: 57.21%; left: 67.85%; width: 17.41%; height: 12.31%;" tabindex="0" onclick="openItemModal('Special Sisig', 130, false)">
+                    <div class="popover-detail-card">
+                        <h5>Special Sisig (₱130)</h5>
+                        <p>Ala Carte Serving Savory Pork Sisig.</p>
+                    </div>
+                </div>
+
+                <div class="hotspot" style="top: 75.33%; left: 8.14%; width: 16.92%; height: 11.97%;" tabindex="0" onclick="openItemModal('Hungarian Sausage', 130, false)">
+                    <div class="popover-detail-card">
+                        <h5>Hungarian Sausage (₱130)</h5>
+                        <p>Single Hungarian Sausage Portion.</p>
+                    </div>
+                </div>
+
+                <div class="hotspot" style="top: 75.84%; left: 35.29%; width: 16.60%; height: 11.74%;" tabindex="0" onclick="openItemModal('Plain Rice', 15, false)">
+                    <div class="popover-detail-card">
+                        <h5>Plain Rice (₱15)</h5>
+                        <p>Steamed White Rice.</p>
+                    </div>
+                </div>
+
+                <div class="hotspot" style="top: 75.38%; left: 58.66%; width: 16.76%; height: 11.85%;" tabindex="0" onclick="openItemModal('Garlic Rice', 20, false)">
+                    <div class="popover-detail-card">
+                        <h5>Garlic Rice (₱20)</h5>
+                        <p>Garlic Fried Rice.</p>
+                    </div>
+                </div>
+
+                <div class="hotspot" style="top: 75.21%; left: 78.97%; width: 16.92%; height: 11.97%;" tabindex="0" onclick="openItemModal('Extra Egg', 15, false)">
+                    <div class="popover-detail-card">
+                        <h5>Extra Egg (₱15)</h5>
+                        <p>Fried Egg (Sunny Side Up / Well Done / Scrambled).</p>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
-        <!-- Footer -->
-        <footer class="text-center mt-4 text-light small">
-            <p class="mb-1">MRB Condominium C5, Taguig City</p>
-            <p class="mb-0">GCash Payments Accepted: 09270466231 (Sarippudin Aming)</p>
-        </footer>
-    </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; <?php echo date('Y'); ?> Sairene TephTeph Tapsilogan &bull; Digital Menu</p>
+    </footer>
 
     <!-- MIDDLE POPUP MODAL FOR ITEM CUSTOMIZATION -->
     <div class="modal fade" id="itemModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content cart-modal-content p-2">
                 <div class="modal-header border-secondary">
-                    <h5 class="modal-title text-gold fw-bold" id="modalItemName">Dish Name</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title fw-bold text-dark" id="modalItemName">Dish Name</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="text-light mb-2"><strong class="text-gold">Ingredients:</strong> <span id="modalItemDescription">Description of ingredients...</span></p>
-                    <p class="fs-5 text-white fw-bold">Price: ₱<span id="modalItemPrice">0</span></p>
+                    <p class="text-secondary mb-2"><strong>Ingredients:</strong> <span id="modalItemDescription">Description of ingredients...</span></p>
+                    <p class="fs-5 text-dark fw-bold">Price: ₱<span id="modalItemPrice">0</span></p>
                     
                     <!-- Choose Your Egg Section -->
                     <div class="mb-3" id="eggSection">
-                        <label class="form-label text-gold fw-semibold">Choose Your Egg:</label>
+                        <label class="form-label fw-semibold text-dark">Choose Your Egg:</label>
                         <div class="d-flex flex-column gap-2">
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="eggChoice" id="eggSunny" value="Sunny Side Up" checked>
-                                <label class="form-check-label text-light" for="eggSunny">Sunny Side Up</label>
+                                <label class="form-check-label text-dark" for="eggSunny">Sunny Side Up</label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="eggChoice" id="eggScrambled" value="Scrambled">
-                                <label class="form-check-label text-light" for="eggScrambled">Scrambled</label>
+                                <label class="form-check-label text-dark" for="eggScrambled">Scrambled</label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="eggChoice" id="eggWellDone" value="Well Done">
-                                <label class="form-check-label text-light" for="eggWellDone">Well Done</label>
+                                <label class="form-check-label text-dark" for="eggWellDone">Well Done</label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="eggChoice" id="eggNone" value="No Egg">
-                                <label class="form-check-label text-light" for="eggNone">No Egg / Don't Want Egg</label>
+                                <label class="form-check-label text-dark" for="eggNone">No Egg / Don't Want Egg</label>
                             </div>
                         </div>
                     </div>
 
                     <!-- Quantity -->
                     <div class="mb-3">
-                        <label class="form-label text-gold fw-semibold">Quantity</label>
+                        <label class="form-label fw-semibold text-dark">Quantity</label>
                         <div class="input-group" style="width: 140px;">
-                            <button class="btn btn-outline-warning btn-sm" type="button" onclick="adjustModalQty(-1)">-</button>
-                            <input type="text" id="modalItemQty" class="form-control bg-dark text-light text-center border-secondary form-control-sm" value="1" readonly>
-                            <button class="btn btn-outline-warning btn-sm" type="button" onclick="adjustModalQty(1)">+</button>
+                            <button class="btn btn-outline-warning btn-sm text-dark" type="button" onclick="adjustModalQty(-1)">-</button>
+                            <input type="text" id="modalItemQty" class="form-control bg-light text-dark text-center border-secondary form-control-sm" value="1" readonly>
+                            <button class="btn btn-outline-warning btn-sm text-dark" type="button" onclick="adjustModalQty(1)">+</button>
                         </div>
                     </div>
 
                     <!-- Notes -->
                     <div class="mb-3">
-                        <label class="form-label text-gold fw-semibold">Notes / Special Instructions</label>
-                        <textarea id="modalItemNotes" class="form-control bg-dark text-light border-secondary" rows="2" placeholder="e.g. Extra spicy, separate sauce..."></textarea>
+                        <label class="form-label fw-semibold text-dark">Notes / Special Instructions</label>
+                        <textarea id="modalItemNotes" class="form-control bg-light text-dark border-secondary" rows="2" placeholder="e.g. Extra spicy, separate sauce..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer border-secondary">
@@ -638,19 +729,19 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
                         <div class="cart-tab-btn" id="tab-btn-ongoing" onclick="switchCartTab('ongoing')">Ongoing Orders</div>
                         <div class="cart-tab-btn" id="tab-btn-past" onclick="switchCartTab('past')">Past Orders</div>
                     </div>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body pt-3">
                     
                     <!-- TAB 1: CURRENT CART -->
                     <div id="tab-current" class="cart-tab-content">
-                        <p class="text-light small mb-2"><i class="fa-solid fa-info-circle me-1"></i> Tip: Slide item left by 1/3 or use the delete button to remove.</p>
+                        <p class="text-muted small mb-2"><i class="fa-solid fa-info-circle me-1"></i> Tip: Slide item left by 1/3 or use the delete button to remove.</p>
                         <div id="cart-items-list" class="mb-3" style="max-height: 250px; overflow-y: auto;">
                             <!-- Dynamic Cart Items -->
                         </div>
                         
                         <div class="border-top border-secondary pt-3">
-                            <div class="d-flex justify-content-between fs-4 fw-bold text-gold mb-3">
+                            <div class="d-flex justify-content-between fs-4 fw-bold text-dark mb-3">
                                 <span>Total Bill:</span>
                                 <span>₱<span id="cart-total">0.00</span></span>
                             </div>
@@ -659,8 +750,8 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
                                 <button type="button" class="btn btn-gold w-100 fw-bold py-2" onclick="proceedToCheckoutForm()">Order Now</button>
                             </div>
 
-                            <div id="payment-delivery-form" class="d-none mt-3 p-3 bg-secondary bg-opacity-10 border border-secondary rounded">
-                                <h6 class="text-gold fw-bold mb-3"><i class="fa-solid fa-wallet me-2"></i>Checkout & GCash Payment</h6>
+                            <div id="payment-delivery-form" class="d-none mt-3 p-3 bg-light border border-warning rounded">
+                                <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-wallet me-2 text-warning"></i>Checkout & GCash Payment</h6>
                                 
                                 <div class="alert alert-warning py-2 small mb-3">
                                     <strong>GCash Details:</strong> 09270466231 (Sarippudin Aming)<br>
@@ -669,24 +760,24 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
 
                                 <form id="orderSubmitForm" class="row g-2">
                                     <div class="col-md-6">
-                                        <label class="form-label text-light small mb-1">Customer Name</label>
-                                        <input type="text" id="custName" class="form-control form-control-sm bg-dark text-light border-secondary" required placeholder="Juan Dela Cruz">
+                                        <label class="form-label text-dark small mb-1">Customer Name</label>
+                                        <input type="text" id="custName" class="form-control form-control-sm bg-light text-dark border-secondary" required placeholder="Juan Dela Cruz">
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label text-light small mb-1">Contact Number</label>
-                                        <input type="text" id="custPhone" class="form-control form-control-sm bg-dark text-light border-secondary" required placeholder="09123456789">
+                                        <label class="form-label text-dark small mb-1">Contact Number</label>
+                                        <input type="text" id="custPhone" class="form-control form-control-sm bg-light text-dark border-secondary" required placeholder="09123456789">
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label text-light small mb-1">Delivery Area</label>
-                                        <input type="text" id="custArea" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="e.g. Taguig">
+                                        <label class="form-label text-dark small mb-1">Delivery Area</label>
+                                        <input type="text" id="custArea" class="form-control form-control-sm bg-light text-dark border-secondary" placeholder="e.g. Taguig">
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label text-light small mb-1">Address / Landmark</label>
-                                        <input type="text" id="custAddress" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Unit / Street / Subdivision" required>
+                                        <label class="form-label text-dark small mb-1">Address / Landmark</label>
+                                        <input type="text" id="custAddress" class="form-control form-control-sm bg-light text-dark border-secondary" placeholder="Unit / Street / Subdivision" required>
                                     </div>
                                     <div class="col-12 mt-2">
-                                        <label class="form-label text-gold small mb-1">Upload GCash Payment Screenshot Proof</label>
-                                        <input type="file" id="paymentProof" class="form-control form-control-sm bg-dark text-light border-secondary" accept="image/*" required>
+                                        <label class="form-label text-dark small mb-1">Upload GCash Payment Screenshot Proof</label>
+                                        <input type="file" id="paymentProof" class="form-control form-control-sm bg-light text-dark border-secondary" accept="image/*" required>
                                     </div>
                                     <div class="col-12 mt-3">
                                         <button type="button" class="btn btn-gold w-100 fw-bold" onclick="submitFinalOrder()">Finish Order</button>
@@ -699,41 +790,41 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
                     <!-- TAB 2: ONGOING ORDERS -->
                     <div id="tab-ongoing" class="cart-tab-content d-none">
                         <?php if (!$is_logged_in): ?>
-                            <p class="text-light text-center my-4">Please <a href="home_page.php" class="text-gold">login from the homepage</a> to view your ongoing orders.</p>
+                            <p class="text-muted text-center my-4">Please <a href="home_page.php" class="text-warning fw-bold text-decoration-none">login from the homepage</a> to view your ongoing orders.</p>
                         <?php elseif (empty($ongoing_orders)): ?>
-                            <p class="text-light text-center my-4">No ongoing active orders found.</p>
+                            <p class="text-muted text-center my-4">No ongoing active orders found.</p>
                         <?php else: ?>
                             <?php foreach ($ongoing_orders as $ord): ?>
-                                <div class="card bg-dark border border-secondary mb-3 p-3 text-light">
+                                <div class="card bg-light border border-warning mb-3 p-3 text-dark">
                                     <div class="d-flex justify-content-between align-items-center mb-2" style="cursor: pointer;" onclick="toggleOrderDetails(<?= $ord['id'] ?>)">
                                         <div>
-                                            <span class="fw-bold text-gold">Order #<?= $ord['id'] ?> - <?= htmlspecialchars($ord['customer_name']) ?></span>
-                                            <div class="small text-light">Placed: <?= $ord['created_at'] ?? 'Just now' ?></div>
+                                            <span class="fw-bold text-dark">Order #<?= $ord['id'] ?> - <?= htmlspecialchars($ord['customer_name']) ?></span>
+                                            <div class="small text-muted">Placed: <?= $ord['created_at'] ?? 'Just now' ?></div>
                                         </div>
                                         <div>
                                             <span class="badge bg-warning text-dark me-2"><?= strtoupper($ord['order_status']) ?></span>
-                                            <i class="fa-solid fa-chevron-down text-gold small"></i>
+                                            <i class="fa-solid fa-chevron-down text-dark small"></i>
                                         </div>
                                     </div>
 
-                                    <div id="orderDetails<?= $ord['id'] ?>" class="d-none border-top border-secondary pt-2 mt-2 small text-light">
+                                    <div id="orderDetails<?= $ord['id'] ?>" class="d-none border-top border-warning pt-2 mt-2 small text-dark">
                                         <p class="mb-1"><strong>Delivery Area:</strong> <?= htmlspecialchars($ord['delivery_area']) ?></p>
                                         <p class="mb-1"><strong>Address:</strong> <?= htmlspecialchars($ord['address']) ?></p>
                                         <p class="mb-1"><strong>Contact:</strong> <?= htmlspecialchars($ord['phone']) ?></p>
-                                        <p class="mb-2 text-gold"><strong>Items Ordered:</strong></p>
-                                        <ul class="ps-3 mb-2 text-light">
-                                            <?php foreach ($ord['items'] as $it): ?>
-                                                <li><?= htmlspecialchars($it['item_name']) ?> (x<?= $it['quantity'] ?>) - ₱<?= number_format($it['price'] * $it['quantity'], 2) ?> 
-                                                    <?php if(!empty($it['egg_choice'])): ?><span class="text-gold">[Egg: <?= htmlspecialchars($it['egg_choice']) ?>]</span><?php endif; ?>
+                                        <p class="mb-2 text-warning fw-bold">Items Ordered:</p>
+                                        <ul class="ps-3 mb-2 text-dark">
+                                            <?php foreach ($ord['items'] as$it): ?>
+                                                <li><?= htmlspecialchars($it['item_name']) ?> (x<?=$it['quantity'] ?>) - ₱<?= number_format($it['price'] *$it['quantity'], 2) ?> 
+                                                    <?php if(!empty($it['egg_choice'])): ?><span class="text-muted">[Egg: <?= htmlspecialchars($it['egg_choice']) ?>]</span><?php endif; ?>
                                                 </li>
                                             <?php endforeach; ?>
                                         </ul>
-                                        <p class="mb-0 fw-bold text-gold">Total Amount: ₱<?= number_format($ord['total_amount'], 2) ?></p>
+                                        <p class="mb-0 fw-bold text-dark">Total Amount: ₱<?= number_format($ord['total_amount'], 2) ?></p>
                                     </div>
 
                                     <div class="form-check form-switch mt-2 border-top border-secondary pt-2">
                                         <input class="form-check-input" type="checkbox" role="switch" id="receivedOrder<?= $ord['id'] ?>" onchange="markOrderCompleted(<?= $ord['id'] ?>)">
-                                        <label class="form-check-label text-light small fw-semibold" for="receivedOrder<?= $ord['id'] ?>">Toggle when you've already gotten your order</label>
+                                        <label class="form-check-label text-dark small fw-semibold" for="receivedOrder<?= $ord['id'] ?>">Toggle when you've already gotten your order</label>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -743,33 +834,33 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
                     <!-- TAB 3: PAST ORDERS -->
                     <div id="tab-past" class="cart-tab-content d-none">
                         <?php if (!$is_logged_in): ?>
-                            <p class="text-light text-center my-4">Please <a href="home_page.php" class="text-gold">login from the homepage</a> to view your past orders.</p>
+                            <p class="text-muted text-center my-4">Please <a href="home_page.php" class="text-warning fw-bold text-decoration-none">login from the homepage</a> to view your past orders.</p>
                         <?php elseif (empty($past_orders)): ?>
-                            <p class="text-light text-center my-4">No past completed orders found.</p>
+                            <p class="text-muted text-center my-4">No past completed orders found.</p>
                         <?php else: ?>
-                            <?php foreach ($past_orders as $ord): ?>
-                                <div class="card bg-dark border border-secondary mb-3 p-3 text-light">
+                            <?php foreach ($past_orders as$ord): ?>
+                                <div class="card bg-light border border-secondary mb-3 p-3 text-dark">
                                     <div class="d-flex justify-content-between align-items-center mb-1" style="cursor: pointer;" onclick="toggleOrderDetails(<?= $ord['id'] ?>)">
                                         <div>
-                                            <span class="fw-bold text-light">Order #<?= $ord['id'] ?> - <?= htmlspecialchars($ord['customer_name']) ?></span>
-                                            <div class="small text-light">Placed: <?= $ord['created_at'] ?? 'Recently' ?></div>
+                                            <span class="fw-bold text-dark">Order #<?= $ord['id'] ?> - <?= htmlspecialchars($ord['customer_name']) ?></span>
+                                            <div class="small text-muted">Placed: <?= $ord['created_at'] ?? 'Recently' ?></div>
                                         </div>
                                         <div>
                                             <span class="badge bg-success me-2">COMPLETED</span>
-                                            <i class="fa-solid fa-chevron-down text-gold small"></i>
+                                            <i class="fa-solid fa-chevron-down text-dark small"></i>
                                         </div>
                                     </div>
 
-                                    <div id="orderDetails<?= $ord['id'] ?>" class="d-none border-top border-secondary pt-2 mt-2 small text-light">
+                                    <div id="orderDetails<?= $ord['id'] ?>" class="d-none border-top border-warning pt-2 mt-2 small text-dark">
                                         <p class="mb-1"><strong>Received Time:</strong> <?= $ord['updated_at'] ?? $ord['created_at'] ?? 'Completed' ?></p>
                                         <p class="mb-1"><strong>Delivery Area:</strong> <?= htmlspecialchars($ord['delivery_area']) ?></p>
-                                        <p class="mb-2 text-gold"><strong>Order Summary:</strong></p>
-                                        <ul class="ps-3 mb-2 text-light">
-                                            <?php foreach ($ord['items'] as $it): ?>
-                                                <li><?= htmlspecialchars($it['item_name']) ?> (x<?= $it['quantity'] ?>) - ₱<?= number_format($it['price'] * $it['quantity'], 2) ?></li>
+                                        <p class="mb-2 text-warning fw-bold">Order Summary:</p>
+                                        <ul class="ps-3 mb-2 text-dark">
+                                            <?php foreach ($ord['items'] as$it): ?>
+                                                <li><?= htmlspecialchars($it['item_name']) ?> (x<?=$it['quantity'] ?>) - ₱<?= number_format($it['price'] *$it['quantity'], 2) ?></li>
                                             <?php endforeach; ?>
                                         </ul>
-                                        <p class="mb-0 fw-bold text-gold">Total Paid: ₱<?= number_format($ord['total_amount'], 2) ?></p>
+                                        <p class="mb-0 fw-bold text-dark">Total Paid: ₱<?= number_format($ord['total_amount'], 2) ?></p>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -790,6 +881,26 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
 
         const itemModal = new bootstrap.Modal(document.getElementById('itemModal'));
         const cartModal = new bootstrap.Modal(document.getElementById('cartModal'));
+
+        // Instant Menu Page Toggle Function (No Refresh / Cart Preserved)
+        function switchMenuPage(pageNum) {
+            const page1 = document.getElementById('menu-page-1');
+            const page2 = document.getElementById('menu-page-2');
+            const btn1 = document.getElementById('btn-page-1');
+            const btn2 = document.getElementById('btn-page-2');
+
+            if (pageNum === 1) {
+                page1.classList.remove('d-none');
+                page2.classList.add('d-none');
+                btn1.classList.add('active');
+                btn2.classList.remove('active');
+            } else {
+                page1.classList.add('d-none');
+                page2.classList.remove('d-none');
+                btn1.classList.remove('active');
+                btn2.classList.add('active');
+            }
+        }
 
         const itemDescriptions = {
             'Tapsilog': 'Marinated Beef Tapa, Garlic Rice, Fried Egg.',
@@ -891,7 +1002,7 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
             listDiv.innerHTML = '';
 
             if (cart.length === 0) {
-                listDiv.innerHTML = '<p class="text-light text-center my-3">Your cart is empty.</p>';
+                listDiv.innerHTML = '<p class="text-muted text-center my-3">Your cart is empty.</p>';
             } else {
                 cart.forEach((item, index) => {
                     totalQty += item.qty;
@@ -907,15 +1018,15 @@ $page = isset($_GET['page']) && $_GET['page'] == 2 ? 2 : 1;
                     row.className = 'cart-item-card d-flex justify-content-between align-items-center';
                     row.innerHTML = `
                         <div>
-                            <h6 class="fw-bold text-white mb-0">${item.name}</h6>
+                            <h6 class="fw-bold text-dark mb-0">${item.name}</h6>
                             ${subtextFormatted}
-                            <div class="text-gold small fw-bold mt-1">
+                            <div class="text-warning small fw-bold mt-1">
                                 ₱${item.price.toFixed(2)} x ${item.qty} = ₱${itemSubtotal.toFixed(2)}
                             </div>
                         </div>
                         <div class="d-flex align-items-center gap-2">
                             <button class="qty-btn" onclick="updateQty(${index}, -1)">-</button>
-                            <span class="text-white fw-bold px-1 small">${item.qty}</span>
+                            <span class="text-dark fw-bold px-1 small">${item.qty}</span>
                             <button class="qty-btn" onclick="updateQty(${index}, 1)">+</button>
                             <button class="btn btn-outline-danger btn-sm ms-2" onclick="removeFromCart(${index}, true)" title="Delete Item"><i class="fa-solid fa-trash"></i></button>
                         </div>

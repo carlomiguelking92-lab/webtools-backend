@@ -1,8 +1,90 @@
 <?php
+session_start();
 require_once 'config/db.php';
 
-// Page selection for interactive menu inside home page
-$menu_page = isset($_GET['menu_page']) && $_GET['menu_page'] == 2 ? 2 : 1;
+// --- AJAX / POST HANDLERS FOR AUTHENTICATION ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    header('Content-Type: application/json');
+
+    // 1. Sign Up Handler
+    if ($_POST['action'] === 'signup') {
+        try {
+            global $pdo;
+            $fullname = trim($_POST['fullname'] ?? '');
+            $email    = trim($_POST['email'] ?? '');
+            $password = $_POST['password'] ?? '';
+
+            if (empty($fullname) || empty($email) || empty($password)) {
+                echo json_encode(['success' => false, 'message' => 'All fields are required.']);
+                exit;
+            }
+
+            // Check if email already exists
+            $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+            $stmt->execute([$email]);
+            if ($stmt->fetch()) {
+                echo json_encode(['success' => false, 'message' => 'Email address is already in use.']);
+                exit;
+            }
+
+            // Hash password and insert user into database
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            $stmt = $pdo->prepare("INSERT INTO users (fullname, email, password, role) VALUES (?, ?, ?, 'customer')");
+            $stmt->execute([$fullname, $email, $hashedPassword]);
+
+            // Auto-login upon successful sign up
+            $_SESSION['user_id']  = $pdo->lastInsertId();
+            $_SESSION['fullname'] = $fullname;
+
+            echo json_encode(['success' => true]);
+            exit;
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+            exit;
+        }
+    }
+
+    // 2. Login Handler
+    if ($_POST['action'] === 'login') {
+        try {
+            global $pdo;
+            $email    = trim($_POST['email'] ?? '');
+            $password = $_POST['password'] ?? '';
+
+            if (empty($email) || empty($password)) {
+                echo json_encode(['success' => false, 'message' => 'Please fill in both email and password.']);
+                exit;
+            }
+
+            $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
+            $stmt->execute([$email]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($user && password_verify($password, $user['password'])) {
+                $_SESSION['user_id']  = $user['id'];
+                $_SESSION['fullname'] = $user['fullname'];
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Invalid email or password.']);
+            }
+            exit;
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+            exit;
+        }
+    }
+
+    // 3. Logout Handler
+    if ($_POST['action'] === 'logout') {
+        session_unset();
+        session_destroy();
+        echo json_encode(['success' => true]);
+        exit;
+    }
+}
+
+// Check logged in session status
+$is_logged_in = isset($_SESSION['user_id']);
 ?>
 
 <!DOCTYPE html>
@@ -19,30 +101,65 @@ $menu_page = isset($_GET['menu_page']) && $_GET['menu_page'] == 2 ? 2 : 1;
 
     <style>
         body {
-            background-color: #f8f9fa;
+            /* Full landscape background banner */
+            background-image: linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url('images/Best Seller (Landscape) (1) (1).png');
+            background-size: 100% 100%;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
             color: #121212;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 20px;
         }
 
-        /* Large Outer Border Box */
+        /* TOP-LEFT FIXED LOGIN BUTTON */
+        .top-left-login-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1050;
+            background-color: #212529;
+            color: #ffc107;
+            border: 2px solid #212529;
+            border-radius: 50px;
+            padding: 8px 20px;
+            font-weight: bold;
+            font-size: 0.88rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .top-left-login-btn:hover {
+            background-color: #ffc107;
+            color: #212529;
+            border-color: #212529;
+            transform: translateY(-2px);
+        }
+
+        /* Large Outer Border Box with Frosted Glass Effect */
         .page-outer-frame {
             border: 2px solid #ffc107;
             border-radius: 12px;
             padding: 20px;
-            background-color: #ffffff;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            background-color: rgba(255, 255, 255, 0.22); /* Highly transparent glass */
+            backdrop-filter: blur(8px); /* Frosted glass blur effect */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
             max-width: 1200px;
-            margin: 0 auto;
+            margin: 40px auto 0 auto;
         }
 
-        /* TOP FEATURED BANNER SPOT */
+        /* TOP FEATURED BANNER SPOT (Transparent Glass) */
         .top-banner-spot {
             position: relative;
             border: 2px solid #ffc107;
             border-radius: 10px;
-            background: linear-gradient(135deg, #ffffff 0%, #fffdf0 100%);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 253, 240, 0.3) 100%);
+            backdrop-filter: blur(4px);
             padding: 25px 30px;
             margin-bottom: 15px;
             overflow: hidden;
@@ -75,12 +192,18 @@ $menu_page = isset($_GET['menu_page']) && $_GET['menu_page'] == 2 ? 2 : 1;
         }
 
         .banner-text-content h1 {
-            color: #d4a000;
+            color: #ffd700; /* Brighter gold for better contrast on background */
             font-weight: 800;
             font-size: 2.2rem;
             margin-bottom: 4px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+        }
+
+        .banner-text-content p {
+            color: #ffffff !important;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
         }
 
         .banner-badges {
@@ -99,16 +222,22 @@ $menu_page = isset($_GET['menu_page']) && $_GET['menu_page'] == 2 ? 2 : 1;
             text-transform: uppercase;
         }
 
-        /* Double Sub-header Lines */
+        /* Double Sub-header Lines (Transparent Glass) */
         .sub-header-line-1, .sub-header-line-2 {
             border: 1px solid #ffc107;
-            background-color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(4px);
             height: 36px;
             border-radius: 4px;
             margin-bottom: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+
+        .sub-header-line-1 span {
+            color: #ffffff !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
         }
 
         .sub-header-line-1 {
@@ -119,17 +248,73 @@ $menu_page = isset($_GET['menu_page']) && $_GET['menu_page'] == 2 ? 2 : 1;
             margin-bottom: 20px;
         }
 
+        /* Interactive Navigation Links with Hover Banners */
         .nav-link-custom {
-            color: #121212;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
             text-decoration: none;
             font-weight: bold;
             font-size: 0.85rem;
-            padding: 0 18px;
-            transition: color 0.2s ease;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            transition: all 0.25s ease;
         }
 
-        .nav-link-custom:hover {
-            color: #d4a000;
+        .nav-link-custom.active {
+            color: #ffc107;
+            border-color: #ffc107;
+        }
+
+        /* 1. Home Button Hover Preview */
+        #homeNavLink:hover {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/Best Seller (Landscape) (1) (1).png');
+            background-size: cover;
+            background-position: center;
+            color: #ffc107 !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+            border: 1px solid #ffc107;
+        }
+
+        /* 2. Menu Button Hover Preview */
+        #menuNavLink:hover {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/menu_page_1.png');
+            background-size: cover;
+            background-position: center;
+            color: #ffc107 !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+            border: 1px solid #ffc107;
+        }
+
+        /* 3. Order Now Button Hover Preview */
+        #orderNavLink:hover {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/Best Seller (Landscape) (1) (1).png');
+            background-size: cover;
+            background-position: center;
+            color: #ffc107 !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+            border: 1px solid #ffc107;
+        }
+
+        /* 4. Food Packs Button Hover Preview */
+        #foodPacksNavLink:hover {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/bannerko.png');
+            background-size: cover;
+            background-position: center;
+            color: #ffc107 !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+            border: 1px solid #ffc107;
+        }
+
+        /* 5. Tambay Caps Button Hover Preview */
+        #tambayNavLink:hover {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/tambay5.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: #ffc107 !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+            border: 1px solid #ffc107;
         }
 
         /* Split Section Containers */
@@ -137,100 +322,67 @@ $menu_page = isset($_GET['menu_page']) && $_GET['menu_page'] == 2 ? 2 : 1;
             display: flex;
             gap: 20px;
             margin-bottom: 20px;
+            align-items: flex-start;
         }
 
-        /* Left Menu Box */
+        /* Left Menu Box (Flush Portrait Banner) */
         .left-menu-box {
             flex: 2;
             border: 2px solid #ffc107;
             border-radius: 8px;
-            background-color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.2);
             position: relative;
-            padding: 15px;
-            min-height: 380px;
+            padding: 0;
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .interactive-board-wrapper {
-            position: relative;
-            width: 100%;
-        }
-
-        .menu-img {
+        .portrait-banner-img {
             width: 100%;
             height: auto;
-            border-radius: 6px;
             display: block;
+            border-radius: 6px;
         }
 
-        /* Static Hotspot Bubbles */
-        .hotspot-circle {
-            position: absolute;
-            border: 2px solid #ffc107;
-            border-radius: 50%;
-            background: rgba(255, 193, 7, 0.25);
-            pointer-events: none;
-        }
-
-        /* Left & Right Control Arrows */
-        .arrow-btn {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background-color: #ffffff;
-            border: 2px solid #ffc107;
-            color: #121212;
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            font-weight: bold;
-            z-index: 20;
-            transition: all 0.2s ease;
-        }
-
-        .arrow-btn:hover {
-            background-color: #ffc107;
-            color: #121212;
-        }
-
-        .arrow-left {
-            left: 10px;
-        }
-
-        .arrow-right {
-            right: 10px;
-        }
-
-        /* Right Split Box */
+        /* Right Split Box (Transparent Glass) */
         .right-info-box {
             flex: 1;
             border: 2px solid #ffc107;
             border-radius: 8px;
-            background-color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(6px);
             padding: 20px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
         }
 
-        /* Bottom Full Width Line */
+        .right-info-box h5 {
+            color: #ffc107 !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+        }
+
+        .right-info-box p {
+            color: #ffffff !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Bottom Full Width Line (Transparent Glass) */
         .bottom-full-line {
             border: 1px solid #ffc107;
-            background-color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(4px);
             height: 36px;
             border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #555555;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
             font-size: 0.85rem;
-            font-weight: 500;
+            font-weight: 600;
         }
 
         @media (max-width: 992px) {
@@ -239,19 +391,24 @@ $menu_page = isset($_GET['menu_page']) && $_GET['menu_page'] == 2 ? 2 : 1;
                 text-align: center;
                 gap: 15px;
             }
-            .banner-text-content {
-                padding: 0;
-            }
-            .banner-badges {
-                justify-content: center;
-            }
-            .split-container {
-                flex-direction: column;
-            }
+            .banner-text-content { padding: 0; }
+            .banner-badges { justify-content: center; }
+            .split-container { flex-direction: column; }
         }
     </style>
 </head>
 <body>
+
+    <!-- TOP-LEFT CORNER LOGIN / LOGOUT BUTTON -->
+    <?php if ($is_logged_in): ?>
+        <button type="button" class="top-left-login-btn" onclick="confirmLogout()">
+            <i class="fa-solid fa-right-from-bracket me-2"></i>Logout (<?= htmlspecialchars($_SESSION['fullname']) ?>)
+        </button>
+    <?php else: ?>
+        <button type="button" class="top-left-login-btn" onclick="openAuthModal('login')">
+            <i class="fa-solid fa-user me-2"></i>Login / Register
+        </button>
+    <?php endif; ?>
 
     <!-- Large Outer Wireframe Frame -->
     <div class="page-outer-frame">
@@ -259,12 +416,12 @@ $menu_page = isset($_GET['menu_page']) && $_GET['menu_page'] == 2 ? 2 : 1;
         <!-- 1. TOP FEATURED BANNER SPOT -->
         <section class="top-banner-spot">
             <div class="banner-logo-container">
-                <img src="Logo Website Draft✨    Ashiee - Reyn (1).png" alt="Sairene TephTeph Logo">
+                <img src="images/Logo Website Draft✨    Ashiee - Reyn (1).png" alt="Sairene TephTeph Logo">
             </div>
 
             <div class="banner-text-content">
                 <h1>Sairene TephTeph Tapsilogan</h1>
-                <p class="text-dark small mb-2 fw-semibold">Your Favorite Neighborhood Tapsilogan & Tambayan • Fresh Silog Meals Everyday</p>
+                <p class="small mb-2 fw-semibold">Your Favorite Neighborhood Tapsilogan & Tambayan • Fresh Silog Meals Everyday</p>
                 
                 <div class="banner-badges">
                     <span class="banner-badge"><i class="fa-solid fa-clock me-1"></i> Open 24/7</span>
@@ -282,64 +439,37 @@ $menu_page = isset($_GET['menu_page']) && $_GET['menu_page'] == 2 ? 2 : 1;
 
         <!-- 2. Two Thin Sub-Header Lines -->
         <div class="sub-header-line-1">
-            <span class="text-dark small fw-bold"><i class="fa-solid fa-star text-warning me-1"></i> A Taste of Comfort • Hot & Fresh Silog Meals <i class="fa-solid fa-star text-warning ms-1"></i></span>
+            <span class="small fw-bold"><i class="fa-solid fa-star text-warning me-1"></i> A Taste of Comfort • Hot & Fresh Silog Meals <i class="fa-solid fa-star text-warning ms-1"></i></span>
         </div>
 
         <div class="sub-header-line-2">
-            <nav class="d-flex gap-3">
-                <a href="Home_Page.php" class="nav-link-custom text-warning">HOME</a>
-                <a href="menu.php" class="nav-link-custom">MENU</a>
-                <a href="order.php" class="nav-link-custom">ORDER NOW</a>
-                <a href="tambay_caps.php" target="_blank" class="nav-link-custom">TAMBAY CAPS</a>
+            <nav class="d-flex gap-3 align-items-center">
+                <a href="Home_Page.php" id="homeNavLink" class="nav-link-custom active">HOME</a>
+                <a href="menu.php" id="menuNavLink" class="nav-link-custom">MENU</a>
+                <a href="order.php" id="orderNavLink" class="nav-link-custom">ORDER NOW</a>
+                <a href="food_packs.php" id="foodPacksNavLink" class="nav-link-custom">FOOD PACKS</a>
+                <a href="tambay_caps.php" id="tambayNavLink" class="nav-link-custom">TAMBAY CAPS</a>
             </nav>
         </div>
 
-        <!-- 3. Split Container (Left Interactive Box + Right Info Box) -->
+        <!-- 3. Split Container (Left Portrait Banner Holder + Right Info Box) -->
         <div class="split-container">
 
-            <!-- LEFT BOX: Menu Board with Static Circles & Side Arrows -->
+            <!-- LEFT BOX: Portrait Banner Display -->
             <div class="left-menu-box">
-                
-                <!-- Left Arrow Control -->
-                <a href="Home_Page.php?menu_page=1" class="arrow-btn arrow-left" title="Previous Menu Page">
-                    <i class="fa-solid fa-arrow-left"></i>
-                </a>
-
-                <div class="interactive-board-wrapper">
-                    <?php if ($menu_page == 1): ?>
-                        <img src="menu 1.png" alt="Silog Meals Menu" class="menu-img">
-
-                        <!-- Static Circle Hotspots -->
-                        <div class="hotspot-circle" style="top: 38%; left: 10%; width: 50px; height: 50px;"></div>
-                        <div class="hotspot-circle" style="top: 58%; left: 10%; width: 50px; height: 50px;"></div>
-                        <div class="hotspot-circle" style="top: 38%; left: 40%; width: 50px; height: 50px;"></div>
-                        <div class="hotspot-circle" style="top: 58%; left: 40%; width: 50px; height: 50px;"></div>
-
-                    <?php else: ?>
-                        <img src="menu 2.png" alt="Combos and Ala Carte" class="menu-img">
-
-                        <div class="hotspot-circle" style="top: 15%; left: 10%; width: 50px; height: 50px;"></div>
-                        <div class="hotspot-circle" style="top: 15%; left: 40%; width: 50px; height: 50px;"></div>
-                    <?php endif; ?>
-                </div>
-
-                <!-- Right Arrow Control -->
-                <a href="Home_Page.php?menu_page=2" class="arrow-btn arrow-right" title="Next Menu Page">
-                    <i class="fa-solid fa-arrow-right"></i>
-                </a>
-
+                <img src="images/bannerko.png" alt="Sairene Tapsilogan Portrait Banner" class="portrait-banner-img">
             </div>
 
             <!-- RIGHT BOX: History & Quick Action Info -->
             <div class="right-info-box">
                 <div>
-                    <h5 class="text-dark fw-bold mb-3 border-bottom border-warning pb-2">
+                    <h5 class="fw-bold mb-3 border-bottom border-warning pb-2">
                         <i class="fa-solid fa-utensils text-warning me-2"></i>About Our Spot
                     </h5>
-                    <p class="small text-dark leading-relaxed mb-3">
+                    <p class="small leading-relaxed mb-3">
                         At <strong>Sairene TephTeph Tapsilogan</strong>, we built our spot to feed hungry shift workers, late-night crews, and friends craving authentic Pinoy silog comfort food.
                     </p>
-                    <p class="small text-muted mb-0">
+                    <p class="small text-white-50 mb-0">
                         Open 24/7 at MRB Condominium C5, Taguig City.
                     </p>
                 </div>
@@ -348,7 +478,7 @@ $menu_page = isset($_GET['menu_page']) && $_GET['menu_page'] == 2 ? 2 : 1;
                     <a href="order.php" class="btn btn-warning w-100 fw-bold py-2 text-dark mb-2">
                         <i class="fa-solid fa-motorcycle me-2"></i>Order Online Now
                     </a>
-                    <a href="menu.php" class="btn btn-outline-dark w-100 btn-sm fw-bold">
+                    <a href="menu.php" class="btn btn-outline-light w-100 btn-sm fw-bold">
                         Full Menu View
                     </a>
                 </div>
@@ -363,7 +493,124 @@ $menu_page = isset($_GET['menu_page']) && $_GET['menu_page'] == 2 ? 2 : 1;
 
     </div>
 
-    <!-- Bootstrap 5 JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/bootstrap.bundle.min.js"></script>
+    <!-- LOGIN & SIGNUP POPUP MODAL -->
+    <div class="modal fade" id="authModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-3 border-warning bg-dark text-white">
+                <div class="modal-header border-warning">
+                    <h5 class="modal-title fw-bold text-warning" id="authModalTitle">Customer Login</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <!-- Login Form -->
+                    <form id="loginForm" onsubmit="handleAuthSubmit(event, 'login')">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-white">Email Address</label>
+                            <input type="email" id="loginEmail" class="form-control" placeholder="name@example.com" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-white">Password</label>
+                            <input type="password" id="loginPassword" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-warning w-100 fw-bold text-dark mb-3">Login</button>
+                        <p class="small text-center mb-0">Don't have an account? <button type="button" onclick="toggleAuthForm('signup')" class="btn btn-link text-warning fw-bold p-0 text-decoration-none">Sign Up</button></p>
+                    </form>
+
+                    <!-- Signup Form -->
+                    <form id="signupForm" class="d-none" onsubmit="handleAuthSubmit(event, 'signup')">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-white">Full Name</label>
+                            <input type="text" id="signupName" class="form-control" placeholder="Juan Dela Cruz" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-white">Email Address</label>
+                            <input type="email" id="signupEmail" class="form-control" placeholder="name@example.com" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-white">Password</label>
+                            <input type="password" id="signupPassword" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-warning w-100 fw-bold text-dark mb-3">Create Account</button>
+                        <p class="small text-center mb-0">Already have an account? <button type="button" onclick="toggleAuthForm('login')" class="btn btn-link text-warning fw-bold p-0 text-decoration-none">Login</button></p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOOTSTRAP 5 JS BUNDLE -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- AUTHENTICATION JAVASCRIPT HANDLERS -->
+    <script>
+        function openAuthModal(type) {
+            toggleAuthForm(type);
+            var modalEl = document.getElementById('authModal');
+            if (typeof bootstrap !== 'undefined') {
+                var modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                modal.show();
+            } else {
+                modalEl.classList.add('show');
+                modalEl.style.display = 'block';
+            }
+        }
+
+        function toggleAuthForm(type) {
+            let loginForm = document.getElementById('loginForm');
+            let signupForm = document.getElementById('signupForm');
+            let modalTitle = document.getElementById('authModalTitle');
+
+            if (type === 'signup') {
+                loginForm.classList.add('d-none');
+                signupForm.classList.remove('d-none');
+                modalTitle.innerText = 'Create Account';
+            } else {
+                signupForm.classList.add('d-none');
+                loginForm.classList.remove('d-none');
+                modalTitle.innerText = 'Customer Login';
+            }
+        }
+
+        function handleAuthSubmit(e, action) {
+            e.preventDefault();
+            let formData = new FormData();
+            formData.append('action', action);
+
+            if (action === 'login') {
+                formData.append('email', document.getElementById('loginEmail').value);
+                formData.append('password', document.getElementById('loginPassword').value);
+            } else if (action === 'signup') {
+                formData.append('fullname', document.getElementById('signupName').value);
+                formData.append('email', document.getElementById('signupEmail').value);
+                formData.append('password', document.getElementById('signupPassword').value);
+            }
+
+            fetch('Home_Page.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'An error occurred during authentication.');
+                }
+            })
+            .catch(err => console.error(err));
+        }
+
+        function confirmLogout() {
+            if (confirm('Are you sure you want to log out?')) {
+                let formData = new FormData();
+                formData.append('action', 'logout');
+                fetch('Home_Page.php', { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) location.reload();
+                });
+            }
+        }
+    </script>
 </body>
 </html>

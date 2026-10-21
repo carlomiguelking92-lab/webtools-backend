@@ -85,22 +85,29 @@ try {
 
     <style>
         body {
-            background-color: #fcfcfc;
-            color: #333333;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url('images/tambay6.png');
+            background-size: 100% 100%;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            color: #ffffff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 30px 20px;
         }
 
-        /* Top Navigation Box matching reference */
+        /* Top Navigation Box with Frosted Glass */
         .top-nav-box {
-            background: #ffffff;
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(4px);
             border: 2px solid #ffc107;
             border-radius: 8px;
             padding: 12px 20px;
             max-width: 950px;
             margin: 0 auto 30px auto;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1090;
         }
 
         .nav-links {
@@ -110,52 +117,113 @@ try {
             list-style: none;
             padding: 0;
             margin: 0;
+            align-items: center;
         }
 
         .nav-links a {
             text-decoration: none;
-            color: #222222;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
             font-weight: 800;
             font-size: 0.95rem;
             letter-spacing: 0.5px;
-            transition: color 0.2s;
+            transition: all 0.25s ease;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: 1px solid transparent;
         }
 
-        .nav-links a:hover, .nav-links a.active {
-            color: #d39e00;
+        .nav-links a.active {
+            color: #ffc107;
+            border-color: #ffc107;
         }
 
-        /* Main Wrapper Container matching reference */
+        /* 1. Home Button Hover */
+        #homeNavLink:hover {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/landscape_banner.png');
+            background-size: cover;
+            background-position: center;
+            color: #ffc107 !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+            border: 1px solid #ffc107;
+        }
+
+        /* 2. Menu Button Hover */
+        #menuNavLink:hover {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/menu_page_1.png');
+            background-size: cover;
+            background-position: center;
+            color: #ffc107 !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+            border: 1px solid #ffc107;
+        }
+
+        /* 3. Food Packs Button Hover */
+        #foodPacksNavLink:hover {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/portrait_banner.png');
+            background-size: cover;
+            background-position: center;
+            color: #ffc107 !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+            border: 1px solid #ffc107;
+        }
+
+        /* 4. Order Now Button Hover */
+        #orderNavLink:hover {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/landscape_banner.png');
+            background-size: cover;
+            background-position: center;
+            color: #ffc107 !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+            border: 1px solid #ffc107;
+        }
+
+        /* 5. Tambay Caps Button Hover */
+        #tambayNavLink:hover {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/tambay5.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: #ffc107 !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+            border: 1px solid #ffc107;
+        }
+
+        /* Main Wrapper Container with Frosted Glass */
         .main-wrapper-box {
-            background: #ffffff;
+            background: rgba(255, 255, 255, 0.22);
+            backdrop-filter: blur(8px);
             border: 2px solid #ffc107;
             border-radius: 12px;
             padding: 40px 30px;
             max-width: 1200px;
             margin: 0 auto;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
         }
 
         .page-title {
-            color: #e0a800;
+            color: #ffd700;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 1px;
             text-align: center;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
         }
 
-        /* Left Dashed Selection Container matching reference */
+        /* Left Dashed Selection Container with Frosted Glass */
         .selection-container {
-            background-color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(4px);
             border: 2.5px dashed #ffc107;
             border-radius: 12px;
             padding: 25px;
             min-height: 520px;
         }
 
-        /* Right Solid Summary Container matching reference */
+        /* Right Solid Summary Container with Frosted Glass */
         .cart-summary-panel {
-            background-color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(4px);
             border: 2.5px solid #ffc107;
             border-radius: 12px;
             padding: 25px;
@@ -166,8 +234,8 @@ try {
 
         /* Product Card */
         .product-card-item {
-            background-color: #ffffff;
-            border: 1px solid #e0e0e0;
+            background-color: rgba(255, 255, 255, 0.85);
+            border: 1px solid #dee2e6;
             border-radius: 8px;
             padding: 15px;
             height: 100%;
@@ -178,7 +246,7 @@ try {
 
         .product-card-item:hover {
             border-color: #ffc107;
-            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.15);
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
         }
 
         .product-img-box {
@@ -200,8 +268,8 @@ try {
 
         /* Cart Item Box */
         .cart-item-row {
-            background-color: #f8f9fa;
-            border: 1px solid #e9ecef;
+            background-color: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ced4da;
             border-radius: 8px;
             padding: 12px;
             margin-bottom: 12px;
@@ -209,7 +277,8 @@ try {
 
         footer {
             text-align: center;
-            color: #777777;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
             font-size: 0.85rem;
             margin-top: 35px;
         }
@@ -220,10 +289,11 @@ try {
     <!-- Top Navigation Box -->
     <nav class="top-nav-box">
         <ul class="nav-links">
-            <li><a href="home_page.php">HOME</a></li>
-            <li><a href="menu.php">MENU</a></li>
-            <li><a href="order.php">ORDER NOW</a></li>
-            <li><a href="tambay_caps.php" class="active">TAMBAY CAPS</a></li>
+            <li><a href="home_page.php" id="homeNavLink">HOME</a></li>
+            <li><a href="menu.php" id="menuNavLink">MENU</a></li>
+            <li><a href="food_packs.php" id="foodPacksNavLink">FOOD PACKS</a></li>
+            <li><a href="order.php" id="orderNavLink">ORDER NOW</a></li>
+            <li><a href="tambay_caps.php" id="tambayNavLink" class="active">TAMBAY CAPS</a></li>
         </ul>
     </nav>
 
@@ -233,10 +303,10 @@ try {
         <!-- Header Section -->
         <section class="text-center mb-4">
             <h1 class="display-6 page-title">Tambay Caps Collection</h1>
-            <p class="text-black small mt-1">Select your favorite neighborhood caps and add them directly to your order summary!</p>
+            <p class="text-white small mt-1" style="text-shadow: 0 1px 2px rgba(0,0,0,0.6);">Select your favorite neighborhood caps and add them directly to your order summary!</p>
         </section>
 
-        <hr class="border-warning opacity-25 my-4">
+        <hr class="border-warning opacity-50 my-4">
 
         <!-- Two-Column Layout -->
         <div class="row g-4">
@@ -244,7 +314,7 @@ try {
             <!-- Left Column: Cap Selection Area (~7 cols) -->
             <div class="col-lg-7">
                 <div class="selection-container">
-                   <h5 class="fw-bold text-dark mb-3 d-flex align-items-center">
+                   <h5 class="fw-bold text-white mb-3 d-flex align-items-center" style="text-shadow: 0 1px 2px rgba(0,0,0,0.6);">
                         <!-- Solid Black Cap Graphic with White "TAMBAY" Text -->
                         <svg xmlns="http://www.w3.org/2000/svg" width="46" height="38" viewBox="0 0 240 180" class="me-2">
                             <!-- Cap Crown (Solid Black) -->
@@ -260,7 +330,7 @@ try {
                     <div class="row row-cols-1 row-cols-md-2 g-3 mt-1">
                         <?php if (empty($caps)): ?>
                             <div class="col-12 text-center py-5">
-                                <p class="text-muted">No caps available at the moment.</p>
+                                <p class="text-white">No caps available at the moment.</p>
                             </div>
                         <?php else: ?>
                             <?php foreach ($caps as $cap): ?>
@@ -298,15 +368,15 @@ try {
             <!-- Right Column: Cart Summary Panel (~5 cols) -->
             <div class="col-lg-5">
                 <div class="cart-summary-panel">
-                    <h5 class="fw-bold text-dark mb-3">
+                    <h5 class="fw-bold text-white mb-3" style="text-shadow: 0 1px 2px rgba(0,0,0,0.6);">
                         <i class="fa-solid fa-bag-shopping text-warning me-2"></i> Your Cap Order Summary
                     </h5>
 
                     <div class="cart-items-list mb-3 flex-grow-1" style="max-height: 340px; overflow-y: auto;">
                         <?php if (empty($_SESSION['cart'])): ?>
-                            <div class="text-center py-5 text-muted my-auto">
-                                <i class="fa-solid fa-basket-shopping fa-3x mb-3 text-secondary opacity-50"></i>
-                                <p class="mb-0 small">Your cart is currently empty.<br>Select a cap to start your order!</p>
+                            <div class="text-center py-5 text-white-50 my-auto">
+                                <i class="fa-solid fa-basket-shopping fa-3x mb-3 text-warning opacity-50"></i>
+                                <p class="mb-0 small text-white">Your cart is currently empty.<br>Select a cap to start your order!</p>
                             </div>
                         <?php else: ?>
                             <?php 
@@ -341,7 +411,7 @@ try {
                         <?php endif; ?>
                     </div>
 
-                    <!-- Total Price Box matching reference style -->
+                    <!-- Total Price Box -->
                     <div class="bg-light p-3 rounded border border-warning mb-3">
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="text-dark fw-bold">Order Total:</span>
@@ -351,7 +421,7 @@ try {
                         </div>
                     </div>
 
-                    <!-- Proceed Button matching reference -->
+                    <!-- Proceed Button -->
                     <a href="order.php" class="btn btn-warning w-100 fw-bold py-2 text-dark shadow-sm">
                         <i class="fa-solid fa-bag-shopping me-2"></i> Proceed to Order
                     </a>
@@ -369,6 +439,6 @@ try {
     </footer>
 
     <!-- Bootstrap 5 JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
