@@ -273,7 +273,7 @@ try {
 
         /* 3. Food Packs Button Hover Preview */
         #foodPacksNavLink:hover {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/bannerko.png');
+            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/.png');
             background-size: cover;
             background-position: center;
             color: #ffc107 !important;
@@ -283,7 +283,7 @@ try {
 
         /* 4. Order Now Button Hover Preview */
         #orderNavLink:hover {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/Best Seller (Landscape) (1) (1).png');
+            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/.png');
             background-size: cover;
             background-position: center;
             color: #ffc107 !important;

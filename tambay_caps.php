@@ -140,7 +140,7 @@ try {
 
         /* 1. Home Button Hover */
         #homeNavLink:hover {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/landscape_banner.png');
+            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/Best Seller (Landscape) (1) (1).png');
             background-size: cover;
             background-position: center;
             color: #ffc107 !important;
