@@ -3,50 +3,70 @@ session_start();
 require_once 'config/db.php';
 
 // Handle Cashier Checkout Submission
-$success_msg = '';$error_msg = '';
+$success_msg = ''; $error_msg = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cashier_checkout'])) {
     try {
         global $pdo;
         $customer_name  = trim($_POST['customer_name'] ?? 'Walk-in Customer');
         $phone          = trim($_POST['phone'] ?? '09000000000');
-        $payment_method =$_POST['payment_method'] ?? 'Cash';
+        $payment_method = $_POST['payment_method'] ?? 'Cash';
         $cash_tendered  = floatval($_POST['cash_tendered'] ?? 0);
-        $cart_json      =$_POST['cart_json'] ?? '[]';
+        $cart_json      = $_POST['cart_json'] ?? '[]';
         $cart_items     = json_decode($cart_json, true);
 
-        if (empty($cart_items)) {$error_msg = 'Cart is empty. Please select menu items.';
+        if (empty($cart_items)) {
+            $error_msg = 'Cart is empty. Please select menu items.';
         } else {
             $total_amount = 0;
-            foreach ($cart_items as $item) {$total_amount += (float)$item['price'] * (int)$item['qty'];
+            foreach ($cart_items as $item) {
+                $total_amount += (float)$item['price'] * (int)$item['qty'];
             }
 
-            if ($payment_method === 'Cash' && $cash_tendered <$total_amount) {
+            if ($payment_method === 'Cash' && $cash_tendered < $total_amount) {
                 throw new Exception('Cash tendered is less than the total amount due.');
             }
 
             $pdo->beginTransaction();
 
             // Insert Order (Marked as paid and preparing for immediate kitchen dispatch)
-            $stmt =$pdo->prepare("INSERT INTO orders (customer_name, phone, delivery_area, address, total_amount, payment_method, payment_status, order_status) VALUES (?, ?, 'Counter Dine-in / Takeout', 'Cashier POS Terminal', ?, ?, 'paid', 'preparing')");
-            $stmt->execute([$customer_name,$phone, $total_amount,$payment_method]);
-            $order_id =$pdo->lastInsertId();
+            $stmt = $pdo->prepare("INSERT INTO orders (customer_name, phone, delivery_area, address, total_amount, payment_method, payment_status, order_status) VALUES (?, ?, 'Counter Dine-in / Takeout', 'Cashier POS Terminal', ?, ?, 'paid', 'preparing')");
+            $stmt->execute([$customer_name, $phone, $total_amount, $payment_method]);
+            $order_id = $pdo->lastInsertId();
 
             // Insert Order Items
-            $item_stmt =$pdo->prepare("INSERT INTO order_items (order_id, item_name, egg_choice, notes, quantity, price) VALUES (?, ?, ?, ?, ?, ?)");
-            foreach ($cart_items as $item) {$item_stmt->execute([
-                    $order_id,$item['name'],
-                    $item['egg'] ?? 'Sunny Side Up',$item['notes'] ?? '',
+            $item_stmt = $pdo->prepare("INSERT INTO order_items (order_id, item_name, egg_choice, notes, quantity, price) VALUES (?, ?, ?, ?, ?, ?)");
+            foreach ($cart_items as $item) {
+                $item_stmt->execute([
+                    $order_id,
+                    $item['name'],
+                    $item['egg'] ?? 'Sunny Side Up',
+                    $item['notes'] ?? '',
                     (int)$item['qty'],
                     (float)$item['price']
                 ]);
             }
 
-            $pdo->commit();$success_msg = "Transaction Complete! Order #$order_id successfully placed.";
+            $pdo->commit();
+            $success_msg = "Transaction Complete! Order #$order_id successfully placed.";
         }
     } catch (Exception $e) {
-        if (isset($pdo) && $pdo->inTransaction())$pdo->rollBack();
-        $error_msg = 'Checkout Error: ' .$e->getMessage();
+        if (isset($pdo) && $pdo->inTransaction()) $pdo->rollBack();
+        $error_msg = 'Checkout Error: ' . $e->getMessage();
+    }
+}
+
+// Handle Marking Kiosk Order as Complete
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['complete_kiosk_order_id'])) {
+    try {
+        global $pdo;
+        $k_order_id = intval($_POST['complete_kiosk_order_id']);
+        $update_stmt = $pdo->prepare("UPDATE kiosk_database.kiosk_orders SET payment_status = 'completed' WHERE id = ?");
+        $update_stmt->execute([$k_order_id]);
+        header("Location: pos.php");
+        exit;
+    } catch (Exception $e) {
+        $error_msg = 'Error updating kiosk order: ' . $e->getMessage();
     }
 }
 
@@ -54,12 +74,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cashier_checkout'])) 
 global $pdo;
 $menu_categories = [];
 try {
-    $stmt =$pdo->query("SELECT * FROM menu WHERE is_available = 1 ORDER BY category, item_name");
-    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {$menu_categories[$row['category']][] =$row;
+    $stmt = $pdo->query("SELECT * FROM menu WHERE is_available = 1 ORDER BY category, item_name");
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $menu_categories[$row['category']][] = $row;
     }
 } catch (Exception $e) {
     // Fallback
 }
+
+// Fetch Active Live Kiosk Orders from Standalone Kiosk Database
+$kiosk_orders = [];
+try {
+    $kiosk_stmt = $pdo->query("SELECT * FROM kiosk_database.kiosk_orders WHERE payment_status = 'paid' ORDER BY id DESC LIMIT 15");
+    while ($k_row = $kiosk_stmt->fetch(PDO::FETCH_ASSOC)) {
+        $k_item_stmt = $pdo->prepare("SELECT * FROM kiosk_database.kiosk_order_items WHERE order_id = ?");
+        $k_item_stmt->execute([$k_row['id']]);
+        $k_row['items'] = $k_item_stmt->fetchAll(PDO::FETCH_ASSOC);
+        $kiosk_orders[] = $k_row;
+    }
+} catch (Exception $e) {
+    // Kiosk DB table might not exist yet
+}
+
+// Map database item names to their respective image filenames in the kiosk/image/ folder
+$pos_images = [
+    'Tapsilog' => 'tapsilog.png',
+    'Bagnetsilog' => 'bagnetsilog.png',
+    'Sisigsilog' => 'sisigsilog.png',
+    'Liemposilog' => 'liemposilog.png',
+    'Malingsilog' => 'malingsilog.png',
+    'Tocilog' => 'tocilog.png',
+    'Hungariansilog' => 'hungariansilog.png',
+    'Hotdogsilog' => 'hotsilog.png',
+    'Bagnet + Hungarian Combo' => 'bagnet_hungaria.png',
+    'Tapa + Hungarian Combo' => 'tapa_hungarian.png',
+    'Tapa + Bagnet Silog Combo' => 'tapa_bagnetsilog.png',
+    'Liempo + Hungarian Combo' => 'liempo_hungaria.png',
+    'Sisig + Hungarian Combo' => 'sisig_hungarian.png',
+    'Special Tapa Portion' => 'special_tapa.png',
+    'Special Bagnet Portion' => 'special_bagnet.png',
+    'Special Sisig Portion' => 'special_sisig.png',
+    'Hungarian Portion' => 'hungarian.png',
+    'Garlic Rice' => 'garlic_rice.png',
+    'Plain Rice' => 'plain_rice.png',
+    'Extra Egg' => 'egg.png'
+];
 ?>
 
 <!DOCTYPE html>
@@ -123,7 +182,7 @@ try {
         .menu-pos-card {
             border: 1.5px solid #e0e0e0;
             border-radius: 8px;
-            padding: 15px;
+            padding: 12px;
             background: #ffffff;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -171,6 +230,14 @@ try {
             justify-content: center;
         }
 
+        .kiosk-order-card {
+            background: #fff8e1;
+            border: 1.5px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
         .bottom-full-line {
             border: 1px solid #ffc107;
             background-color: #ffffff;
@@ -194,7 +261,7 @@ try {
         <div class="cashier-header">
             <div>
                 <h3 class="fw-bold mb-0"><i class="fa-solid fa-cash-register me-2"></i>Cashier POS Terminal</h3>
-                <small class="text-light">Sairene TephTeph Tapsilogan • Counter Operations</small>
+                <small class="text-light">Sairene TephTeph Tapsilogan • Counter Operations & Kiosk Sync</small>
             </div>
             <div>
                 <a href="Home_Page.php" class="btn btn-outline-warning btn-sm fw-bold"><i class="fa-solid fa-arrow-left me-1"></i> Back to Home</a>
@@ -214,6 +281,56 @@ try {
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php endif; ?>
+
+        <!-- KIOSK LIVE ORDERS BANNER / ACCORDION -->
+        <div class="mb-4">
+            <div class="card border-warning shadow-sm">
+                <div class="card-header bg-warning text-dark fw-bold d-flex justify-content-between align-items-center" data-bs-toggle="collapse" href="#kioskOrdersCollapse" role="button" aria-expanded="true" style="cursor: pointer;">
+                    <span><i class="fa-solid fa-tablet-screen-button me-2"></i> Live Tablet Kiosk Orders (<?= count($kiosk_orders) ?>)</span>
+                    <small><i class="fa-solid fa-chevron-down"></i> Click to toggle</small>
+                </div>
+                <div class="collapse show" id="kioskOrdersCollapse">
+                    <div class="card-body bg-light" style="max-height: 280px; overflow-y: auto;">
+                        <?php if (empty($kiosk_orders)): ?>
+                            <p class="text-muted text-center small mb-0 py-3">No active orders placed from the kiosk.</p>
+                        <?php else: ?>
+                            <div class="row g-2">
+                                <?php foreach ($kiosk_orders as $k_order): ?>
+                                    <div class="col-md-4">
+                                        <div class="kiosk-order-card">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="badge bg-dark text-warning fw-bold"><?= htmlspecialchars($k_order['queue_number']) ?></span>
+                                                <span class="small text-muted"><?= htmlspecialchars($k_order['dining_style']) ?></span>
+                                            </div>
+                                            <div class="fw-bold small text-dark"><?= htmlspecialchars($k_order['customer_name']) ?></div>
+                                            <?php if (!empty($k_order['table_tag'])): ?>
+                                                <div class="small text-danger fw-bold"><?= htmlspecialchars($k_order['table_tag']) ?></div>
+                                            <?php endif; ?>
+                                            <div class="border-top border-warning my-1 pt-1 small">
+                                                <?php foreach ($k_order['items'] as $k_item): ?>
+                                                    <div>• <?= $k_item['quantity'] ?>x <?= htmlspecialchars($k_item['product_name']) ?></div>
+                                                <?php endforeach; ?>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center mt-2 pt-1 border-top">
+                                                <span class="small text-muted"><?= htmlspecialchars($k_order['neighborhood_badge']) ?></span>
+                                                <span class="fw-bold text-dark">₱<?= number_format($k_order['total_amount'], 2) ?></span>
+                                            </div>
+                                            <!-- Mark as Complete Button -->
+                                            <form method="POST" class="mt-2 pt-2 border-top">
+                                                <input type="hidden" name="complete_kiosk_order_id" value="<?= $k_order['id'] ?>">
+                                                <button type="submit" class="btn btn-success btn-sm w-100 fw-bold py-1 fs-8 text-white">
+                                                    <i class="fa-solid fa-check me-1"></i> Mark as Complete
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="row g-3">
             
@@ -237,13 +354,24 @@ try {
                     <!-- Menu Cards Grid -->
                     <div class="row g-2 overflow-y-auto" style="max-height: 480px;" id="posMenuGrid">
                         <?php if (!empty($menu_categories)): ?>
-                            <?php foreach ($menu_categories as $cat =>$items): ?>
-                                <?php foreach ($items as$item): ?>
+                            <?php foreach ($menu_categories as $cat => $items): ?>
+                                <?php foreach ($items as $item): ?>
+                                    <?php 
+                                        $img_file = $pos_images[$item['item_name']] ?? '';
+                                        $img_src = $img_file ? 'images/' . $img_file : '';
+                                    ?>
                                     <div class="col-md-4 menu-item-box" data-category="<?= htmlspecialchars($cat) ?>">
                                         <div class="menu-pos-card" onclick="addPosItem('<?= htmlspecialchars(addslashes($item['item_name'])) ?>', <?= (float)$item['price'] ?>)">
-                                            <div>
-                                                <h6 class="fw-bold text-dark mb-1 fs-6"><?= htmlspecialchars($item['item_name']) ?></h6>
-                                                <span class="badge bg-warning text-dark fs-9 text-uppercase"><?= htmlspecialchars($cat) ?></span>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <?php if ($img_src): ?>
+                                                    <div style="width: 48px; height: 48px; border-radius: 10px; overflow: hidden; flex-shrink: 0; background: #fffaf0; display: grid; place-items: center;">
+                                                        <img src="<?= $img_src ?>" alt="<?= htmlspecialchars($item['item_name']) ?>" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.parentElement.style.display='none';">
+                                                    </div>
+                                                <?php endif; ?>
+                                                <div>
+                                                    <h6 class="fw-bold text-dark mb-1 fs-6"><?= htmlspecialchars($item['item_name']) ?></h6>
+                                                    <span class="badge bg-warning text-dark fs-9 text-uppercase"><?= htmlspecialchars($cat) ?></span>
+                                                </div>
                                             </div>
                                             <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
                                                 <span class="text-dark fw-bold fs-6">₱<?= number_format($item['price'], 2) ?></span>
