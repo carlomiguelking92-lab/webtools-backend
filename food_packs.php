@@ -36,8 +36,7 @@ require_once 'config/db.php';
         .sub-header-line {
             border: 1px solid #ffc107;
             background-color: #ffffff;
-            height: auto;
-            padding: 6px 0;
+            height: 38px;
             border-radius: 6px;
             margin-bottom: 20px;
             display: flex;
@@ -50,66 +49,11 @@ require_once 'config/db.php';
             text-decoration: none;
             font-weight: bold;
             font-size: 0.85rem;
-            padding: 6px 14px;
-            border-radius: 6px;
-            border: 1px solid transparent;
-            transition: all 0.25s ease;
+            padding: 0 15px;
         }
 
-        .nav-link-custom.active {
+        .nav-link-custom:hover, .nav-link-custom.active {
             color: #d4a000;
-            border-color: #ffc107;
-        }
-
-        /* 1. Home Button Hover Preview */
-        #homeNavLink:hover {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/Best Seller (Landscape) (1) (1).png');
-            background-size: cover;
-            background-position: center;
-            color: #ffc107 !important;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
-            border: 1px solid #ffc107;
-        }
-
-        /* 2. Menu Button Hover Preview */
-        #menuNavLink:hover {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/menu_page_1.png');
-            background-size: cover;
-            background-position: center;
-            color: #ffc107 !important;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
-            border: 1px solid #ffc107;
-        }
-
-        /* 3. Food Packs Button Hover Preview */
-        #foodPacksNavLink:hover {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/.png');
-            background-size: cover;
-            background-position: center;
-            color: #ffc107 !important;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
-            border: 1px solid #ffc107;
-        }
-
-        /* 4. Order Now Button Hover Preview */
-        #orderNavLink:hover {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/.png');
-            background-size: cover;
-            background-position: center;
-            color: #ffc107 !important;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
-            border: 1px solid #ffc107;
-        }
-
-        /* 5. Tambay Caps Button Hover Preview */
-        #tambayNavLink:hover {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/tambay5.png');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            color: #ffc107 !important;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
-            border: 1px solid #ffc107;
         }
 
         /* 3-DIVISION CONTAINER GRAPHIC */
@@ -259,12 +203,12 @@ require_once 'config/db.php';
 
         <!-- Header Navigation Bar -->
         <div class="sub-header-line">
-            <nav class="d-flex gap-3 align-items-center">
-                <a href="Home_Page.php" id="homeNavLink" class="nav-link-custom">HOME</a>
-                <a href="menu.php" id="menuNavLink" class="nav-link-custom">MENU</a>
-                <a href="food_packs.php" id="foodPacksNavLink" class="nav-link-custom active">FOOD PACKS</a>
-                <a href="order.php" id="orderNavLink" class="nav-link-custom">ORDER NOW</a>
-                <a href="tambay_caps.php" id="tambayNavLink" class="nav-link-custom">TAMBAY CAPS</a>
+            <nav class="d-flex gap-3">
+                <a href="Home_Page.php" class="nav-link-custom">HOME</a>
+                <a href="menu.php" class="nav-link-custom">MENU</a>
+                <a href="order.php" class="nav-link-custom">ORDER NOW</a>
+                <a href="tambay_caps.php" target="_blank" class="nav-link-custom">TAMBAY CAPS</a>
+                <a href="food_packs.php" class="nav-link-custom active">FOOD PACKS</a>
             </nav>
         </div>
 
@@ -386,7 +330,7 @@ require_once 'config/db.php';
         </div>
 
         <div class="text-center mt-4 text-muted small">
-            &copy; <?php echo date('Y'); ?> Sairene TephTeph Tapsilogan &bull; Custom Food Pack Container Builder[cite: 12]
+            &copy; <?php echo date('Y'); ?> Sairene TephTeph Tapsilogan • Custom Food Pack Container Builder
         </div>
 
     </div>
