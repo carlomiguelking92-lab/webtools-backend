@@ -85,6 +85,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
 // Check logged in session status
 $is_logged_in = isset($_SESSION['user_id']);
+
+// Page selection for interactive menu inside home page
+$menu_page = isset($_GET['menu_page']) && $_GET['menu_page'] == 2 ? 2 : 1;
 ?>
 
 <!DOCTYPE html>
@@ -101,12 +104,8 @@ $is_logged_in = isset($_SESSION['user_id']);
 
     <style>
         body {
-            /* Full landscape background banner */
-            background-image: linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url('images/Best Seller (Landscape) (1) (1).png');
-            background-size: 100% 100%;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
+            background: url('Best Seller (Landscape) (1) (1).png') no-repeat center center fixed;
+            background-size: cover;
             color: #121212;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
@@ -141,25 +140,24 @@ $is_logged_in = isset($_SESSION['user_id']);
             transform: translateY(-2px);
         }
 
-        /* Large Outer Border Box with Frosted Glass Effect */
+        /* Large Outer Border Box with Semi-transparent White Background */
         .page-outer-frame {
             border: 2px solid #ffc107;
             border-radius: 12px;
             padding: 20px;
-            background-color: rgba(255, 255, 255, 0.22); /* Highly transparent glass */
-            backdrop-filter: blur(8px); /* Frosted glass blur effect */
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            background-color: rgba(255, 255, 255, 0.93);
+            backdrop-filter: blur(6px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
             max-width: 1200px;
             margin: 40px auto 0 auto;
         }
 
-        /* TOP FEATURED BANNER SPOT (Transparent Glass) */
+        /* TOP FEATURED BANNER SPOT */
         .top-banner-spot {
             position: relative;
             border: 2px solid #ffc107;
             border-radius: 10px;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 253, 240, 0.3) 100%);
-            backdrop-filter: blur(4px);
+            background: linear-gradient(135deg, #ffffff 0%, #fffdf0 100%);
             padding: 25px 30px;
             margin-bottom: 15px;
             overflow: hidden;
@@ -192,18 +190,12 @@ $is_logged_in = isset($_SESSION['user_id']);
         }
 
         .banner-text-content h1 {
-            color: #ffd700; /* Brighter gold for better contrast on background */
+            color: #d4a000;
             font-weight: 800;
             font-size: 2.2rem;
             margin-bottom: 4px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
-        }
-
-        .banner-text-content p {
-            color: #ffffff !important;
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
         }
 
         .banner-badges {
@@ -222,22 +214,16 @@ $is_logged_in = isset($_SESSION['user_id']);
             text-transform: uppercase;
         }
 
-        /* Double Sub-header Lines (Transparent Glass) */
+        /* Double Sub-header Lines */
         .sub-header-line-1, .sub-header-line-2 {
             border: 1px solid #ffc107;
-            background-color: rgba(255, 255, 255, 0.3);
-            backdrop-filter: blur(4px);
+            background-color: #ffffff;
             height: 36px;
             border-radius: 4px;
             margin-bottom: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-
-        .sub-header-line-1 span {
-            color: #ffffff !important;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
         }
 
         .sub-header-line-1 {
@@ -248,73 +234,17 @@ $is_logged_in = isset($_SESSION['user_id']);
             margin-bottom: 20px;
         }
 
-        /* Interactive Navigation Links with Hover Banners */
         .nav-link-custom {
-            color: #ffffff;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+            color: #121212;
             text-decoration: none;
             font-weight: bold;
             font-size: 0.85rem;
-            padding: 6px 14px;
-            border-radius: 6px;
-            border: 1px solid transparent;
-            transition: all 0.25s ease;
+            padding: 0 18px;
+            transition: color 0.2s ease;
         }
 
-        .nav-link-custom.active {
-            color: #ffc107;
-            border-color: #ffc107;
-        }
-
-        /* 1. Home Button Hover Preview */
-        #homeNavLink:hover {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/Best Seller (Landscape) (1) (1).png');
-            background-size: cover;
-            background-position: center;
-            color: #ffc107 !important;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
-            border: 1px solid #ffc107;
-        }
-
-        /* 2. Menu Button Hover Preview */
-        #menuNavLink:hover {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/menu_page_1.png');
-            background-size: cover;
-            background-position: center;
-            color: #ffc107 !important;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
-            border: 1px solid #ffc107;
-        }
-
-        /* 3. Order Now Button Hover Preview */
-        #orderNavLink:hover {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/.png');
-            background-size: cover;
-            background-position: center;
-            color: #ffc107 !important;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
-            border: 1px solid #ffc107;
-        }
-
-        /* 4. Food Packs Button Hover Preview */
-        #foodPacksNavLink:hover {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/.png');
-            background-size: cover;
-            background-position: center;
-            color: #ffc107 !important;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
-            border: 1px solid #ffc107;
-        }
-
-        /* 5. Tambay Caps Button Hover Preview */
-        #tambayNavLink:hover {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/tambay5.png');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            color: #ffc107 !important;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
-            border: 1px solid #ffc107;
+        .nav-link-custom:hover {
+            color: #d4a000;
         }
 
         /* Split Section Containers */
@@ -322,67 +252,95 @@ $is_logged_in = isset($_SESSION['user_id']);
             display: flex;
             gap: 20px;
             margin-bottom: 20px;
-            align-items: flex-start;
         }
 
-        /* Left Menu Box (Flush Portrait Banner) */
+        /* Left Menu Box */
         .left-menu-box {
             flex: 2;
             border: 2px solid #ffc107;
             border-radius: 8px;
-            background-color: rgba(255, 255, 255, 0.2);
+            background-color: #ffffff;
             position: relative;
-            padding: 0;
-            overflow: hidden;
+            padding: 15px;
+            min-height: 380px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .portrait-banner-img {
+        .interactive-board-wrapper {
+            position: relative;
             width: 100%;
-            height: auto;
-            display: block;
-            border-radius: 6px;
         }
 
-        /* Right Split Box (Transparent Glass) */
+        .menu-img {
+            width: 100%;
+            height: auto;
+            border-radius: 6px;
+            display: block;
+        }
+
+        /* Static Hotspot Bubbles */
+        .hotspot-circle {
+            position: absolute;
+            border: 2px solid #ffc107;
+            border-radius: 50%;
+            background: rgba(255, 193, 7, 0.25);
+            pointer-events: none;
+        }
+
+        /* Left & Right Control Arrows */
+        .arrow-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: #ffffff;
+            border: 2px solid #ffc107;
+            color: #121212;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-weight: bold;
+            z-index: 20;
+            transition: all 0.2s ease;
+        }
+
+        .arrow-btn:hover {
+            background-color: #ffc107;
+            color: #121212;
+        }
+
+        .arrow-left { left: 10px; }
+        .arrow-right { right: 10px; }
+
+        /* Right Split Box */
         .right-info-box {
             flex: 1;
             border: 2px solid #ffc107;
             border-radius: 8px;
-            background-color: rgba(255, 255, 255, 0.3);
-            backdrop-filter: blur(6px);
+            background-color: #ffffff;
             padding: 20px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
         }
 
-        .right-info-box h5 {
-            color: #ffc107 !important;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
-        }
-
-        .right-info-box p {
-            color: #ffffff !important;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
-        }
-
-        /* Bottom Full Width Line (Transparent Glass) */
+        /* Bottom Full Width Line */
         .bottom-full-line {
             border: 1px solid #ffc107;
-            background-color: rgba(255, 255, 255, 0.3);
-            backdrop-filter: blur(4px);
+            background-color: #ffffff;
             height: 36px;
             border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #ffffff;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+            color: #555555;
             font-size: 0.85rem;
-            font-weight: 600;
+            font-weight: 500;
         }
 
         @media (max-width: 992px) {
@@ -416,12 +374,12 @@ $is_logged_in = isset($_SESSION['user_id']);
         <!-- 1. TOP FEATURED BANNER SPOT -->
         <section class="top-banner-spot">
             <div class="banner-logo-container">
-                <img src="images/Logo Website Draft✨    Ashiee - Reyn (1).png" alt="Sairene TephTeph Logo">
+                <img src="Logo Website Draft✨    Ashiee - Reyn (1).png" alt="Sairene TephTeph Logo">
             </div>
 
             <div class="banner-text-content">
                 <h1>Sairene TephTeph Tapsilogan</h1>
-                <p class="small mb-2 fw-semibold">Your Favorite Neighborhood Tapsilogan & Tambayan • Fresh Silog Meals Everyday</p>
+                <p class="text-dark small mb-2 fw-semibold">Your Favorite Neighborhood Tapsilogan & Tambayan • Fresh Silog Meals Everyday</p>
                 
                 <div class="banner-badges">
                     <span class="banner-badge"><i class="fa-solid fa-clock me-1"></i> Open 24/7</span>
@@ -439,37 +397,65 @@ $is_logged_in = isset($_SESSION['user_id']);
 
         <!-- 2. Two Thin Sub-Header Lines -->
         <div class="sub-header-line-1">
-            <span class="small fw-bold"><i class="fa-solid fa-star text-warning me-1"></i> A Taste of Comfort • Hot & Fresh Silog Meals <i class="fa-solid fa-star text-warning ms-1"></i></span>
+            <span class="text-dark small fw-bold"><i class="fa-solid fa-star text-warning me-1"></i> A Taste of Comfort • Hot & Fresh Silog Meals <i class="fa-solid fa-star text-warning ms-1"></i></span>
         </div>
 
         <div class="sub-header-line-2">
-            <nav class="d-flex gap-3 align-items-center">
-                <a href="Home_Page.php" id="homeNavLink" class="nav-link-custom active">HOME</a>
-                <a href="menu.php" id="menuNavLink" class="nav-link-custom">MENU</a>
-                <a href="order.php" id="orderNavLink" class="nav-link-custom">ORDER NOW</a>
-                <a href="food_packs.php" id="foodPacksNavLink" class="nav-link-custom">FOOD PACKS</a>
-                <a href="tambay_caps.php" id="tambayNavLink" class="nav-link-custom">TAMBAY CAPS</a>
+            <nav class="d-flex gap-3">
+                <a href="Home_Page.php" class="nav-link-custom text-warning">HOME</a>
+                <a href="menu.php" class="nav-link-custom">MENU</a>
+                <a href="order.php" class="nav-link-custom">ORDER NOW</a>
+                <a href="food_packs.php" class="nav-link-custom">FOOD PACKS</a>
+                <a href="tambay_caps.php" target="_blank" class="nav-link-custom">TAMBAY CAPS</a>
             </nav>
         </div>
 
-        <!-- 3. Split Container (Left Portrait Banner Holder + Right Info Box) -->
+        <!-- 3. Split Container (Left Interactive Box + Right Info Box) -->
         <div class="split-container">
 
-            <!-- LEFT BOX: Portrait Banner Display -->
+            <!-- LEFT BOX: Menu Board with Static Circles & Side Arrows -->
             <div class="left-menu-box">
-                <img src="images/bannerko.png" alt="Sairene Tapsilogan Portrait Banner" class="portrait-banner-img">
+                
+                <!-- Left Arrow Control -->
+                <a href="Home_Page.php?menu_page=1" class="arrow-btn arrow-left" title="Previous Menu Page">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+
+                <div class="interactive-board-wrapper">
+                    <?php if ($menu_page == 1): ?>
+                        <img src="menu 1.png" alt="Silog Meals Menu" class="menu-img">
+
+                        <!-- Static Circle Hotspots -->
+                        <div class="hotspot-circle" style="top: 38%; left: 10%; width: 50px; height: 50px;"></div>
+                        <div class="hotspot-circle" style="top: 58%; left: 10%; width: 50px; height: 50px;"></div>
+                        <div class="hotspot-circle" style="top: 38%; left: 40%; width: 50px; height: 50px;"></div>
+                        <div class="hotspot-circle" style="top: 58%; left: 40%; width: 50px; height: 50px;"></div>
+
+                    <?php else: ?>
+                        <img src="menu 2.png" alt="Combos and Ala Carte" class="menu-img">
+
+                        <div class="hotspot-circle" style="top: 15%; left: 10%; width: 50px; height: 50px;"></div>
+                        <div class="hotspot-circle" style="top: 15%; left: 40%; width: 50px; height: 50px;"></div>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Right Arrow Control -->
+                <a href="Home_Page.php?menu_page=2" class="arrow-btn arrow-right" title="Next Menu Page">
+                    <i class="fa-solid fa-arrow-right"></i>
+                </a>
+
             </div>
 
             <!-- RIGHT BOX: History & Quick Action Info -->
             <div class="right-info-box">
                 <div>
-                    <h5 class="fw-bold mb-3 border-bottom border-warning pb-2">
+                    <h5 class="text-dark fw-bold mb-3 border-bottom border-warning pb-2">
                         <i class="fa-solid fa-utensils text-warning me-2"></i>About Our Spot
                     </h5>
-                    <p class="small leading-relaxed mb-3">
+                    <p class="small text-dark leading-relaxed mb-3">
                         At <strong>Sairene TephTeph Tapsilogan</strong>, we built our spot to feed hungry shift workers, late-night crews, and friends craving authentic Pinoy silog comfort food.
                     </p>
-                    <p class="small text-white-50 mb-0">
+                    <p class="small text-muted mb-0">
                         Open 24/7 at MRB Condominium C5, Taguig City.
                     </p>
                 </div>
@@ -478,7 +464,7 @@ $is_logged_in = isset($_SESSION['user_id']);
                     <a href="order.php" class="btn btn-warning w-100 fw-bold py-2 text-dark mb-2">
                         <i class="fa-solid fa-motorcycle me-2"></i>Order Online Now
                     </a>
-                    <a href="menu.php" class="btn btn-outline-light w-100 btn-sm fw-bold">
+                    <a href="menu.php" class="btn btn-outline-dark w-100 btn-sm fw-bold">
                         Full Menu View
                     </a>
                 </div>
@@ -539,7 +525,7 @@ $is_logged_in = isset($_SESSION['user_id']);
     </div>
 
     <!-- BOOTSTRAP 5 JS BUNDLE -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/bootstrap.bundle.min.js"></script>
 
     <!-- AUTHENTICATION JAVASCRIPT HANDLERS -->
     <script>
@@ -614,3 +600,4 @@ $is_logged_in = isset($_SESSION['user_id']);
     </script>
 </body>
 </html>
+
