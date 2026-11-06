@@ -124,23 +124,111 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <title>Sairene Tephteph Tapsilogan | Self-Service Kiosk</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"><link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 <style>
-:root{--ink:#24221f;--gold:#c99b35;--gold-light:#f8f0dc;--cream:#fbfaf7;--line:#e9e3d7;--muted:#77736c;--shadow:0 8px 24px #33260b0d}*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:Georgia,'Times New Roman',serif;padding-bottom:94px}button,input{font:inherit}
+:root{
+  --ink:#ffffff;
+  --gold:#ffc107;
+  --gold-light:rgba(255, 193, 7, 0.15);
+  --cream:rgba(0, 0, 0, 0.45);
+  --line:#ffc107;
+  --muted:#d1d1d1;
+  --shadow:0 8px 24px rgba(0, 0, 0, 0.5);
+}
+*{box-sizing:border-box}
 
-/* Enlarged Header Styles (+20% bigger layout) */
-.topbar{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20;padding:26px 0}
-/* Brandmark Logo (+30% bigger: 73px x 73px) */
-.brandmark{width:73px;height:73px;border-radius:50%;background:#24221f;color:#fff;display:grid;place-items:center;font-size:34px;border:4px double var(--gold);box-shadow:inset 0 0 0 2px #24221f;outline:1px solid #d8b75e;outline-offset:2px;overflow:hidden}
+body{
+  margin:0;
+  background-color:#2b1d0c;
+  color:var(--ink);
+  font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding-bottom:94px;
+  position:relative;
+  min-height:100vh;
+}
+
+/* Fixed Fullscreen Wooden Texture Overlay */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.35)), url('img/wood.jpg') no-repeat center center;
+  background-size: cover;
+  z-index: -1;
+}
+
+button,input{font:inherit}
+
+/* Enlarged Header Styles */
+.topbar{
+  background:rgba(0, 0, 0, 0.55);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  border-bottom:2px solid var(--line);
+  position:sticky;
+  top:0;
+  z-index:20;
+  padding:16px 0;
+}
+.brandmark{
+  width:73px;
+  height:73px;
+  border-radius:50%;
+  background:#121212;
+  color:#fff;
+  display:grid;
+  place-items:center;
+  font-size:34px;
+  border:3px solid var(--gold);
+  box-shadow:0 4px 12px rgba(0, 0, 0, 0.4);
+  overflow:hidden;
+}
 .brandmark img{width:100%;height:100%;object-fit:cover;border-radius:50%}
-.brandname{font-family:Georgia,serif;font-weight:850;font-size:1.35rem;letter-spacing:-.03em}
+.brandname{font-family:Georgia,serif;font-weight:850;font-size:1.35rem;letter-spacing:-.03em;color:var(--gold)}
 
 .screen{display:none}.screen.active{display:block;animation:fade .24s ease}@keyframes fade{from{opacity:.45;transform:translateY(4px)}to{opacity:1;transform:none}}
 
-/* Main Greeting Hero Card & Plate Logo (+30% bigger: 104px x 104px) */
-.hero{max-width:720px;margin:18px auto 22px;padding:30px 16px;text-align:center;background:linear-gradient(135deg,#fff,#f8f1df);border:1px solid #eee3c9;border-radius:24px;box-shadow:var(--shadow)}
-.hero-plate{width:104px;height:104px;margin:auto;border-radius:50%;display:grid;place-items:center;background:#fff;border:7px solid #282622;box-shadow:inset 0 0 0 4px #e7e2d8;color:#24221f;font-size:44px;overflow:hidden}
+/* Main Greeting Hero Card & Plate Logo */
+.hero{
+  max-width:720px;
+  margin:18px auto 22px;
+  padding:30px 16px;
+  text-align:center;
+  background:rgba(0, 0, 0, 0.55);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  border:2px solid var(--gold);
+  border-radius:24px;
+  box-shadow:var(--shadow);
+}
+.hero-plate{
+  width:104px;
+  height:104px;
+  margin:auto;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:#121212;
+  border:3px solid var(--gold);
+  color:#fff;
+  font-size:44px;
+  overflow:hidden;
+}
 .hero-plate img{width:100%;height:100%;object-fit:cover;border-radius:50%}
 
-.h-title{font-family:Georgia,serif;font-weight:850;letter-spacing:-.04em}.muted{color:var(--muted)}.panel,.choice-card{background:#ffffffd9;border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow)}.choice-card{padding:26px 18px;cursor:pointer;transition:.18s;height:100%}.choice-card:hover{transform:translateY(-2px);box-shadow:0 12px 28px #33260b12}.choice-icon{font-size:34px;color:var(--gold)}.btn-gold{background:var(--gold);color:#fff;border:1px solid var(--gold);font-weight:700;border-radius:13px;padding:11px 18px}.btn-gold:hover{background:#af8123;color:white}.btn-outline-gold{border:1px solid var(--gold);color:#8d681c;border-radius:12px;font-weight:650}.btn-outline-gold:hover,.btn-outline-gold.active{background:var(--gold);color:#fff}.form-control,.form-select{border-radius:12px;padding:12px;border-color:#ded7c8}
+.h-title{font-family:Georgia,serif;font-weight:850;letter-spacing:-.04em;color:var(--gold)}.muted{color:var(--muted) !important}
+.panel,.choice-card{
+  background:rgba(0, 0, 0, 0.55);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  border:2px solid var(--line);
+  border-radius:20px;
+  box-shadow:var(--shadow);
+  color:#fff;
+}
+.choice-card{padding:26px 18px;cursor:pointer;transition:.18s;height:100%}.choice-card:hover{transform:translateY(-2px);border-color:#fff;box-shadow:0 12px 28px rgba(255, 193, 7, 0.2)}.choice-icon{font-size:34px;color:var(--gold)}
+.btn-gold{background:var(--gold);color:#121212;border:1px solid var(--gold);font-weight:700;border-radius:13px;padding:11px 18px}.btn-gold:hover{background:#e0a800;color:#000}.btn-outline-gold{border:1px solid var(--gold);color:var(--gold);border-radius:12px;font-weight:650;background:rgba(0,0,0,0.3)}.btn-outline-gold:hover,.btn-outline-gold.active{background:var(--gold);color:#121212}.form-control,.form-select{border-radius:12px;padding:12px;border-color:var(--gold);background:#1e1e1e;color:#fff}.form-control:focus,.form-select:focus{background:#222;color:#fff;border-color:var(--gold);box-shadow:0 0 8px rgba(255,193,7,0.4)}
 
 /* Category Strip */
 .category-strip {
@@ -163,17 +251,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   font-weight: 700 !important;
   white-space: nowrap !important;
   border: 1px solid var(--gold) !important;
-  background: #fffaf0;
-  color: #8d681c;
+  background: rgba(0,0,0,0.5);
+  color: var(--gold);
 }
 .category-strip button.active {
   background: var(--gold) !important;
-  color: #fff !important;
+  color: #121212 !important;
 }
 
 .food-list{display:grid;grid-template-columns:1fr;gap:14px}
 
-/* Floating & Translucent Frosted Glass Dish Cards */
+/* Translucent Frosted Glass Dish Cards */
 .food-row {
   display: grid;
   grid-template-columns: 70px minmax(0, 1fr) auto;
@@ -181,18 +269,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   align-items: center;
   padding: 14px;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.65) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-  backdrop-filter: blur(16px) saturate(180%) !important;
-  border: 1px solid rgba(233, 227, 215, 0.75) !important;
-  box-shadow: 0 10px 25px -5px rgba(51, 38, 11, 0.08), 0 8px 10px -6px rgba(51, 38, 11, 0.04) !important;
+  background: rgba(0, 0, 0, 0.55) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid var(--gold) !important;
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5) !important;
   transition: transform 0.22s ease, box-shadow 0.22s ease;
   isolation: isolate;
   min-width: 0;
+  color: #fff;
 }
 .food-row:hover, .food-row:active {
   transform: translateY(-4px) !important;
-  box-shadow: 0 18px 30px -6px rgba(51, 38, 11, 0.12), 0 10px 12px -5px rgba(51, 38, 11, 0.06) !important;
+  box-shadow: 0 18px 30px -6px rgba(255, 193, 7, 0.25) !important;
 }
 
 /* 70x70 Centered Food Art Container */
@@ -201,7 +290,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   width: 70px;
   height: 70px;
   border-radius: 16px;
-  background: radial-gradient(circle at 30% 20%,#fff,#f2e1bb);
+  background: #121212;
+  border: 1px solid var(--gold);
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -217,10 +307,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   border-radius: inherit;
 }
 
-.food-info{flex:1;min-width:0}.food-info h3{font-size:1.04rem;font-weight:800;margin:0 0 4px}.food-desc{font-size:.86rem;color:var(--muted);margin:0 0 5px}.price{font-weight:800;color:#8d681c}.quantity{display:flex;align-items:center;gap:8px;flex-shrink:0}.qty-btn{width:36px;height:36px;border-radius:11px;border:1px solid var(--line);background:#fff;font-weight:800}.qty-num{min-width:14px;text-align:center;font-weight:800}.budget-control{border:1px solid var(--line);border-radius:999px;background:#fff;padding:8px 12px;font-weight:700}.cart-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);box-shadow:0 -8px 25px #33260b12;z-index:30;padding:12px 0}.cart-bar .inner{display:flex;justify-content:space-between;align-items:center;gap:12px}.badge-neighborhood{background:var(--gold-light);color:#785817;border:1px solid #ead9aa;border-radius:999px;padding:8px 12px;font-weight:700}.subtle{font-size:.9rem;color:var(--muted)}.section-title{font-weight:850;letter-spacing:-.025em}.summary-line{display:flex;justify-content:space-between;gap:14px;padding:8px 0}.summary-total{font-size:1.3rem;font-weight:850;border-top:1px solid var(--line);padding-top:14px}
+.food-info{flex:1;min-width:0}.food-info h3{font-size:1.04rem;font-weight:800;margin:0 0 4px;color:var(--gold)}.food-desc{font-size:.86rem;color:var(--muted);margin:0 0 5px}.price{font-weight:800;color:var(--gold)}.quantity{display:flex;align-items:center;gap:8px;flex-shrink:0}.qty-btn{width:36px;height:36px;border-radius:11px;border:1px solid var(--gold);background:#212529;color:var(--gold);font-weight:800}.qty-num{min-width:14px;text-align:center;font-weight:800;color:#fff}.budget-control{border:1px solid var(--gold);border-radius:999px;background:#212529;padding:8px 12px;font-weight:700}.cart-bar{position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);border-top:2px solid var(--gold);box-shadow:0 -8px 25px rgba(0,0,0,0.5);z-index:30;padding:12px 0}.cart-bar .inner{display:flex;justify-content:space-between;align-items:center;gap:12px}.badge-neighborhood{background:var(--gold-light);color:var(--gold);border:1px solid var(--gold);border-radius:999px;padding:8px 12px;font-weight:700}.subtle{font-size:.9rem;color:var(--muted)}.section-title{font-weight:850;letter-spacing:-.025em}.summary-line{display:flex;justify-content:space-between;gap:14px;padding:8px 0;border-color:rgba(255,193,7,0.3) !important}.summary-total{font-size:1.3rem;font-weight:850;border-top:1px solid var(--gold);padding-top:14px}
 
 /* Tip Jar and Gold Coin Dropping Animations */
-.jar-wrap{width:145px;height:165px;margin:0 auto;filter:drop-shadow(0 8px 7px #a37b1c12);position:relative}
+.jar-wrap{width:145px;height:165px;margin:0 auto;filter:drop-shadow(0 8px 7px rgba(0,0,0,0.5));position:relative}
 .jar-svg{width:100%;height:100%;overflow:visible}
 .jar-fill{transition:y .55s cubic-bezier(.2,.8,.2,1),height .55s cubic-bezier(.2,.8,.2,1),fill .3s;animation:liquidShimmer 2.8s ease-in-out infinite}
 @keyframes liquidShimmer{0%,100%{opacity:.88}50%{opacity:1}}
@@ -241,28 +331,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 .quantity-stepper{display:flex;align-items:center;gap:14px}.quantity-stepper .qty-btn{width:42px;height:42px;font-size:1.2rem}.quantity-stepper output{min-width:24px;font-weight:800;font-size:1.1rem;text-align:center}
-.tip-chip{border-radius:999px}.payment-card{max-width:760px;margin:auto}.qr-mark{width:42px;height:42px;border-radius:12px;background:#f7efd9;color:#9b741f;display:grid;place-items:center;font-size:23px}.modal-content{border:0;border-radius:22px;box-shadow:0 20px 60px #2118002b;overflow:hidden}.modal-header{background:#f8f0dc;border-bottom:1px solid #eadfca}.modal-footer{border-top:1px solid var(--line)}.toast-modal{background:#fffcf4;border:1px solid #e7d8b5;border-radius:18px;padding:20px;box-shadow:0 15px 45px #24180024}.toast-overlay{position:fixed;inset:0;background:#1d1a14a6;z-index:1100;display:none;align-items:center;justify-content:center;padding:18px}.toast-overlay.show{display:flex}.receipt-number{font-size:clamp(2.8rem,8vw,4.8rem);font-weight:900;letter-spacing:-.06em;color:#9a711d}.mini-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:800}
+.tip-chip{border-radius:999px}.payment-card{max-width:760px;margin:auto}.qr-mark{width:42px;height:42px;border-radius:12px;background:var(--gold);color:#121212;display:grid;place-items:center;font-size:23px}.modal-content{border:2px solid var(--gold);border-radius:22px;background:#1a1a1a;color:#fff;box-shadow:0 20px 60px rgba(0,0,0,0.8);overflow:hidden}.modal-header{background:rgba(0,0,0,0.4);border-bottom:1px solid var(--gold)}.modal-footer{border-top:1px solid rgba(255,193,7,0.3)}.toast-modal{background:#1e1e1e;border:2px solid var(--gold);color:#fff;border-radius:18px;padding:20px;box-shadow:0 15px 45px rgba(0,0,0,0.8)}.toast-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1100;display:none;align-items:center;justify-content:center;padding:18px}.toast-overlay.show{display:flex}.receipt-number{font-size:clamp(2.8rem,8vw,4.8rem);font-weight:900;letter-spacing:-.06em;color:var(--gold)}.mini-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:800}
 
-.menu-banner{margin:6px 0 22px;padding:25px 22px 27px;text-align:center;background:linear-gradient(135deg,#fffdf8,#f5e8c8);border:1px solid #dfc783;border-radius:22px;box-shadow:0 8px 24px #33260b0d;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:18px;text-align:left;min-height:150px}
-.banner-eyebrow{font:800 .72rem system-ui,sans-serif;letter-spacing:.18em;color:#98732b;margin-bottom:6px}.menu-banner h1{font:700 clamp(1.8rem,4vw,2.65rem) Georgia,serif;margin:0 0 8px;color:#24221f}.menu-banner p{font:.98rem system-ui,sans-serif;color:#77736c;margin:0;line-height:1.45}
-/* Menu Banner Logo (+30% bigger: 99px x 99px) */
-.menu-banner .banner-brandmark{width:99px;height:99px;border-radius:50%;background:#24221f;color:#fff;display:grid;place-items:center;font-size:45px;border:4px double var(--gold);box-shadow:inset 0 0 0 3px #24221f;outline:1px solid #d8b75e;outline-offset:3px;overflow:hidden}
+.menu-banner{margin:6px 0 22px;padding:25px 22px 27px;text-align:center;background:rgba(0, 0, 0, 0.55);backdrop-filter:blur(8px);border:2px solid var(--gold);border-radius:22px;box-shadow:0 8px 24px rgba(0,0,0,0.5);display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:18px;text-align:left;min-height:150px}
+.banner-eyebrow{font:800 .72rem system-ui,sans-serif;letter-spacing:.18em;color:var(--gold);margin-bottom:6px}.menu-banner h1{font:700 clamp(1.8rem,4vw,2.65rem) Georgia,serif;margin:0 0 8px;color:var(--gold)}.menu-banner p{font:.98rem system-ui,sans-serif;color:var(--muted);margin:0;line-height:1.45}
+.menu-banner .banner-brandmark{width:99px;height:99px;border-radius:50%;background:#121212;color:#fff;display:grid;place-items:center;font-size:45px;border:3px solid var(--gold);box-shadow:0 4px 12px rgba(0,0,0,0.4);overflow:hidden}
 .menu-banner .banner-brandmark img{width:100%;height:100%;object-fit:cover;border-radius:50%}
 .menu-banner .banner-copy{text-align:center;min-width:0}
 .banner-budget-wrap{width:220px;max-width:100%;display:flex;flex-direction:column;gap:7px;align-items:stretch}
-.menu-banner .banner-budget{width:100%;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;border:1px solid #ddcea4;background:#fffaf0;color:#5e4b22;border-radius:13px;padding:11px 14px;font-weight:800}
-.budget-gauge-track{height:8px;width:100%;background:rgba(201,155,53,.18);border-radius:99px;overflow:hidden;border:1px solid rgba(201,155,53,.22)}
-.budget-gauge-fill{height:100%;width:0;background:#c99b35;border-radius:99px;transition:width .25s ease,background .2s ease}
-.budget-current{font:800 .92rem system-ui,sans-serif;color:#5e4b22;text-align:right;font-variant-numeric:tabular-nums}
-.budget-current.over-budget{color:#d13d3d}
-.budget-gauge-fill.over-budget{background:#d13d3d}
+.menu-banner .banner-budget{width:100%;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;border:1px solid var(--gold);background:#212529;color:var(--gold);border-radius:13px;padding:11px 14px;font-weight:800}
+.budget-gauge-track{height:8px;width:100%;background:rgba(255,193,7,0.18);border-radius:99px;overflow:hidden;border:1px solid rgba(255,193,7,0.3)}
+.budget-gauge-fill{height:100%;width:0;background:var(--gold);border-radius:99px;transition:width .25s ease,background .2s ease}
+.budget-current{font:800 .92rem system-ui,sans-serif;color:var(--gold);text-align:right;font-variant-numeric:tabular-nums}
+.budget-current.over-budget{color:#ff4d4d}
+.budget-gauge-fill.over-budget{background:#ff4d4d}
 
 /* Matched Styling for Budget Warning Message */
 .budget-over-message{
   margin: 6px 0 0 0;
-  color: #5e4b22;
-  background: #fffaf0;
-  border: 1px solid #ddcea4;
+  color: #ffc107;
+  background: rgba(0,0,0,0.6);
+  border: 1px solid #ffc107;
   padding: 8px 10px;
   border-radius: 12px;
   font-family: Georgia, 'Times New Roman', serif;
@@ -274,17 +363,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   z-index: 5;
 }
 
-.category-intro{background:#fffdf8;border:1px solid #eee4ce;border-radius:14px;padding:13px 16px;margin:-2px 0 14px}
-.category-intro h3{font-size:1rem;font-weight:850;margin:0 0 3px}.category-intro p{font-size:.9rem;color:var(--muted);margin:0;line-height:1.4}
-.duo-options{display:grid;gap:9px}.duo-option{display:flex;align-items:center;gap:10px;width:100%;padding:12px;border:1px solid #e3d7b9;border-radius:13px;background:#fffdf8;text-align:left;color:var(--ink);transition:.15s}.duo-option.selected{border-color:var(--gold);background:#f8f0dc;box-shadow:inset 0 0 0 1px var(--gold)}.duo-option .duo-check{width:22px;height:22px;border:1.5px solid #b9a36e;border-radius:50%;display:grid;place-items:center;flex:0 0 22px;color:transparent}.duo-option.selected .duo-check{background:var(--gold);border-color:var(--gold);color:#fff}.duo-option .duo-name{font-weight:800}.duo-option .duo-price{display:block;font-size:.85rem;color:#80601e;margin-top:2px}
+.category-intro{background:rgba(0,0,0,0.45);border:1px solid var(--gold);border-radius:14px;padding:13px 16px;margin:-2px 0 14px}
+.category-intro h3{font-size:1rem;font-weight:850;margin:0 0 3px;color:var(--gold)}.category-intro p{font-size:.9rem;color:var(--muted);margin:0;line-height:1.4}
+.duo-options{display:grid;gap:9px}.duo-option{display:flex;align-items:center;gap:10px;width:100%;padding:12px;border:1px solid var(--gold);border-radius:13px;background:#212529;text-align:left;color:#fff;transition:.15s}.duo-option.selected{border-color:#fff;background:var(--gold);color:#121212}.duo-option.selected .duo-name, .duo-option.selected .duo-price{color:#121212 !important}.duo-option .duo-check{width:22px;height:22px;border:1.5px solid var(--gold);border-radius:50%;display:grid;place-items:center;flex:0 0 22px;color:transparent}.duo-option.selected .duo-check{background:#121212;border-color:#121212;color:var(--gold)}.duo-option .duo-name{font-weight:800}.duo-option .duo-price{display:block;font-size:.85rem;color:var(--gold);margin-top:2px}
 
 .neighborhood-options{display:flex;flex-wrap:wrap;gap:8px}
-.neighborhood-chip{border:1px solid #e4d6b4;border-radius:999px;padding:8px 12px;color:#6f541c;font-weight:700;font-size:.88rem;cursor:pointer;transition:all .15s}
+.neighborhood-chip{border:1px solid var(--gold);border-radius:999px;padding:8px 12px;color:var(--gold);background:rgba(0,0,0,0.4);font-weight:700;font-size:.88rem;cursor:pointer;transition:all .15s}
 .neighborhood-chip span{margin-right:4px}
-.neighborhood-chip.selected{background:#c99b35;color:#fff;border-color:#b78a28;box-shadow:0 4px 12px #c99b3533}
+.neighborhood-chip.selected{background:var(--gold);color:#121212;border-color:var(--gold);box-shadow:0 4px 12px rgba(255,193,7,0.4)}
 .cart-notifications{position:fixed;right:18px;bottom:92px;z-index:1000;display:flex;flex-direction:column;gap:10px;align-items:flex-end;pointer-events:none;max-width:min(390px,calc(100vw - 28px))}
-.cart-toast{display:flex;align-items:flex-start;gap:10px;background:linear-gradient(135deg,#fff4d2f5,#f0ce78f5);color:#4b3710;border:1px solid #d7ad48;border-radius:15px;padding:12px 15px;box-shadow:0 10px 28px #4c35052b;backdrop-filter:blur(14px);font:700 .9rem/1.4 system-ui,sans-serif;opacity:0;transform:translateY(8px);animation:toastIn .22s ease forwards,toastOut .35s ease 3.65s forwards}
-.cart-toast i{font-size:1.2rem;color:#8d681c;flex-shrink:0;margin-top:1px}
+.cart-toast{display:flex;align-items:flex-start;gap:10px;background:#212529;color:var(--gold);border:1px solid var(--gold);border-radius:15px;padding:12px 15px;box-shadow:0 10px 28px rgba(0,0,0,0.6);backdrop-filter:blur(14px);font:700 .9rem/1.4 system-ui,sans-serif;opacity:0;transform:translateY(8px);animation:toastIn .22s ease forwards,toastOut .35s ease 3.65s forwards}
+.cart-toast i{font-size:1.2rem;color:var(--gold);flex-shrink:0;margin-top:1px}
 @keyframes toastIn{to{opacity:1;transform:translateY(0)}}@keyframes toastOut{to{opacity:0;transform:translateY(8px)}}
 
 @media(max-width:576px){
@@ -315,14 +404,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <h1 class="h-title mt-3" style="font-size: clamp(1.8rem, 3.5vw, 2.3rem);">Kain na, tara!</h1>
     <p class="muted mb-0">Welcome to Sairene Tephteph Tapsilogan. What sounds good today?</p>
   </div>
-  <h2 class="h4 fw-bold text-center mb-3">How will you be dining?</h2>
+  <h2 class="h4 fw-bold text-center mb-3 text-warning">How will you be dining?</h2>
   <div class="row g-3 justify-content-center mx-auto" style="max-width:760px">
-    <div class="col-6"><button class="choice-card w-100" onclick="chooseDining('Dine-In')"><i class="bi bi-cup-hot choice-icon"></i><h3 class="h5 fw-bold mt-3">Dine-In</h3><p class="subtle mb-0">Settle in and enjoy</p></button></div>
-    <div class="col-6"><button class="choice-card w-100" onclick="chooseDining('Take-Out')"><i class="bi bi-bag-heart choice-icon"></i><h3 class="h5 fw-bold mt-3">Take-Out</h3><p class="subtle mb-0">Pack it up to go</p></button></div>
+    <div class="col-6"><button class="choice-card w-100" onclick="chooseDining('Dine-In')"><i class="bi bi-cup-hot choice-icon"></i><h3 class="h5 fw-bold mt-3 text-warning">Dine-In</h3><p class="subtle mb-0">Settle in and enjoy</p></button></div>
+    <div class="col-6"><button class="choice-card w-100" onclick="chooseDining('Take-Out')"><i class="bi bi-bag-heart choice-icon"></i><h3 class="h5 fw-bold mt-3 text-warning">Take-Out</h3><p class="subtle mb-0">Pack it up to go</p></button></div>
   </div>
 </section>
-<section id="screen-table" class="screen"><button class="btn btn-link px-0 muted mb-2" onclick="showScreen('screen-welcome')"><i class="bi bi-arrow-left me-1"></i>Back</button><div class="panel p-4 p-md-5 mx-auto text-center" style="max-width:650px"><div class="choice-icon mb-2"><i class="bi bi-people"></i></div><h1 class="h-title h2">Got a table or group name?</h1><p class="muted">Add a table number or group tag so your order is easier to identify. It's completely optional.</p><label class="form-label fw-semibold text-start d-block" for="tableTag">Table number or group tag</label><input class="form-control form-control-lg mb-3" id="tableTag" placeholder="e.g. Table 4, Team Sampaguita"><button class="btn btn-gold w-100" onclick="confirmTable()">Continue <i class="bi bi-arrow-right ms-1"></i></button><button class="btn btn-link muted mt-2" onclick="confirmTable(true)">Skip for now</button></div></section>
-<section id="screen-reorder" class="screen"><button class="btn btn-link px-0 muted mb-2" onclick="goBackFromReorder()"><i class="bi bi-arrow-left me-1"></i>Back</button><div class="panel p-4 p-md-5 mx-auto text-center" style="max-width:650px"><div class="choice-icon mb-3"><i class="bi bi-arrow-repeat"></i></div><h1 class="h-title h2">Skip the hassle and reorder?</h1><p class="muted">Back for another round? If you saved an order with us before, we can bring it back so you don't have to pick everything all over again.</p><div class="text-start mt-4"><label class="form-label fw-semibold" for="reorderDigits">Last four digits of your saved phone number</label><input id="reorderDigits" class="form-control form-control-lg" inputmode="numeric" maxlength="4" placeholder="e.g. 1234"></div><button class="btn btn-gold w-100 mt-3" onclick="findReorder()">Find My Last Order</button><button class="btn btn-outline-gold w-100 mt-2" onclick="startFresh()">No Thanks, Start Fresh</button><div id="reorderResult" class="mt-3"></div></div></section>
+<section id="screen-table" class="screen"><button class="btn btn-link px-0 text-warning text-decoration-none mb-2" onclick="showScreen('screen-welcome')"><i class="bi bi-arrow-left me-1"></i>Back</button><div class="panel p-4 p-md-5 mx-auto text-center" style="max-width:650px"><div class="choice-icon mb-2"><i class="bi bi-people"></i></div><h1 class="h-title h2">Got a table or group name?</h1><p class="muted">Add a table number or group tag so your order is easier to identify. It's completely optional.</p><label class="form-label fw-semibold text-start d-block text-warning" for="tableTag">Table number or group tag</label><input class="form-control form-control-lg mb-3" id="tableTag" placeholder="e.g. Table 4, Team Sampaguita"><button class="btn btn-gold w-100" onclick="confirmTable()">Continue <i class="bi bi-arrow-right ms-1"></i></button><button class="btn btn-link text-light text-decoration-none mt-2" onclick="confirmTable(true)">Skip for now</button></div></section>
+<section id="screen-reorder" class="screen"><button class="btn btn-link px-0 text-warning text-decoration-none mb-2" onclick="goBackFromReorder()"><i class="bi bi-arrow-left me-1"></i>Back</button><div class="panel p-4 p-md-5 mx-auto text-center" style="max-width:650px"><div class="choice-icon mb-3"><i class="bi bi-arrow-repeat"></i></div><h1 class="h-title h2">Skip the hassle and reorder?</h1><p class="muted">Back for another round? If you saved an order with us before, we can bring it back so you don't have to pick everything all over again.</p><div class="text-start mt-4"><label class="form-label fw-semibold text-warning" for="reorderDigits">Last four digits of your saved phone number</label><input id="reorderDigits" class="form-control form-control-lg" inputmode="numeric" maxlength="4" placeholder="e.g. 1234"></div><button class="btn btn-gold w-100 mt-3" onclick="findReorder()">Find My Last Order</button><button class="btn btn-outline-gold w-100 mt-2" onclick="startFresh()">No Thanks, Start Fresh</button><div id="reorderResult" class="mt-3"></div></div></section>
 <section id="screen-menu" class="screen">
   <div class="menu-banner">
     <div class="banner-brandmark"><img src="logo.png" alt="Logo" onerror="this.remove();this.parentElement.innerHTML='<i class=\'bi bi-egg-fried\'></i>'"></div>
@@ -345,8 +434,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <div id="categoryIntro" class="category-intro"><h3>Something delicious for every craving</h3><p>Take a look around and find the silog that feels just right.</p></div>
   <div id="menuList" class="food-list"></div>
 </section>
-<section id="screen-review" class="screen"><button class="btn btn-link px-0 muted mb-2" onclick="backToMenuFromReview()"><i class="bi bi-arrow-left me-1"></i>Back to menu</button><h1 class="h-title h2 mb-1">Review your order</h1><p class="muted mb-4">One last look before payment.</p><div class="row g-3"><div class="col-lg-7"><div class="panel p-3 p-md-4"><h2 class="h5 fw-bold mb-3">Your food</h2><div id="reviewItems"></div><div class="summary-line"><span class="muted">Food bill</span><strong id="reviewSubtotal">₱0.00</strong></div></div></div><div class="col-lg-5"><div class="panel p-3 p-md-4"><h2 class="h5 fw-bold mb-3">A little about you</h2><label class="form-label fw-semibold" for="customerName">Your name <span class="text-danger">*</span></label><input id="customerName" class="form-control mb-3" placeholder="Name or nickname"><label class="form-label fw-semibold d-block">Choose your neighborhood badge</label><input type="hidden" id="neighborhood" value=""><div class="neighborhood-options mb-3" role="group" aria-label="Neighborhood badges"><button type="button" class="neighborhood-chip" data-neighborhood="Night Shift Hero" onclick="selectNeighborhood(this)"><span>🌙</span> Night Shift Hero</button><button type="button" class="neighborhood-chip" data-neighborhood="Local Regular" onclick="selectNeighborhood(this)"><span>🏡</span> Local Regular</button><button type="button" class="neighborhood-chip" data-neighborhood="Early Bird" onclick="selectNeighborhood(this)"><span>🐣</span> Early Bird</button><button type="button" class="neighborhood-chip" data-neighborhood="Weekend Foodie" onclick="selectNeighborhood(this)"><span>🍜</span> Weekend Foodie</button><button type="button" class="neighborhood-chip" data-neighborhood="First-Time Visitor" onclick="selectNeighborhood(this)"><span>✨</span> First-Time Visitor</button></div><label class="form-label fw-semibold" for="phone">Phone number <span class="muted fw-normal">(optional)</span></label><input id="phone" class="form-control" inputmode="tel" placeholder="09XX XXX XXXX"><div class="form-check mt-3"><input class="form-check-input" type="checkbox" id="saveOrder"><label class="form-check-label small" for="saveOrder">Save this order for next time</label></div><div class="small muted mt-1">Only saved when you choose this option and provide a phone number.</div><div id="reviewBudgetWarning" class="alert alert-warning mt-3 d-none mb-0"></div></div></div></div><button class="btn btn-gold btn-lg w-100 mt-4" onclick="proceedPayment()">Proceed to Payment <i class="bi bi-arrow-right ms-1"></i></button></section>
-<section id="screen-payment" class="screen"><button class="btn btn-link px-0 muted mb-2" onclick="backToReviewFromPayment()"><i class="bi bi-arrow-left me-1"></i>Back to review</button><div class="payment-card"><div class="text-center mb-3"><h1 class="h-title h2 mb-1">Payment</h1><p class="muted">Choose a tip if you'd like, then review your total.</p></div><div class="panel p-3 p-md-4 mb-3"><div class="row align-items-center g-3"><div class="col-md-5 text-center">
+<section id="screen-review" class="screen"><button class="btn btn-link px-0 text-warning text-decoration-none mb-2" onclick="backToMenuFromReview()"><i class="bi bi-arrow-left me-1"></i>Back to menu</button><h1 class="h-title h2 mb-1">Review your order</h1><p class="muted mb-4">One last look before payment.</p><div class="row g-3"><div class="col-lg-7"><div class="panel p-3 p-md-4"><h2 class="h5 fw-bold mb-3 text-warning">Your food</h2><div id="reviewItems"></div><div class="summary-line"><span class="muted">Food bill</span><strong id="reviewSubtotal" class="text-warning">₱0.00</strong></div></div></div><div class="col-lg-5"><div class="panel p-3 p-md-4"><h2 class="h5 fw-bold mb-3 text-warning">A little about you</h2><label class="form-label fw-semibold text-warning" for="customerName">Your name <span class="text-danger">*</span></label><input id="customerName" class="form-control mb-3" placeholder="Name or nickname"><label class="form-label fw-semibold d-block text-warning">Choose your neighborhood badge</label><input type="hidden" id="neighborhood" value=""><div class="neighborhood-options mb-3" role="group" aria-label="Neighborhood badges"><button type="button" class="neighborhood-chip" data-neighborhood="Night Shift Hero" onclick="selectNeighborhood(this)"><span>🌙</span> Night Shift Hero</button><button type="button" class="neighborhood-chip" data-neighborhood="Local Regular" onclick="selectNeighborhood(this)"><span>🏡</span> Local Regular</button><button type="button" class="neighborhood-chip" data-neighborhood="Early Bird" onclick="selectNeighborhood(this)"><span>🐣</span> Early Bird</button><button type="button" class="neighborhood-chip" data-neighborhood="Weekend Foodie" onclick="selectNeighborhood(this)"><span>🍜</span> Weekend Foodie</button><button type="button" class="neighborhood-chip" data-neighborhood="First-Time Visitor" onclick="selectNeighborhood(this)"><span>✨</span> First-Time Visitor</button></div><label class="form-label fw-semibold text-warning" for="phone">Phone number <span class="muted fw-normal">(optional)</span></label><input id="phone" class="form-control" inputmode="tel" placeholder="09XX XXX XXXX"><div class="form-check mt-3"><input class="form-check-input" type="checkbox" id="saveOrder"><label class="form-check-label small" for="saveOrder">Save this order for next time</label></div><div class="small muted mt-1">Only saved when you choose this option and provide a phone number.</div><div id="reviewBudgetWarning" class="alert alert-warning mt-3 d-none mb-0"></div></div></div></div><button class="btn btn-gold btn-lg w-100 mt-4" onclick="proceedPayment()">Proceed to Payment <i class="bi bi-arrow-right ms-1"></i></button></section>
+<section id="screen-payment" class="screen"><button class="btn btn-link px-0 text-warning text-decoration-none mb-2" onclick="backToReviewFromPayment()"><i class="bi bi-arrow-left me-1"></i>Back to review</button><div class="payment-card"><div class="text-center mb-3"><h1 class="h-title h2 mb-1">Payment</h1><p class="muted">Choose a tip if you'd like, then review your total.</p></div><div class="panel p-3 p-md-4 mb-3"><div class="row align-items-center g-3"><div class="col-md-5 text-center">
   <div class="jar-wrap">
     <svg class="jar-svg" viewBox="0 0 120 145" role="img" aria-label="Animated gold tip jar">
       <defs>
@@ -363,18 +452,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <rect x="38" y="8" width="44" height="12" rx="4" fill="#b88a2b"/>
       <rect x="33" y="18" width="54" height="9" rx="4" fill="#e5c56c" stroke="#b88a2b" stroke-width="1.5"/>
       <g id="coinDropContainer"></g>
-      <path d="M31 27 Q22 29 22 42 L22 119 Q22 132 38 132 H82 Q98 132 98 119 L98 42 Q98 29 89 27 Z" fill="none" stroke="#bca66f" stroke-width="3"/>
+      <path d="M31 27 Q22 29 22 42 L22 119 Q22 132 38 132 H82 Q98 132 98 119 L98 42 Q98 29 89 27 Z" fill="none" stroke="#ffc107" stroke-width="3"/>
       <path d="M37 39 L37 106" stroke="#fff" stroke-width="5" stroke-linecap="round" class="jar-shine"/>
       <path d="M45 34 L45 55" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".7"/>
     </svg>
   </div>
-  <div class="fw-bold">A little extra love?</div><div class="small muted">Totally optional</div>
+  <div class="fw-bold text-warning">A little extra love?</div><div class="small muted">Totally optional</div>
 </div>
-<div class="col-md-7"><div class="d-flex justify-content-between align-items-center"><label for="tipSlider" class="fw-bold">Kitchen tip</label><strong id="tipDisplay">₱0.00</strong></div><input id="tipSlider" class="form-range mt-3" type="range" min="0" max="200" step="5" value="0" oninput="setTip(this.value)"><div class="d-flex flex-wrap gap-2 mt-2"><button class="btn btn-outline-gold tip-chip" onclick="setTip(0)">No tip</button><button class="btn btn-outline-gold tip-chip" onclick="setTip(20)">₱20</button><button class="btn btn-outline-gold tip-chip" onclick="setTip(50)">₱50</button><button class="btn btn-outline-gold tip-chip" onclick="setTip(100)">₱100</button><button class="btn btn-outline-gold tip-chip" onclick="setTip(150)">₱150</button><button class="btn btn-outline-gold tip-chip" onclick="setTip(200)">₱200</button></div></div></div></div><div class="panel p-3 p-md-4 mb-3"><div class="summary-line"><span class="muted">Food bill</span><strong id="paymentFood">₱0.00</strong></div><div class="summary-line"><span class="muted">Tip</span><strong id="paymentTip">₱0.00</strong></div><div class="summary-line border-top mt-2 pt-3"><span class="muted">Calculation</span><span id="paymentCalculation" class="fw-semibold text-end">₱0.00 + ₱0.00</span></div><div class="summary-line align-items-center mb-0"><span class="h5 fw-bold mb-0">Total Bill</span><span class="h3 fw-bold mb-0" id="paymentTotal">₱0.00</span></div></div><div class="panel p-3 p-md-4 mb-3"><div class="d-flex align-items-center gap-3 mb-3"><div class="qr-mark"><i class="bi bi-qr-code"></i></div><div><h2 class="h5 fw-bold mb-1">GCash</h2><div class="small muted">Payment details</div></div></div><div class="summary-line"><span class="muted">GCash number</span><strong>09270466231</strong></div><div class="summary-line"><span class="muted">Account name</span><strong>Sarippudin Aming</strong></div><button class="btn btn-outline-gold w-100 mt-2" onclick="copyGcash()"><i class="bi bi-copy me-1"></i>Copy GCash Number</button></div><div class="panel p-3 p-md-4"><div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="paymentAcknowledged"><label class="form-check-label" for="paymentAcknowledged">I have completed the payment.</label></div><button class="btn btn-gold btn-lg w-100" onclick="confirmPayment()">Confirm Order <i class="bi bi-check2 ms-1"></i></button></div><div class="panel p-3 mt-3"><button class="btn btn-outline-gold w-100" onclick="toggleSplit()"><i class="bi bi-people me-1"></i>Split the bill (optional)</button><div id="splitPanel" class="mt-3 d-none"><label class="form-label fw-semibold" for="splitCount">How many people are sharing?</label><input class="form-control" id="splitCount" type="number" min="1" step="1" value="2" oninput="updateSplit()"><div class="mt-2 fw-bold" id="splitResult">Estimated share: ₱0.00 per person</div></div></div></div></section>
-<section id="screen-success" class="screen"><div class="panel p-4 p-md-5 mx-auto text-center" style="max-width:650px"><div class="display-3" style="color:#b88a2b"><i class="bi bi-check-circle-fill"></i></div><h1 class="h-title h2 mt-2">Order confirmed!</h1><p class="muted">Thank you for choosing Sairene Tephteph Tapsilogan.</p><div class="my-4 p-4 rounded-4" style="background:var(--gold-light);border:1px solid #ead9aa"><div class="mini-label">Your queue number</div><div class="receipt-number" id="queueNumber">—</div><div class="fw-bold" id="successName"></div><span class="badge-neighborhood d-inline-block mt-2" id="successBadge"></span><div class="mt-2 muted" id="successDining"></div><div class="muted small" id="successTag"></div></div><div class="text-start panel p-3 mb-3"><h2 class="h6 fw-bold">Order summary</h2><div id="successItems"></div><div class="summary-line"><span class="muted">Food bill</span><strong id="successFood"></strong></div><div class="summary-line"><span class="muted">Tip</span><strong id="successTip"></strong></div><div class="summary-line border-top pt-3"><strong>Total bill</strong><strong id="successTotal"></strong></div></div><button class="btn btn-gold btn-lg w-100" onclick="resetKiosk()">Start New Order</button></div></section>
-</main><div id="cartNotifications" class="cart-notifications" aria-live="polite" aria-atomic="false"></div><div class="cart-bar" id="cartBar"><div class="container inner"><div><div class="fw-bold"><i class="bi bi-basket2 me-1" style="color:var(--gold)"></i><span id="cartCount">0 items</span></div><div class="muted small" id="cartTotal">₱0.00</div></div><button class="btn btn-gold" onclick="openReview()">View Order <i class="bi bi-arrow-right ms-1"></i></button></div></div>
-<div class="modal fade" id="customModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h2 class="modal-title h5 fw-bold" id="customTitle">Customize your meal</h2><button class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body"><div id="customItemName" class="fw-bold mb-1"></div><p id="customItemDesc" class="food-desc mb-3"></p><div id="riceSection" class="mb-3"><label class="form-label fw-semibold"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 24 24" class="me-1" style="vertical-align: -0.125em;"><path d="M12 3a3 3 0 0 0-3 3h6a3 3 0 0 0-3-3zm8.5 5h-17a1.5 1.5 0 0 0-1.5 1.5c0 4.35 3.12 7.95 7.25 8.75V20a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1.75c4.13-.8 7.25-4.4 7.25-8.75a1.5 1.5 0 0 0-1.5-1.5z"/></svg>Rice Option</label><div class="d-grid gap-2"><label class="btn btn-outline-gold text-start"><input class="form-check-input me-2" type="radio" name="rice" value="Garlic Rice" checked>Garlic Rice</label><label class="btn btn-outline-gold text-start"><input class="form-check-input me-2" type="radio" name="rice" value="Plain Rice">Plain Rice</label></div></div><div id="eggSection" class="mb-3"><label class="form-label fw-semibold"><i class="bi bi-egg-fried me-1" aria-hidden="true"></i>Egg Option</label><div class="d-grid gap-2"><label class="btn btn-outline-gold text-start"><input class="form-check-input me-2" type="radio" name="rice-egg" value="Sunny-side up" checked>Sunny-side up</label><label class="btn btn-outline-gold text-start"><input class="form-check-input me-2" type="radio" name="rice-egg" value="Scrambled">Scrambled</label><label class="btn btn-outline-gold text-start"><input class="form-check-input me-2" type="radio" name="rice-egg" value="Well-done">Well-done</label></div></div><div id="duoSection" class="mb-3 d-none"><div class="form-label fw-semibold"><i class="bi bi-people-fill me-1" aria-hidden="true"></i>Combo Upgrade <span class="muted fw-normal">(optional)</span></div><div id="duoOptions" class="duo-options"></div><input type="hidden" id="duoCombo" value=""><div class="small muted mt-2">Tap an option to upgrade, or keep your solo meal.</div></div><label class="form-label fw-semibold d-block">Quantity</label><div class="quantity-stepper"><button type="button" class="qty-btn" onclick="changeCustomQty(-1)" aria-label="Decrease quantity">−</button><output id="customQtyDisplay" class="qty-num">1</output><button type="button" class="qty-btn" onclick="changeCustomQty(1)" aria-label="Increase quantity">+</button></div><input id="customQty" type="hidden" value="1"></div><div class="modal-footer"><button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button><button class="btn btn-gold" onclick="addCustomizedItem()">Add to Order</button></div></div></div></div>
-<div class="toast-overlay" id="popupOverlay"><div class="toast-modal w-100" style="max-width:430px"><div class="d-flex align-items-start gap-3"><div class="choice-icon"><i class="bi bi-info-circle"></i></div><div class="flex-grow-1"><h2 class="h5 fw-bold" id="popupTitle">A quick note</h2><div id="popupMessage" class="muted"></div></div></div><div id="popupActions" class="d-flex gap-2 justify-content-end mt-4 flex-wrap"></div></div></div>
+<div class="col-md-7"><div class="d-flex justify-content-between align-items-center"><label for="tipSlider" class="fw-bold text-warning">Kitchen tip</label><strong id="tipDisplay" class="text-warning">₱0.00</strong></div><input id="tipSlider" class="form-range mt-3" type="range" min="0" max="200" step="5" value="0" oninput="setTip(this.value)"><div class="d-flex flex-wrap gap-2 mt-2"><button class="btn btn-outline-gold tip-chip" onclick="setTip(0)">No tip</button><button class="btn btn-outline-gold tip-chip" onclick="setTip(20)">₱20</button><button class="btn btn-outline-gold tip-chip" onclick="setTip(50)">₱50</button><button class="btn btn-outline-gold tip-chip" onclick="setTip(100)">₱100</button><button class="btn btn-outline-gold tip-chip" onclick="setTip(150)">₱150</button><button class="btn btn-outline-gold tip-chip" onclick="setTip(200)">₱200</button></div></div></div></div><div class="panel p-3 p-md-4 mb-3"><div class="summary-line"><span class="muted">Food bill</span><strong id="paymentFood" class="text-warning">₱0.00</strong></div><div class="summary-line"><span class="muted">Tip</span><strong id="paymentTip" class="text-warning">₱0.00</strong></div><div class="summary-line border-top mt-2 pt-3"><span class="muted">Calculation</span><span id="paymentCalculation" class="fw-semibold text-end text-light">₱0.00 + ₱0.00</span></div><div class="summary-line align-items-center mb-0"><span class="h5 fw-bold mb-0 text-warning">Total Bill</span><span class="h3 fw-bold mb-0 text-warning" id="paymentTotal">₱0.00</span></div></div><div class="panel p-3 p-md-4 mb-3"><div class="d-flex align-items-center gap-3 mb-3"><div class="qr-mark"><i class="bi bi-qr-code"></i></div><div><h2 class="h5 fw-bold mb-1 text-warning">GCash</h2><div class="small muted">Payment details</div></div></div><div class="summary-line"><span class="muted">GCash number</span><strong class="text-warning">09270466231</strong></div><div class="summary-line"><span class="muted">Account name</span><strong class="text-warning">Sarippudin Aming</strong></div><button class="btn btn-outline-gold w-100 mt-2" onclick="copyGcash()"><i class="bi bi-copy me-1"></i>Copy GCash Number</button></div><div class="panel p-3 p-md-4"><div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="paymentAcknowledged"><label class="form-check-label text-light" for="paymentAcknowledged">I have completed the payment.</label></div><button class="btn btn-gold btn-lg w-100" onclick="confirmPayment()">Confirm Order <i class="bi bi-check2 ms-1"></i></button></div><div class="panel p-3 mt-3"><button class="btn btn-outline-gold w-100" onclick="toggleSplit()"><i class="bi bi-people me-1"></i>Split the bill (optional)</button><div id="splitPanel" class="mt-3 d-none"><label class="form-label fw-semibold text-warning" for="splitCount">How many people are sharing?</label><input class="form-control" id="splitCount" type="number" min="1" step="1" value="2" oninput="updateSplit()"><div class="mt-2 fw-bold text-warning" id="splitResult">Estimated share: ₱0.00 per person</div></div></div></div></section>
+<section id="screen-success" class="screen"><div class="panel p-4 p-md-5 mx-auto text-center" style="max-width:650px"><div class="display-3" style="color:var(--gold)"><i class="bi bi-check-circle-fill"></i></div><h1 class="h-title h2 mt-2">Order confirmed!</h1><p class="muted">Thank you for choosing Sairene Tephteph Tapsilogan.</p><div class="my-4 p-4 rounded-4" style="background:rgba(0,0,0,0.6);border:2px solid var(--gold)"><div class="mini-label">Your queue number</div><div class="receipt-number" id="queueNumber">—</div><div class="fw-bold text-warning" id="successName"></div><span class="badge-neighborhood d-inline-block mt-2" id="successBadge"></span><div class="mt-2 text-light" id="successDining"></div><div class="muted small" id="successTag"></div></div><div class="text-start panel p-3 mb-3"><h2 class="h6 fw-bold text-warning">Order summary</h2><div id="successItems"></div><div class="summary-line"><span class="muted">Food bill</span><strong id="successFood" class="text-warning"></strong></div><div class="summary-line"><span class="muted">Tip</span><strong id="successTip" class="text-warning"></strong></div><div class="summary-line border-top pt-3"><strong class="text-warning">Total bill</strong><strong id="successTotal" class="text-warning"></strong></div></div><button class="btn btn-gold btn-lg w-100" onclick="resetKiosk()">Start New Order</button></div></section>
+</main><div id="cartNotifications" class="cart-notifications" aria-live="polite" aria-atomic="false"></div><div class="cart-bar" id="cartBar"><div class="container inner"><div><div class="fw-bold text-warning"><i class="bi bi-basket2 me-1" style="color:var(--gold)"></i><span id="cartCount">0 items</span></div><div class="muted small" id="cartTotal">₱0.00</div></div><button class="btn btn-gold" onclick="openReview()">View Order <i class="bi bi-arrow-right ms-1"></i></button></div></div>
+<div class="modal fade" id="customModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h2 class="modal-title h5 fw-bold text-warning" id="customTitle">Customize your meal</h2><button class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body"><div id="customItemName" class="fw-bold mb-1 text-warning"></div><p id="customItemDesc" class="food-desc mb-3"></p><div id="riceSection" class="mb-3"><label class="form-label fw-semibold text-warning"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 24 24" class="me-1" style="vertical-align: -0.125em;"><path d="M12 3a3 3 0 0 0-3 3h6a3 3 0 0 0-3-3zm8.5 5h-17a1.5 1.5 0 0 0-1.5 1.5c0 4.35 3.12 7.95 7.25 8.75V20a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1.75c4.13-.8 7.25-4.4 7.25-8.75a1.5 1.5 0 0 0-1.5-1.5z"/></svg>Rice Option</label><div class="d-grid gap-2"><label class="btn btn-outline-gold text-start"><input class="form-check-input me-2" type="radio" name="rice" value="Garlic Rice" checked>Garlic Rice</label><label class="btn btn-outline-gold text-start"><input class="form-check-input me-2" type="radio" name="rice" value="Plain Rice">Plain Rice</label></div></div><div id="eggSection" class="mb-3"><label class="form-label fw-semibold text-warning"><i class="bi bi-egg-fried me-1" aria-hidden="true"></i>Egg Option</label><div class="d-grid gap-2"><label class="btn btn-outline-gold text-start"><input class="form-check-input me-2" type="radio" name="rice-egg" value="Sunny-side up" checked>Sunny-side up</label><label class="btn btn-outline-gold text-start"><input class="form-check-input me-2" type="radio" name="rice-egg" value="Scrambled">Scrambled</label><label class="btn btn-outline-gold text-start"><input class="form-check-input me-2" type="radio" name="rice-egg" value="Well-done">Well-done</label></div></div><div id="duoSection" class="mb-3 d-none"><div class="form-label fw-semibold text-warning"><i class="bi bi-people-fill me-1" aria-hidden="true"></i>Combo Upgrade <span class="muted fw-normal">(optional)</span></div><div id="duoOptions" class="duo-options"></div><input type="hidden" id="duoCombo" value=""><div class="small muted mt-2">Tap an option to upgrade, or keep your solo meal.</div></div><label class="form-label fw-semibold d-block text-warning">Quantity</label><div class="quantity-stepper"><button type="button" class="qty-btn" onclick="changeCustomQty(-1)" aria-label="Decrease quantity">−</button><output id="customQtyDisplay" class="qty-num">1</output><button type="button" class="qty-btn" onclick="changeCustomQty(1)" aria-label="Increase quantity">+</button></div><input id="customQty" type="hidden" value="1"></div><div class="modal-footer"><button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button><button class="btn btn-gold" onclick="addCustomizedItem()">Add to Order</button></div></div></div></div>
+<div class="toast-overlay" id="popupOverlay"><div class="toast-modal w-100" style="max-width:430px"><div class="d-flex align-items-start gap-3"><div class="choice-icon"><i class="bi bi-info-circle"></i></div><div class="flex-grow-1"><h2 class="h5 fw-bold text-warning" id="popupTitle">A quick note</h2><div id="popupMessage" class="muted"></div></div></div><div id="popupActions" class="d-flex gap-2 justify-content-end mt-4 flex-wrap"></div></div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
@@ -490,7 +579,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try { saved = JSON.parse(localStorage.getItem('saireneSavedOrders') || '[]'); } catch (e) {}
             const found = [...saved].reverse().find(o => String(o.phone || '').replace(/\D/g, '').endsWith(digits));
             if (!found) {
-              $('reorderResult').innerHTML = '<div class="alert alert-light border mt-3">We couldn’t find a saved order with those digits. You can try again or start fresh.</div>';
+              $('reorderResult').innerHTML = '<div class="alert alert-dark border border-warning mt-3">We couldn’t find a saved order with those digits. You can try again or start fresh.</div>';
               return;
             }
             reorderCandidate = found;
@@ -506,7 +595,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try { saved = JSON.parse(localStorage.getItem('saireneSavedOrders') || '[]'); } catch (e) {}
         const found = [...saved].reverse().find(o => String(o.phone || '').replace(/\D/g, '').endsWith(digits));
         if (!found) {
-          $('reorderResult').innerHTML = '<div class="alert alert-light border mt-3">We couldn’t find a saved order with those digits. You can try again or start fresh.</div>';
+          $('reorderResult').innerHTML = '<div class="alert alert-dark border border-warning mt-3">We couldn’t find a saved order with those digits. You can try again or start fresh.</div>';
           return;
         }
         reorderCandidate = found;
@@ -674,7 +763,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   };
 
   function renderReview() {
-    $('reviewItems').innerHTML = cart.map((x, i) => `<div class="d-flex justify-content-between gap-2 py-3 border-bottom"><div class="flex-grow-1"><div class="fw-bold">${x.name}</div><div class="small muted">${x.options || ''}</div><div class="d-flex align-items-center gap-2 mt-2"><button class="qty-btn" onclick="reviewQty(${i},-1)">−</button><span class="fw-bold">${x.qty}</span><button class="qty-btn" onclick="reviewQty(${i},1)">+</button><button class="btn btn-sm btn-link text-danger" onclick="removeReviewItem(${i})">Remove</button></div></div><strong>${money(x.price * x.qty)}</strong></div>`).join('');
+    $('reviewItems').innerHTML = cart.map((x, i) => `<div class="d-flex justify-content-between gap-2 py-3 border-bottom border-warning"><div class="flex-grow-1"><div class="fw-bold text-warning">${x.name}</div><div class="small muted">${x.options || ''}</div><div class="d-flex align-items-center gap-2 mt-2"><button class="qty-btn" onclick="reviewQty(${i},-1)">−</button><span class="fw-bold">${x.qty}</span><button class="qty-btn" onclick="reviewQty(${i},1)">+</button><button class="btn btn-sm btn-link text-danger" onclick="removeReviewItem(${i})">Remove</button></div></div><strong class="text-warning">${money(x.price * x.qty)}</strong></div>`).join('');
     $('reviewSubtotal').textContent = money(subtotal());
     $('reviewBudgetWarning').classList.toggle('d-none', budget === null || subtotal() <= budget);
     $('reviewBudgetWarning').textContent = budget !== null && subtotal() > budget ? 'Your food bill is ' + money(subtotal() - budget) + ' over your budget. You can still continue.' : '';
@@ -721,7 +810,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         renderReviewIfVisible();
       }}
     ]);
-    $('popupMessage').innerHTML = 'Set an optional spending limit in pesos. Going over budget will show a warning, but checkout stays available.<label class="form-label fw-semibold d-block mt-3" for="budgetInput">Budget amount</label><div class="input-group"><span class="input-group-text">₱</span><input id="budgetInput" class="form-control" type="number" min="1" step="1" placeholder="e.g. 300" value="' + (budget === null ? '' : budget) + '"></div>';
+    $('popupMessage').innerHTML = 'Set an optional spending limit in pesos. Going over budget will show a warning, but checkout stays available.<label class="form-label fw-semibold d-block mt-3 text-warning" for="budgetInput">Budget amount</label><div class="input-group"><span class="input-group-text bg-dark text-warning border-warning">₱</span><input id="budgetInput" class="form-control bg-dark text-white border-warning" type="number" min="1" step="1" placeholder="e.g. 300" value="' + (budget === null ? '' : budget) + '"></div>';
   };
 
   function renderReviewIfVisible() {
@@ -928,7 +1017,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       const opts = [];
       if (x.rice) opts.push('<span class="d-inline-block me-2"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 24 24" class="me-1" style="vertical-align: -0.125em;"><path d="M12 3a3 3 0 0 0-3 3h6a3 3 0 0 0-3-3zm8.5 5h-17a1.5 1.5 0 0 0-1.5 1.5c0 4.35 3.12 7.95 7.25 8.75V20a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1.75c4.13-.8 7.25-4.4 7.25-8.75a1.5 1.5 0 0 0-1.5-1.5z"/></svg>' + x.rice + '</span>');
       if (x.egg) opts.push('<span class="d-inline-block me-2"><i class="bi bi-egg-fried me-1" aria-hidden="true"></i>' + x.egg + '</span>');
-      return `<div class="summary-line align-items-start"><span><span class="fw-semibold">${x.qty} × ${x.name}</span>${opts.length ? '<div class="small muted mt-1">' + opts.join('') + '</div>' : ''}</span><strong>${money(x.qty * x.price)}</strong></div>`;
+      return `<div class="summary-line align-items-start"><span class="text-light"><span class="fw-semibold text-warning">${x.qty} × ${x.name}</span>${opts.length ? '<div class="small muted mt-1">' + opts.join('') + '</div>' : ''}</span><strong class="text-warning">${money(x.qty * x.price)}</strong></div>`;
     }).join('');
 
     $('successFood').textContent = money(order.food);
