@@ -106,11 +106,26 @@ try {
 
     <style>
         body {
-            background-color: #f8f9fa;
-            color: #121212;
+            background-color: #2b1d0c;
+            color: #ffffff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 20px;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        /* Fixed Fullscreen Wooden Texture Overlay */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.35)), url('img/wood.jpg') no-repeat center center;
+            background-size: cover;
+            z-index: -1;
         }
 
         /* TOP-LEFT FIXED LOGIN BUTTON */
@@ -121,12 +136,12 @@ try {
             z-index: 1050;
             background-color: #212529;
             color: #ffc107;
-            border: 2px solid #212529;
+            border: 2px solid #ffc107;
             border-radius: 50px;
             padding: 8px 20px;
             font-weight: bold;
             font-size: 0.88rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             transition: all 0.2s ease;
             text-decoration: none;
             display: inline-flex;
@@ -146,8 +161,10 @@ try {
             border: 2px solid #ffc107;
             border-radius: 12px;
             padding: 20px;
-            background-color: #ffffff;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             max-width: 1200px;
             margin: 40px auto 0 auto;
         }
@@ -157,7 +174,7 @@ try {
             position: relative;
             border: 2px solid #ffc107;
             border-radius: 10px;
-            background: linear-gradient(135deg, #ffffff 0%, #fffdf0 100%);
+            background: rgba(0, 0, 0, 0.55);
             padding: 25px 30px;
             margin-bottom: 15px;
             overflow: hidden;
@@ -175,7 +192,7 @@ try {
             background-color: #ffffff;
             overflow: hidden;
             flex-shrink: 0;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
         .banner-logo-container img {
@@ -190,7 +207,7 @@ try {
         }
 
         .banner-text-content h1 {
-            color: #d4a000;
+            color: #ffc107;
             font-weight: 800;
             font-size: 2.2rem;
             margin-bottom: 4px;
@@ -217,7 +234,7 @@ try {
         /* Double Sub-header Lines */
         .sub-header-line-1, .sub-header-line-2 {
             border: 1px solid #ffc107;
-            background-color: #ffffff;
+            background: rgba(0, 0, 0, 0.4);
             height: auto;
             padding: 6px 0;
             border-radius: 4px;
@@ -236,7 +253,7 @@ try {
         }
 
         .nav-link-custom {
-            color: #121212;
+            color: #ffffff;
             text-decoration: none;
             font-weight: bold;
             font-size: 0.85rem;
@@ -247,7 +264,7 @@ try {
         }
 
         .nav-link-custom.active, .nav-link-custom.text-warning {
-            color: #d4a000 !important;
+            color: #ffc107 !important;
             border-color: #ffc107;
         }
 
@@ -310,7 +327,7 @@ try {
             height: 0;
             border-radius: 12px;
             border: 2px solid #ffc107;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
         }
 
         .map-responsive iframe {
@@ -322,25 +339,25 @@ try {
         }
 
         .location-card {
-            background-color: #ffffff;
+            background: rgba(0, 0, 0, 0.55);
             border: 2px solid #ffc107;
             border-radius: 12px;
             padding: 25px;
             height: 100%;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         }
 
         .form-select-gold {
-            background-color: #ffffff;
-            color: #121212;
+            background-color: #212529;
+            color: #ffffff;
             border: 2px solid #ffc107;
             font-weight: bold;
             border-radius: 8px;
         }
 
         .form-select-gold:focus {
-            background-color: #ffffff;
-            color: #121212;
+            background-color: #212529;
+            color: #ffffff;
             border-color: #d4a000;
             box-shadow: 0 0 10px rgba(255, 193, 7, 0.4);
         }
@@ -348,13 +365,13 @@ try {
         /* Bottom Full Width Line */
         .bottom-full-line {
             border: 1px solid #ffc107;
-            background-color: #ffffff;
+            background: rgba(0, 0, 0, 0.4);
             height: 36px;
             border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #555555;
+            color: #ffffff;
             font-size: 0.85rem;
             font-weight: 500;
             margin-top: 25px;
@@ -390,12 +407,12 @@ try {
         <!-- 1. TOP FEATURED BANNER SPOT -->
         <section class="top-banner-spot">
             <div class="banner-logo-container">
-                <img src="images/Logo Website Draft✨    Ashiee - Reyn (1).png" alt="Sairene TephTeph Logo">
+                <img src="img/Logo.png" alt="Sairene TephTeph Logo">
             </div>
 
             <div class="banner-text-content">
                 <h1>Sairene TephTeph Tapsilogan</h1>
-                <p class="text-dark small mb-2 fw-semibold">Your Favorite Neighborhood Tapsilogan & Tambayan • Fresh Silog Meals Everyday</p>
+                <p class="text-light small mb-2 fw-semibold">Your Favorite Neighborhood Tapsilogan & Tambayan • Fresh Silog Meals Everyday</p>
                 
                 <div class="banner-badges">
                     <span class="banner-badge"><i class="fa-solid fa-clock me-1"></i> Open 24/7</span>
@@ -413,7 +430,7 @@ try {
 
         <!-- 2. Two Thin Sub-Header Lines -->
         <div class="sub-header-line-1">
-            <span class="text-dark small fw-bold"><i class="fa-solid fa-star text-warning me-1"></i> A Taste of Comfort • Hot & Fresh Silog Meals <i class="fa-solid fa-star text-warning ms-1"></i></span>
+            <span class="text-light small fw-bold"><i class="fa-solid fa-star text-warning me-1"></i> A Taste of Comfort • Hot & Fresh Silog Meals <i class="fa-solid fa-star text-warning ms-1"></i></span>
         </div>
 
         <div class="sub-header-line-2">
@@ -429,8 +446,8 @@ try {
         <!-- 3. Main Content Container (Map + Delivery Area Selector) -->
         <div class="my-4">
             <section class="text-center mb-4">
-                <h2 class="h4 fw-bold text-dark text-uppercase">Delivery Location & Store Map</h2>
-                <p class="text-muted small">Select your delivery zone to check coverage and store distance.</p>
+                <h2 class="h4 fw-bold text-warning text-uppercase">Delivery Location & Store Map</h2>
+                <p class="text-light small">Select your delivery zone to check coverage and store distance.</p>
             </section>
 
             <div class="row g-4">
@@ -450,10 +467,10 @@ try {
                 <!-- Right Side: Location Selector & Delivery Details -->
                 <div class="col-lg-5">
                     <div class="location-card">
-                        <h5 class="text-dark fw-bold mb-3 border-bottom border-warning pb-2"><i class="fa-solid fa-map-pin text-warning me-2"></i>Choose Delivery Area</h5>
+                        <h5 class="text-warning fw-bold mb-3 border-bottom border-warning pb-2"><i class="fa-solid fa-map-pin text-warning me-2"></i>Choose Delivery Area</h5>
                         
                         <div class="mb-3">
-                            <label for="locationSelect" class="form-label text-dark small fw-bold">Select Location / Branch:</label>
+                            <label for="locationSelect" class="form-label text-light small fw-bold">Select Location / Branch:</label>
                             <select id="locationSelect" class="form-select form-select-gold py-2" onchange="updateMapLocation(this.value)">
                                 <option value="mrb_c5" selected>MRB Condominium C5, Taguig (Main Store / Pickup)</option>
                                 <option value="taguig_proper">Taguig City Center / Lower Bicutan</option>
@@ -463,25 +480,25 @@ try {
                         </div>
 
                         <!-- Dynamic Zone Info Container -->
-                        <div class="p-3 rounded bg-light border border-warning mb-3">
+                        <div class="p-3 rounded bg-dark border border-warning mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="text-secondary small">Estimated Delivery Fee:</span>
+                                <span class="text-light small">Estimated Delivery Fee:</span>
                                 <span id="feeBadge" class="badge bg-warning text-dark fw-bold fs-6">₱30 - ₱50</span>
                             </div>
                             <div class="d-flex justify-content-between align-items-center">
-                                <span class="text-secondary small">Est. Delivery Time:</span>
-                                <span id="timeBadge" class="text-dark fw-bold small">20 - 35 mins</span>
+                                <span class="text-light small">Est. Delivery Time:</span>
+                                <span id="timeBadge" class="text-warning fw-bold small">20 - 35 mins</span>
                             </div>
                         </div>
 
                         <!-- Store Info & GCash Payment -->
                         <div class="border-top border-warning pt-3 mb-3">
-                            <h6 class="text-dark fw-bold mb-2 small"><i class="fa-solid fa-clock text-warning me-2"></i>24/7 Operations</h6>
-                            <p class="small text-muted mb-2">Open all day & late nights for shift workers.</p>
+                            <h6 class="text-warning fw-bold mb-2 small"><i class="fa-solid fa-clock me-2"></i>24/7 Operations</h6>
+                            <p class="small text-light mb-2">Open all day & late nights for shift workers.</p>
 
-                            <h6 class="text-dark fw-bold mb-2 small"><i class="fa-solid fa-wallet text-warning me-2"></i>GCash Details</h6>
-                            <p class="small text-muted mb-1"><strong>Number:</strong> 09270466231</p>
-                            <p class="small text-muted mb-0"><strong>Account Name:</strong> Sarippudin Aming</p>
+                            <h6 class="text-warning fw-bold mb-2 small"><i class="fa-solid fa-wallet me-2"></i>GCash Details</h6>
+                            <p class="small text-light mb-1"><strong>Number:</strong> 09270466231</p>
+                            <p class="small text-light mb-0"><strong>Account Name:</strong> Sarippudin Aming</p>
                         </div>
 
                         <!-- Proceed Button -->
@@ -513,11 +530,11 @@ try {
                     <form id="loginForm" onsubmit="handleAuthSubmit(event, 'login')">
                         <div class="mb-3">
                             <label class="form-label small fw-bold text-white">Email Address</label>
-                            <input type="email" id="loginEmail" class="form-control" placeholder="name@example.com" required>
+                            <input type="email" id="loginEmail" class="form-control bg-dark text-white border-secondary" placeholder="name@example.com" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label small fw-bold text-white">Password</label>
-                            <input type="password" id="loginPassword" class="form-control" required>
+                            <input type="password" id="loginPassword" class="form-control bg-dark text-white border-secondary" required>
                         </div>
                         <button type="submit" class="btn btn-warning w-100 fw-bold text-dark mb-3">Login</button>
                         <p class="small text-center mb-0">Don't have an account? <button type="button" onclick="toggleAuthForm('signup')" class="btn btn-link text-warning fw-bold p-0 text-decoration-none">Sign Up</button></p>
@@ -527,15 +544,15 @@ try {
                     <form id="signupForm" class="d-none" onsubmit="handleAuthSubmit(event, 'signup')">
                         <div class="mb-3">
                             <label class="form-label small fw-bold text-white">Full Name</label>
-                            <input type="text" id="signupName" class="form-control" placeholder="Juan Dela Cruz" required>
+                            <input type="text" id="signupName" class="form-control bg-dark text-white border-secondary" placeholder="Juan Dela Cruz" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label small fw-bold text-white">Email Address</label>
-                            <input type="email" id="signupEmail" class="form-control" placeholder="name@example.com" required>
+                            <input type="email" id="signupEmail" class="form-control bg-dark text-white border-secondary" placeholder="name@example.com" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label small fw-bold text-white">Password</label>
-                            <input type="password" id="signupPassword" class="form-control" required>
+                            <input type="password" id="signupPassword" class="form-control bg-dark text-white border-secondary" required>
                         </div>
                         <button type="submit" class="btn btn-warning w-100 fw-bold text-dark mb-3">Create Account</button>
                         <p class="small text-center mb-0">Already have an account? <button type="button" onclick="toggleAuthForm('login')" class="btn btn-link text-warning fw-bold p-0 text-decoration-none">Login</button></p>
