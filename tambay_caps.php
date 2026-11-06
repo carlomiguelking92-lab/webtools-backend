@@ -128,22 +128,41 @@ if (empty($caps)) {
 
     <style>
         body {
-            background-color: #fcfcfc;
-            color: #333333;
+            background-color: #2b1d0c;
+            color: #ffffff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 30px 20px;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        /* Fixed Fullscreen Wooden Texture Overlay */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.35)), url('img/wood.jpg') no-repeat center center;
+            background-size: cover;
+            z-index: -1;
         }
 
         /* Top Navigation Box */
         .top-nav-box {
-            background: #ffffff;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             border: 2px solid #ffc107;
-            border-radius: 8px;
-            padding: 12px 20px;
+            border-radius: 12px;
+            padding: 14px 24px;
             max-width: 950px;
             margin: 0 auto 30px auto;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            position: relative;
+            z-index: 1090;
         }
 
         .nav-links {
@@ -153,44 +172,55 @@ if (empty($caps)) {
             list-style: none;
             padding: 0;
             margin: 0;
+            align-items: center;
         }
 
         .nav-links a {
             text-decoration: none;
-            color: #222222;
+            color: #ffffff;
             font-weight: 800;
             font-size: 0.95rem;
             letter-spacing: 0.5px;
-            transition: color 0.2s;
+            transition: all 0.25s ease;
+            padding: 6px 16px;
+            border-radius: 50px;
+            border: 1px solid transparent;
         }
 
         .nav-links a:hover, .nav-links a.active {
-            color: #d39e00;
+            color: #121212;
+            background-color: #ffc107;
+            border-color: #d4a000;
+            box-shadow: 0 4px 10px rgba(255, 193, 7, 0.4);
         }
 
         /* Main Wrapper Container */
         .main-wrapper-box {
-            background: #ffffff;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             border: 2px solid #ffc107;
-            border-radius: 12px;
+            border-radius: 16px;
             padding: 40px 30px;
             max-width: 1200px;
             margin: 0 auto;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
+            position: relative;
         }
 
         .page-title {
-            color: #e0a800;
-            font-weight: 800;
+            color: #ffc107;
+            font-weight: 900;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
             text-align: center;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
         }
 
         /* Left Selection Container */
         .selection-container {
-            background-color: #ffffff;
-            border: 2.5px dashed #ffc107;
+            background: rgba(0, 0, 0, 0.55);
+            border: 2px dashed #ffc107;
             border-radius: 12px;
             padding: 25px;
             min-height: 520px;
@@ -198,8 +228,8 @@ if (empty($caps)) {
 
         /* Right Summary Container */
         .cart-summary-panel {
-            background-color: #ffffff;
-            border: 2.5px solid #ffc107;
+            background: rgba(0, 0, 0, 0.55);
+            border: 2px solid #ffc107;
             border-radius: 12px;
             padding: 25px;
             min-height: 520px;
@@ -209,8 +239,8 @@ if (empty($caps)) {
 
         /* Product Card */
         .product-card-item {
-            background-color: #ffffff;
-            border: 1px solid #e0e0e0;
+            background: #1e1e1e;
+            border: 1px solid #333;
             border-radius: 8px;
             padding: 15px;
             height: 100%;
@@ -221,7 +251,7 @@ if (empty($caps)) {
 
         .product-card-item:hover {
             border-color: #ffc107;
-            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.15);
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.25);
         }
 
         /* 3D FLIP CONTAINER STYLES */
@@ -256,11 +286,11 @@ if (empty($caps)) {
             backface-visibility: hidden;
             border-radius: 6px;
             overflow: hidden;
-            border: 1px solid #eeeeee;
+            border: 1px solid #444444;
         }
 
         .flip-card-front {
-            background-color: #f8f9fa;
+            background-color: #121212;
         }
 
         .flip-card-back {
@@ -286,13 +316,13 @@ if (empty($caps)) {
             padding: 3px 8px;
             border-radius: 20px;
             pointer-events: none;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
         }
 
         /* Cart Item Box */
         .cart-item-row {
-            background-color: #f8f9fa;
-            border: 1px solid #e9ecef;
+            background-color: #212529;
+            border: 1px solid #343a40;
             border-radius: 8px;
             padding: 12px;
             margin-bottom: 12px;
@@ -300,8 +330,9 @@ if (empty($caps)) {
 
         footer {
             text-align: center;
-            color: #777777;
+            color: #ffffff;
             font-size: 0.85rem;
+            font-weight: 600;
             margin-top: 35px;
         }
     </style>
@@ -311,8 +342,9 @@ if (empty($caps)) {
     <!-- Top Navigation Box -->
     <nav class="top-nav-box">
         <ul class="nav-links">
-            <li><a href="home_page.php">HOME</a></li>
+            <li><a href="Home_Page.php">HOME</a></li>
             <li><a href="menu.php">MENU</a></li>
+            <li><a href="food_packs.php">FOOD PACKS</a></li>
             <li><a href="order.php">ORDER NOW</a></li>
             <li><a href="tambay_caps.php" class="active">TAMBAY CAPS</a></li>
         </ul>
@@ -324,10 +356,10 @@ if (empty($caps)) {
         <!-- Header Section -->
         <section class="text-center mb-4">
             <h1 class="display-6 page-title">Tambay Caps Collection</h1>
-            <p class="text-black small mt-1">Click on any cap image to turn it around and check the alternate view!</p>
+            <p class="text-light small mt-1 fw-bold">Click on any cap image to turn it around and check the alternate view!</p>
         </section>
 
-        <hr class="border-warning opacity-25 my-4">
+        <hr class="border-warning opacity-75 my-4">
 
         <!-- Two-Column Layout -->
         <div class="row g-4">
@@ -335,11 +367,11 @@ if (empty($caps)) {
             <!-- Left Column: Cap Selection Area (~7 cols) -->
             <div class="col-lg-7">
                 <div class="selection-container">
-                   <h5 class="fw-bold text-dark mb-3 d-flex align-items-center">
+                   <h5 class="fw-bold text-warning mb-3 d-flex align-items-center">
                         <svg xmlns="http://www.w3.org/2000/svg" width="46" height="38" viewBox="0 0 240 180" class="me-2">
-                            <path d="M52 108 C 52 60, 92 32, 142 32 C 188 32, 212 65, 212 102 Z" fill="#000000" stroke="#000000" stroke-width="4"/>
-                            <path d="M15 122 C 20 122, 60 148, 125 142 C 175 137, 200 115, 215 100 C 195 107, 150 122, 112 118 C 65 113, 30 102, 15 122 Z" fill="#000000"/>
-                            <text x="125" y="85" font-family="'Segoe UI', Tahoma, sans-serif" font-weight="900" font-size="26" fill="#ffffff" text-anchor="middle" transform="rotate(-6 125 85)" letter-spacing="1">TAMBAY</text>
+                            <path d="M52 108 C 52 60, 92 32, 142 32 C 188 32, 212 65, 212 102 Z" fill="#ffc107" stroke="#ffc107" stroke-width="4"/>
+                            <path d="M15 122 C 20 122, 60 148, 125 142 C 175 137, 200 115, 215 100 C 195 107, 150 122, 112 118 C 65 113, 30 102, 15 122 Z" fill="#ffc107"/>
+                            <text x="125" y="85" font-family="'Segoe UI', Tahoma, sans-serif" font-weight="900" font-size="26" fill="#121212" text-anchor="middle" transform="rotate(-6 125 85)" letter-spacing="1">TAMBAY</text>
                         </svg>
                         Available Caps
                     </h5>
@@ -368,18 +400,18 @@ if (empty($caps)) {
                                     </div>
 
                                     <div class="d-flex justify-content-between align-items-start mb-1">
-                                        <h6 class="fw-bold text-dark mb-0" style="font-size: 0.95rem;"><?php echo htmlspecialchars($cap['product_name']); ?></h6>
-                                        <span class="badge bg-light text-dark border border-secondary" style="font-size: 0.7rem;">Stock: <?php echo $cap['stock']; ?></span>
+                                        <h6 class="fw-bold text-warning mb-0" style="font-size: 0.95rem;"><?php echo htmlspecialchars($cap['product_name']); ?></h6>
+                                        <span class="badge bg-dark text-warning border border-warning" style="font-size: 0.7rem;">Stock: <?php echo $cap['stock']; ?></span>
                                     </div>
-                                    <p class="text-muted small mb-2 flex-grow-1" style="font-size: 0.8rem;"><?php echo htmlspecialchars($cap['description']); ?></p>
+                                    <p class="text-light small mb-2 flex-grow-1" style="font-size: 0.8rem; opacity: 0.85;"><?php echo htmlspecialchars($cap['description']); ?></p>
                                     
-                                    <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top border-light">
-                                        <span class="text-dark fw-bold font-monospace">₱<?php echo number_format($cap['price'], 2); ?></span>
+                                    <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top border-secondary">
+                                        <span class="text-warning fw-bold font-monospace">₱<?php echo number_format($cap['price'], 2); ?></span>
                                         
                                         <form action="tambay_caps.php" method="POST" class="d-flex align-items-center gap-1">
                                             <input type="hidden" name="action" value="add">
                                             <input type="hidden" name="product_id" value="<?php echo $cap['id']; ?>">
-                                            <input type="number" name="quantity" value="1" min="1" max="<?php echo max(1, $cap['stock']); ?>" class="form-control form-control-sm text-center border-secondary" style="width: 45px; height: 30px; font-size: 0.85rem;">
+                                            <input type="number" name="quantity" value="1" min="1" max="<?php echo max(1, $cap['stock']); ?>" class="form-control form-control-sm text-center bg-dark text-white border-secondary" style="width: 45px; height: 30px; font-size: 0.85rem;">
                                             <button type="submit" class="btn btn-warning btn-sm fw-bold px-2 py-1 text-dark" title="Add to Order">
                                                 <i class="fa-solid fa-cart-plus"></i>
                                             </button>
@@ -395,15 +427,15 @@ if (empty($caps)) {
             <!-- Right Column: Cart Summary Panel (~5 cols) -->
             <div class="col-lg-5">
                 <div class="cart-summary-panel">
-                    <h5 class="fw-bold text-dark mb-3">
-                        <i class="fa-solid fa-bag-shopping text-warning me-2"></i> Your Cap Order Summary
+                    <h5 class="fw-bold text-warning mb-3">
+                        <i class="fa-solid fa-bag-shopping me-2"></i> Your Cap Order Summary
                     </h5>
 
                     <div class="cart-items-list mb-3 flex-grow-1" style="max-height: 340px; overflow-y: auto;">
                         <?php if (empty($_SESSION['cart'])): ?>
                             <div class="text-center py-5 text-muted my-auto">
                                 <i class="fa-solid fa-basket-shopping fa-3x mb-3 text-secondary opacity-50"></i>
-                                <p class="mb-0 small">Your cart is currently empty.<br>Select a cap to start your order!</p>
+                                <p class="mb-0 small text-light opacity-75">Your cart is currently empty.<br>Select a cap to start your order!</p>
                             </div>
                         <?php else: ?>
                             <?php 
@@ -414,7 +446,7 @@ if (empty($caps)) {
                             ?>
                                 <div class="cart-item-row">
                                     <div class="d-flex justify-content-between align-items-start mb-1">
-                                        <span class="fw-bold text-dark small"><?php echo htmlspecialchars($item['name']); ?></span>
+                                        <span class="fw-bold text-warning small"><?php echo htmlspecialchars($item['name']); ?></span>
                                         <form action="tambay_caps.php" method="POST" class="m-0">
                                             <input type="hidden" name="action" value="remove">
                                             <input type="hidden" name="product_id" value="<?php echo $item['id']; ?>">
@@ -423,15 +455,15 @@ if (empty($caps)) {
                                     </div>
                                     
                                     <div class="d-flex justify-content-between align-items-center mt-2">
-                                        <span class="text-muted small font-monospace">₱<?php echo number_format($item['price'], 2); ?> each</span>
+                                        <span class="text-light small font-monospace opacity-75">₱<?php echo number_format($item['price'], 2); ?> each</span>
                                         
                                         <form action="tambay_caps.php" method="POST" class="d-flex align-items-center gap-1 m-0">
                                             <input type="hidden" name="action" value="update">
                                             <input type="hidden" name="product_id" value="<?php echo $item['id']; ?>">
-                                            <input type="number" name="quantity" value="<?php echo $item['quantity']; ?>" min="1" class="form-control form-control-sm text-center border-secondary p-0" style="width: 45px; height: 26px; font-size: 0.85rem;" onchange="this.form.submit()">
+                                            <input type="number" name="quantity" value="<?php echo $item['quantity']; ?>" min="1" class="form-control form-control-sm text-center bg-dark text-white border-secondary p-0" style="width: 45px; height: 26px; font-size: 0.85rem;" onchange="this.form.submit()">
                                         </form>
                                         
-                                        <span class="fw-bold text-dark small font-monospace">₱<?php echo number_format($item_total, 2); ?></span>
+                                        <span class="fw-bold text-warning small font-monospace">₱<?php echo number_format($item_total, 2); ?></span>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -439,10 +471,10 @@ if (empty($caps)) {
                     </div>
 
                     <!-- Total Price Box -->
-                    <div class="bg-light p-3 rounded border border-warning mb-3">
+                    <div class="bg-dark p-3 rounded border border-warning mb-3">
                         <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-dark fw-bold">Order Total:</span>
-                            <span class="text-dark fw-bold fs-5 font-monospace">
+                            <span class="text-light fw-bold">Order Total:</span>
+                            <span class="text-warning fw-bold fs-5 font-monospace">
                                 ₱<?php echo isset($grand_total) ? number_format($grand_total, 2) : '0.00'; ?>
                             </span>
                         </div>
@@ -466,6 +498,6 @@ if (empty($caps)) {
     </footer>
 
     <!-- Bootstrap 5 JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
