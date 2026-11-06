@@ -85,9 +85,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
 // Check logged in session status
 $is_logged_in = isset($_SESSION['user_id']);
-
-// Page selection for interactive menu inside home page
-$menu_page = isset($_GET['menu_page']) && $_GET['menu_page'] == 2 ? 2 : 1;
 ?>
 
 <!DOCTYPE html>
@@ -104,12 +101,26 @@ $menu_page = isset($_GET['menu_page']) && $_GET['menu_page'] == 2 ? 2 : 1;
 
     <style>
         body {
-            background: url('Best Seller (Landscape) (1) (1).png') no-repeat center center fixed;
-            background-size: cover;
+            background-color: #2b1d0c;
             color: #121212;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 20px;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        /* Fixed Fullscreen Wooden Texture Overlay */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.25)), url('img/wood.jpg') no-repeat center center;
+            background-size: cover;
+            z-index: -1;
         }
 
         /* TOP-LEFT FIXED LOGIN BUTTON */
@@ -140,14 +151,15 @@ $menu_page = isset($_GET['menu_page']) && $_GET['menu_page'] == 2 ? 2 : 1;
             transform: translateY(-2px);
         }
 
-        /* Large Outer Border Box with Semi-transparent White Background */
+        /* Large Outer Border Box */
         .page-outer-frame {
             border: 2px solid #ffc107;
             border-radius: 12px;
             padding: 20px;
-            background-color: rgba(255, 255, 255, 0.93);
-            backdrop-filter: blur(6px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
             max-width: 1200px;
             margin: 40px auto 0 auto;
         }
@@ -278,18 +290,10 @@ $menu_page = isset($_GET['menu_page']) && $_GET['menu_page'] == 2 ? 2 : 1;
             height: auto;
             border-radius: 6px;
             display: block;
+            transition: opacity 0.3s ease;
         }
 
-        /* Static Hotspot Bubbles */
-        .hotspot-circle {
-            position: absolute;
-            border: 2px solid #ffc107;
-            border-radius: 50%;
-            background: rgba(255, 193, 7, 0.25);
-            pointer-events: none;
-        }
-
-        /* Left & Right Control Arrows */
+        /* Left & Right Control Arrow Buttons */
         .arrow-btn {
             position: absolute;
             top: 50%;
@@ -297,21 +301,24 @@ $menu_page = isset($_GET['menu_page']) && $_GET['menu_page'] == 2 ? 2 : 1;
             background-color: #ffffff;
             border: 2px solid #ffc107;
             color: #121212;
-            width: 42px;
-            height: 42px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            text-decoration: none;
             font-weight: bold;
             z-index: 20;
             transition: all 0.2s ease;
+            cursor: pointer;
+            outline: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
 
         .arrow-btn:hover {
             background-color: #ffc107;
             color: #121212;
+            transform: translateY(-50%) scale(1.08);
         }
 
         .arrow-left { left: 10px; }
@@ -374,7 +381,7 @@ $menu_page = isset($_GET['menu_page']) && $_GET['menu_page'] == 2 ? 2 : 1;
         <!-- 1. TOP FEATURED BANNER SPOT -->
         <section class="top-banner-spot">
             <div class="banner-logo-container">
-                <img src="Logo Website Draft✨    Ashiee - Reyn (1).png" alt="Sairene TephTeph Logo">
+                <img src="img/Logo.png" alt="Sairene TephTeph Logo">
             </div>
 
             <div class="banner-text-content">
@@ -413,36 +420,22 @@ $menu_page = isset($_GET['menu_page']) && $_GET['menu_page'] == 2 ? 2 : 1;
         <!-- 3. Split Container (Left Interactive Box + Right Info Box) -->
         <div class="split-container">
 
-            <!-- LEFT BOX: Menu Board with Static Circles & Side Arrows -->
+            <!-- LEFT BOX: Menu Board with Interactive Side Arrows -->
             <div class="left-menu-box">
                 
                 <!-- Left Arrow Control -->
-                <a href="Home_Page.php?menu_page=1" class="arrow-btn arrow-left" title="Previous Menu Page">
+                <button type="button" class="arrow-btn arrow-left" onclick="switchMenuPage('prev')" title="Previous Menu Page">
                     <i class="fa-solid fa-arrow-left"></i>
-                </a>
+                </button>
 
                 <div class="interactive-board-wrapper">
-                    <?php if ($menu_page == 1): ?>
-                        <img src="menu 1.png" alt="Silog Meals Menu" class="menu-img">
-
-                        <!-- Static Circle Hotspots -->
-                        <div class="hotspot-circle" style="top: 38%; left: 10%; width: 50px; height: 50px;"></div>
-                        <div class="hotspot-circle" style="top: 58%; left: 10%; width: 50px; height: 50px;"></div>
-                        <div class="hotspot-circle" style="top: 38%; left: 40%; width: 50px; height: 50px;"></div>
-                        <div class="hotspot-circle" style="top: 58%; left: 40%; width: 50px; height: 50px;"></div>
-
-                    <?php else: ?>
-                        <img src="menu 2.png" alt="Combos and Ala Carte" class="menu-img">
-
-                        <div class="hotspot-circle" style="top: 15%; left: 10%; width: 50px; height: 50px;"></div>
-                        <div class="hotspot-circle" style="top: 15%; left: 40%; width: 50px; height: 50px;"></div>
-                    <?php endif; ?>
+                    <img id="activeMenuBoard" src="img/menu1.png" alt="Silog Meals Menu" class="menu-img">
                 </div>
 
                 <!-- Right Arrow Control -->
-                <a href="Home_Page.php?menu_page=2" class="arrow-btn arrow-right" title="Next Menu Page">
+                <button type="button" class="arrow-btn arrow-right" onclick="switchMenuPage('next')" title="Next Menu Page">
                     <i class="fa-solid fa-arrow-right"></i>
-                </a>
+                </button>
 
             </div>
 
@@ -527,8 +520,33 @@ $menu_page = isset($_GET['menu_page']) && $_GET['menu_page'] == 2 ? 2 : 1;
     <!-- BOOTSTRAP 5 JS BUNDLE -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/bootstrap.bundle.min.js"></script>
 
-    <!-- AUTHENTICATION JAVASCRIPT HANDLERS -->
+    <!-- MENU SLIDER & AUTHENTICATION JAVASCRIPT HANDLERS -->
     <script>
+        // Track currently visible menu image page
+        let currentPage = 1;
+
+        function switchMenuPage(direction) {
+            const menuImg = document.getElementById('activeMenuBoard');
+            
+            // Toggle between Page 1 and Page 2
+            if (direction === 'next' || direction === 'prev') {
+                currentPage = (currentPage === 1) ? 2 : 1;
+            }
+
+            // Quick fade transition effect
+            menuImg.style.opacity = '0.3';
+            setTimeout(() => {
+                if (currentPage === 1) {
+                    menuImg.src = 'img/menu1.png';
+                    menuImg.alt = 'Silog Meals Menu';
+                } else {
+                    menuImg.src = 'img/menu2.png';
+                    menuImg.alt = 'Combos and Ala Carte Menu';
+                }
+                menuImg.style.opacity = '1';
+            }, 150);
+        }
+
         function openAuthModal(type) {
             toggleAuthForm(type);
             var modalEl = document.getElementById('authModal');
@@ -600,4 +618,3 @@ $menu_page = isset($_GET['menu_page']) && $_GET['menu_page'] == 2 ? 2 : 1;
     </script>
 </body>
 </html>
-
