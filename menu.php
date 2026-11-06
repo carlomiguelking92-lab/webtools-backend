@@ -117,27 +117,39 @@ try {
     
     <style>
         body {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url('images/Best Seller (Landscape) (1) (1).png');
-            background-size: 100% 100%;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
+            background-color: #2b1d0c;
             color: #ffffff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 30px 20px;
+            position: relative;
+            min-height: 100vh;
         }
 
-        /* Top Navigation Box with Frosted Glass */
+        /* Fixed Fullscreen Wooden Texture Overlay */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.35)), url('img/wood.jpg') no-repeat center center;
+            background-size: cover;
+            z-index: -1;
+        }
+
+        /* Top Navigation Box */
         .top-nav-box {
-            background: rgba(255, 255, 255, 0.3);
-            backdrop-filter: blur(4px);
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             border: 2px solid #ffc107;
-            border-radius: 8px;
-            padding: 12px 20px;
+            border-radius: 12px;
+            padding: 14px 24px;
             max-width: 950px;
             margin: 0 auto 30px auto;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
             position: relative;
             z-index: 1090;
         }
@@ -155,119 +167,73 @@ try {
         .nav-links a {
             text-decoration: none;
             color: #ffffff;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
             font-weight: 800;
             font-size: 0.95rem;
             letter-spacing: 0.5px;
             transition: all 0.25s ease;
-            padding: 6px 14px;
-            border-radius: 6px;
+            padding: 6px 16px;
+            border-radius: 50px;
             border: 1px solid transparent;
         }
 
-        .nav-links a.active {
-            color: #ffc107;
-            border-color: #ffc107;
+        .nav-links a:hover, .nav-links a.active {
+            color: #121212;
+            background-color: #ffc107;
+            border-color: #d4a000;
+            box-shadow: 0 4px 10px rgba(255, 193, 7, 0.4);
         }
 
-        /* 1. Home Button Hover Preview */
-        #homeNavLink:hover {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/Best Seller (Landscape) (1) (1).png');
-            background-size: cover;
-            background-position: center;
-            color: #ffc107 !important;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
-            border: 1px solid #ffc107;
-        }
-
-        /* 2. Menu Button Hover Preview */
-        #menuNavLink:hover {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/menu_page_1.png');
-            background-size: cover;
-            background-position: center;
-            color: #ffc107 !important;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
-            border: 1px solid #ffc107;
-        }
-
-        /* 3. Order Now Button Hover Preview */
-        #orderNavLink:hover {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/.png');
-            background-size: cover;
-            background-position: center;
-            color: #ffc107 !important;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
-            border: 1px solid #ffc107;
-        }
-
-        /* 4. Food Packs Button Hover Preview */
-        #foodPacksNavLink:hover {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/.png');
-            background-size: cover;
-            background-position: center;
-            color: #ffc107 !important;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
-            border: 1px solid #ffc107;
-        }
-
-        /* 5. Tambay Caps Button Hover Preview */
-        #tambayNavLink:hover {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/tambay5.png');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            color: #ffc107 !important;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
-            border: 1px solid #ffc107;
-        }
-
-        /* Main Wrapper Container with Frosted Glass */
+        /* Main Wrapper Container - White/Cream Layer Removed */
         .main-wrapper-box {
-            background: rgba(255, 255, 255, 0.22);
+            background: rgba(0, 0, 0, 0.45);
             backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             border: 2px solid #ffc107;
-            border-radius: 12px;
+            border-radius: 16px;
             padding: 40px 30px;
             max-width: 1200px;
             margin: 0 auto;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.5);
+            position: relative;
         }
 
         .page-title {
-            color: #ffd700;
-            font-weight: 800;
+            color: #ffc107;
+            font-weight: 900;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
             text-align: center;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
         }
 
         .btn-gold {
-            background-color: #ffc107;
+            background: linear-gradient(180deg, #ffca28 0%, #ffb300 100%);
             color: #121212;
-            border: 2px solid #ffc107;
+            border: 2px solid #d4a000;
             font-weight: bold;
             border-radius: 50px;
-            padding: 8px 18px;
+            padding: 8px 22px;
             transition: all 0.2s ease-in-out;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
         }
 
         .btn-gold:hover {
-            background-color: #e0a800;
+            background: linear-gradient(180deg, #ffc107 0%, #ffa000 100%);
             color: #121212;
-            transform: scale(1.05);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
         }
 
         .btn-gold.active {
-            background-color: #121212;
+            background: #212529;
             color: #ffc107;
-            border-color: #121212;
-            box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+            border-color: #ffc107;
+            box-shadow: 0 0 12px rgba(255, 193, 7, 0.6);
         }
 
         /* Menu Container */
@@ -280,16 +246,17 @@ try {
             position: relative;
             width: 100%;
             overflow: hidden;
-            border-radius: 12px;
-            border: 2px solid #ffc107;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 14px;
+            border: 3px solid #ffc107;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            background-color: transparent;
         }
 
         .menu-board-img {
             width: 100%;
             height: auto;
             display: block;
+            border-radius: 11px;
         }
 
         /* Invisible Hotspots */
@@ -305,8 +272,8 @@ try {
         }
 
         .hotspot:hover, .hotspot:focus {
-            box-shadow: 0 0 15px rgba(255, 193, 7, 0.8);
-            transform: scale(1.03);
+            box-shadow: 0 0 18px rgba(255, 193, 7, 0.9);
+            transform: scale(1.05);
         }
 
         /* Popup Cards */
@@ -354,7 +321,7 @@ try {
             z-index: 1050;
             border-radius: 50px;
             padding: 10px 22px;
-            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
             font-weight: bold;
         }
 
@@ -387,37 +354,39 @@ try {
         }
 
         .cart-modal-content {
-            background-color: #ffffff !important;
-            border: 2px solid #ffc107;
-            color: #121212;
-            border-radius: 12px;
+            background: #1a1a1a !important;
+            border: 3px solid #ffc107;
+            color: #ffffff;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         .cart-tab-btn {
             flex: 1;
             text-align: center;
             border-radius: 8px;
-            padding: 8px;
-            color: #495057;
-            background: #f8f9fa;
-            border: 1px solid #ced4da;
+            padding: 10px;
+            color: #ffffff;
+            background: #2a2a2a;
+            border: 1px solid #ffc107;
             cursor: pointer;
             transition: all 0.3s ease;
             font-size: 0.85rem;
-            font-weight: 600;
+            font-weight: 700;
         }
 
         .cart-tab-btn.active {
             background: #ffc107;
             color: #121212;
-            font-weight: bold;
-            border-color: #ffc107;
+            font-weight: 800;
+            border-color: #d4a000;
+            box-shadow: 0 2px 8px rgba(255, 193, 7, 0.4);
         }
 
         .cart-item-card {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
+            background: #252525;
+            border: 1px solid #ffc107;
+            border-radius: 10px;
             margin-bottom: 8px;
             padding: 12px;
             user-select: none;
@@ -428,7 +397,7 @@ try {
 
         .subtext-info {
             font-size: 0.78rem;
-            color: #6c757d;
+            color: #b0b0b0;
             display: block;
             margin-top: 2px;
         }
@@ -436,10 +405,10 @@ try {
         .qty-btn {
             background: transparent;
             border: 1px solid #ffc107;
-            color: #d39e00;
-            width: 26px;
-            height: 26px;
-            border-radius: 5px;
+            color: #ffc107;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -450,8 +419,8 @@ try {
         footer {
             text-align: center;
             color: #ffffff;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
             font-size: 0.85rem;
+            font-weight: 600;
             margin-top: 35px;
         }
     </style>
@@ -461,7 +430,7 @@ try {
     <!-- Top Navigation Box -->
     <nav class="top-nav-box">
         <ul class="nav-links">
-            <li><a href="home_page.php" id="homeNavLink">HOME</a></li>
+            <li><a href="Home_Page.php" id="homeNavLink">HOME</a></li>
             <li><a href="menu.php" id="menuNavLink" class="active">MENU</a></li>
             <li><a href="food_packs.php" id="foodPacksNavLink">FOOD PACKS</a></li>
             <li><a href="order.php" id="orderNavLink">ORDER NOW</a></li>
@@ -483,10 +452,10 @@ try {
         <!-- Header -->
         <header class="text-center mb-4">
             <h1 class="display-6 page-title">Sairene Tephteph Tapsilogan</h1>
-            <p class="text-white small mt-1" style="text-shadow: 0 1px 2px rgba(0,0,0,0.6);">A Taste of Comfort • Interactive Digital Menu</p>
+            <p class="text-light small mt-1 fw-bold">A Taste of Comfort • Interactive Digital Menu</p>
         </header>
 
-        <hr class="border-warning opacity-50 my-4">
+        <hr class="border-warning opacity-75 my-4">
 
         <!-- Instant Page Switch Buttons (No Reload) -->
         <div class="d-flex justify-content-center align-items-center gap-3 mb-4">
@@ -503,7 +472,7 @@ try {
             
             <!-- PAGE 1: SILOG MEALS -->
             <div id="menu-page-1" class="menu-board-container">
-                <img src="images/menu_page_1.png" alt="Sairene Tapsilogan Silog Meals" class="img-fluid menu-board-img">
+                <img src="img/menu1.png" alt="Sairene Tapsilogan Silog Meals" class="img-fluid menu-board-img">
 
                 <div class="hotspot" style="top: 40.85%; left: 9.03%; width: 16.97%; height: 11.99%;" tabindex="0" onclick="openItemModal('Tapsilog', 90, true)">
                     <div class="popover-detail-card">
@@ -564,7 +533,7 @@ try {
 
             <!-- PAGE 2: COMBO MEALS & ALA CARTE (Initially Hidden) -->
             <div id="menu-page-2" class="menu-board-container d-none">
-                <img src="images/menu_page_2.png" alt="Sairene Tapsilogan Combos and Ala Carte" class="img-fluid menu-board-img">
+                <img src="img/menu2.png" alt="Sairene Tapsilogan Combos and Ala Carte" class="img-fluid menu-board-img">
 
                 <div class="hotspot" style="top: 14.25%; left: 7.41%; width: 19.02%; height: 13.45%;" tabindex="0" onclick="openItemModal('Bagnet + Hungarian', 140, true)">
                     <div class="popover-detail-card">
@@ -665,50 +634,50 @@ try {
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content cart-modal-content p-2">
                 <div class="modal-header border-secondary">
-                    <h5 class="modal-title fw-bold text-dark" id="modalItemName">Dish Name</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title fw-bold text-warning" id="modalItemName">Dish Name</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="text-secondary mb-2"><strong>Ingredients:</strong> <span id="modalItemDescription">Description of ingredients...</span></p>
-                    <p class="fs-5 text-dark fw-bold">Price: ₱<span id="modalItemPrice">0</span></p>
+                    <p class="text-light mb-2"><strong>Ingredients:</strong> <span id="modalItemDescription">Description of ingredients...</span></p>
+                    <p class="fs-5 text-warning fw-bold">Price: ₱<span id="modalItemPrice">0</span></p>
                     
                     <!-- Choose Your Egg Section -->
                     <div class="mb-3" id="eggSection">
-                        <label class="form-label fw-semibold text-dark">Choose Your Egg:</label>
+                        <label class="form-label fw-semibold text-warning">Choose Your Egg:</label>
                         <div class="d-flex flex-column gap-2">
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="eggChoice" id="eggSunny" value="Sunny Side Up" checked>
-                                <label class="form-check-label text-dark" for="eggSunny">Sunny Side Up</label>
+                                <label class="form-check-label text-light" for="eggSunny">Sunny Side Up</label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="eggChoice" id="eggScrambled" value="Scrambled">
-                                <label class="form-check-label text-dark" for="eggScrambled">Scrambled</label>
+                                <label class="form-check-label text-light" for="eggScrambled">Scrambled</label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="eggChoice" id="eggWellDone" value="Well Done">
-                                <label class="form-check-label text-dark" for="eggWellDone">Well Done</label>
+                                <label class="form-check-label text-light" for="eggWellDone">Well Done</label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="eggChoice" id="eggNone" value="No Egg">
-                                <label class="form-check-label text-dark" for="eggNone">No Egg / Don't Want Egg</label>
+                                <label class="form-check-label text-light" for="eggNone">No Egg / Don't Want Egg</label>
                             </div>
                         </div>
                     </div>
 
                     <!-- Quantity -->
                     <div class="mb-3">
-                        <label class="form-label fw-semibold text-dark">Quantity</label>
+                        <label class="form-label fw-semibold text-warning">Quantity</label>
                         <div class="input-group" style="width: 140px;">
-                            <button class="btn btn-outline-warning btn-sm text-dark" type="button" onclick="adjustModalQty(-1)">-</button>
-                            <input type="text" id="modalItemQty" class="form-control bg-light text-dark text-center border-secondary form-control-sm" value="1" readonly>
-                            <button class="btn btn-outline-warning btn-sm text-dark" type="button" onclick="adjustModalQty(1)">+</button>
+                            <button class="btn btn-outline-warning btn-sm text-light" type="button" onclick="adjustModalQty(-1)">-</button>
+                            <input type="text" id="modalItemQty" class="form-control bg-dark text-light text-center border-secondary form-control-sm" value="1" readonly>
+                            <button class="btn btn-outline-warning btn-sm text-light" type="button" onclick="adjustModalQty(1)">+</button>
                         </div>
                     </div>
 
                     <!-- Notes -->
                     <div class="mb-3">
-                        <label class="form-label fw-semibold text-dark">Notes / Special Instructions</label>
-                        <textarea id="modalItemNotes" class="form-control bg-light text-dark border-secondary" rows="2" placeholder="e.g. Extra spicy, separate sauce..."></textarea>
+                        <label class="form-label fw-semibold text-warning">Notes / Special Instructions</label>
+                        <textarea id="modalItemNotes" class="form-control bg-dark text-light border-secondary" rows="2" placeholder="e.g. Extra spicy, separate sauce..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer border-secondary">
@@ -729,7 +698,7 @@ try {
                         <div class="cart-tab-btn" id="tab-btn-ongoing" onclick="switchCartTab('ongoing')">Ongoing Orders</div>
                         <div class="cart-tab-btn" id="tab-btn-past" onclick="switchCartTab('past')">Past Orders</div>
                     </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body pt-3">
                     
@@ -741,7 +710,7 @@ try {
                         </div>
                         
                         <div class="border-top border-secondary pt-3">
-                            <div class="d-flex justify-content-between fs-4 fw-bold text-dark mb-3">
+                            <div class="d-flex justify-content-between fs-4 fw-bold text-warning mb-3">
                                 <span>Total Bill:</span>
                                 <span>₱<span id="cart-total">0.00</span></span>
                             </div>
@@ -750,8 +719,8 @@ try {
                                 <button type="button" class="btn btn-gold w-100 fw-bold py-2" onclick="proceedToCheckoutForm()">Order Now</button>
                             </div>
 
-                            <div id="payment-delivery-form" class="d-none mt-3 p-3 bg-light border border-warning rounded">
-                                <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-wallet me-2 text-warning"></i>Checkout & GCash Payment</h6>
+                            <div id="payment-delivery-form" class="d-none mt-3 p-3 bg-dark border border-warning rounded">
+                                <h6 class="fw-bold text-warning mb-3"><i class="fa-solid fa-wallet me-2"></i>Checkout & GCash Payment</h6>
                                 
                                 <div class="alert alert-warning py-2 small mb-3">
                                     <strong>GCash Details:</strong> 09270466231 (Sarippudin Aming)<br>
@@ -760,24 +729,24 @@ try {
 
                                 <form id="orderSubmitForm" class="row g-2">
                                     <div class="col-md-6">
-                                        <label class="form-label text-dark small mb-1">Customer Name</label>
-                                        <input type="text" id="custName" class="form-control form-control-sm bg-light text-dark border-secondary" required placeholder="Juan Dela Cruz">
+                                        <label class="form-label text-light small mb-1">Customer Name</label>
+                                        <input type="text" id="custName" class="form-control form-control-sm bg-dark text-light border-secondary" required placeholder="Juan Dela Cruz">
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label text-dark small mb-1">Contact Number</label>
-                                        <input type="text" id="custPhone" class="form-control form-control-sm bg-light text-dark border-secondary" required placeholder="09123456789">
+                                        <label class="form-label text-light small mb-1">Contact Number</label>
+                                        <input type="text" id="custPhone" class="form-control form-control-sm bg-dark text-light border-secondary" required placeholder="09123456789">
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label text-dark small mb-1">Delivery Area</label>
-                                        <input type="text" id="custArea" class="form-control form-control-sm bg-light text-dark border-secondary" placeholder="e.g. Taguig">
+                                        <label class="form-label text-light small mb-1">Delivery Area</label>
+                                        <input type="text" id="custArea" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="e.g. Taguig">
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label text-dark small mb-1">Address / Landmark</label>
-                                        <input type="text" id="custAddress" class="form-control form-control-sm bg-light text-dark border-secondary" placeholder="Unit / Street / Subdivision" required>
+                                        <label class="form-label text-light small mb-1">Address / Landmark</label>
+                                        <input type="text" id="custAddress" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Unit / Street / Subdivision" required>
                                     </div>
                                     <div class="col-12 mt-2">
-                                        <label class="form-label text-dark small mb-1">Upload GCash Payment Screenshot Proof</label>
-                                        <input type="file" id="paymentProof" class="form-control form-control-sm bg-light text-dark border-secondary" accept="image/*" required>
+                                        <label class="form-label text-light small mb-1">Upload GCash Payment Screenshot Proof</label>
+                                        <input type="file" id="paymentProof" class="form-control form-control-sm bg-dark text-light border-secondary" accept="image/*" required>
                                     </div>
                                     <div class="col-12 mt-3">
                                         <button type="button" class="btn btn-gold w-100 fw-bold" onclick="submitFinalOrder()">Finish Order</button>
@@ -790,41 +759,41 @@ try {
                     <!-- TAB 2: ONGOING ORDERS -->
                     <div id="tab-ongoing" class="cart-tab-content d-none">
                         <?php if (!$is_logged_in): ?>
-                            <p class="text-muted text-center my-4">Please <a href="home_page.php" class="text-warning fw-bold text-decoration-none">login from the homepage</a> to view your ongoing orders.</p>
+                            <p class="text-muted text-center my-4">Please <a href="Home_Page.php" class="text-warning fw-bold text-decoration-none">login from the homepage</a> to view your ongoing orders.</p>
                         <?php elseif (empty($ongoing_orders)): ?>
                             <p class="text-muted text-center my-4">No ongoing active orders found.</p>
                         <?php else: ?>
                             <?php foreach ($ongoing_orders as $ord): ?>
-                                <div class="card bg-light border border-warning mb-3 p-3 text-dark">
+                                <div class="card bg-dark border border-warning mb-3 p-3 text-light">
                                     <div class="d-flex justify-content-between align-items-center mb-2" style="cursor: pointer;" onclick="toggleOrderDetails(<?= $ord['id'] ?>)">
                                         <div>
-                                            <span class="fw-bold text-dark">Order #<?= $ord['id'] ?> - <?= htmlspecialchars($ord['customer_name']) ?></span>
+                                            <span class="fw-bold text-warning">Order #<?= $ord['id'] ?> - <?= htmlspecialchars($ord['customer_name']) ?></span>
                                             <div class="small text-muted">Placed: <?= $ord['created_at'] ?? 'Just now' ?></div>
                                         </div>
                                         <div>
                                             <span class="badge bg-warning text-dark me-2"><?= strtoupper($ord['order_status']) ?></span>
-                                            <i class="fa-solid fa-chevron-down text-dark small"></i>
+                                            <i class="fa-solid fa-chevron-down text-warning small"></i>
                                         </div>
                                     </div>
 
-                                    <div id="orderDetails<?= $ord['id'] ?>" class="d-none border-top border-warning pt-2 mt-2 small text-dark">
+                                    <div id="orderDetails<?= $ord['id'] ?>" class="d-none border-top border-warning pt-2 mt-2 small text-light">
                                         <p class="mb-1"><strong>Delivery Area:</strong> <?= htmlspecialchars($ord['delivery_area']) ?></p>
                                         <p class="mb-1"><strong>Address:</strong> <?= htmlspecialchars($ord['address']) ?></p>
                                         <p class="mb-1"><strong>Contact:</strong> <?= htmlspecialchars($ord['phone']) ?></p>
                                         <p class="mb-2 text-warning fw-bold">Items Ordered:</p>
-                                        <ul class="ps-3 mb-2 text-dark">
-                                            <?php foreach ($ord['items'] as$it): ?>
-                                                <li><?= htmlspecialchars($it['item_name']) ?> (x<?=$it['quantity'] ?>) - ₱<?= number_format($it['price'] *$it['quantity'], 2) ?> 
+                                        <ul class="ps-3 mb-2 text-light">
+                                            <?php foreach ($ord['items'] as $it): ?>
+                                                <li><?= htmlspecialchars($it['item_name']) ?> (x<?= $it['quantity'] ?>) - ₱<?= number_format($it['price'] * $it['quantity'], 2) ?> 
                                                     <?php if(!empty($it['egg_choice'])): ?><span class="text-muted">[Egg: <?= htmlspecialchars($it['egg_choice']) ?>]</span><?php endif; ?>
                                                 </li>
                                             <?php endforeach; ?>
                                         </ul>
-                                        <p class="mb-0 fw-bold text-dark">Total Amount: ₱<?= number_format($ord['total_amount'], 2) ?></p>
+                                        <p class="mb-0 fw-bold text-warning">Total Amount: ₱<?= number_format($ord['total_amount'], 2) ?></p>
                                     </div>
 
                                     <div class="form-check form-switch mt-2 border-top border-secondary pt-2">
                                         <input class="form-check-input" type="checkbox" role="switch" id="receivedOrder<?= $ord['id'] ?>" onchange="markOrderCompleted(<?= $ord['id'] ?>)">
-                                        <label class="form-check-label text-dark small fw-semibold" for="receivedOrder<?= $ord['id'] ?>">Toggle when you've already gotten your order</label>
+                                        <label class="form-check-label text-light small fw-semibold" for="receivedOrder<?= $ord['id'] ?>">Toggle when you've already gotten your order</label>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -834,33 +803,33 @@ try {
                     <!-- TAB 3: PAST ORDERS -->
                     <div id="tab-past" class="cart-tab-content d-none">
                         <?php if (!$is_logged_in): ?>
-                            <p class="text-muted text-center my-4">Please <a href="home_page.php" class="text-warning fw-bold text-decoration-none">login from the homepage</a> to view your past orders.</p>
+                            <p class="text-muted text-center my-4">Please <a href="Home_Page.php" class="text-warning fw-bold text-decoration-none">login from the homepage</a> to view your past orders.</p>
                         <?php elseif (empty($past_orders)): ?>
                             <p class="text-muted text-center my-4">No past completed orders found.</p>
                         <?php else: ?>
-                            <?php foreach ($past_orders as$ord): ?>
-                                <div class="card bg-light border border-secondary mb-3 p-3 text-dark">
+                            <?php foreach ($past_orders as $ord): ?>
+                                <div class="card bg-dark border border-secondary mb-3 p-3 text-light">
                                     <div class="d-flex justify-content-between align-items-center mb-1" style="cursor: pointer;" onclick="toggleOrderDetails(<?= $ord['id'] ?>)">
                                         <div>
-                                            <span class="fw-bold text-dark">Order #<?= $ord['id'] ?> - <?= htmlspecialchars($ord['customer_name']) ?></span>
+                                            <span class="fw-bold text-warning">Order #<?= $ord['id'] ?> - <?= htmlspecialchars($ord['customer_name']) ?></span>
                                             <div class="small text-muted">Placed: <?= $ord['created_at'] ?? 'Recently' ?></div>
                                         </div>
                                         <div>
                                             <span class="badge bg-success me-2">COMPLETED</span>
-                                            <i class="fa-solid fa-chevron-down text-dark small"></i>
+                                            <i class="fa-solid fa-chevron-down text-warning small"></i>
                                         </div>
                                     </div>
 
-                                    <div id="orderDetails<?= $ord['id'] ?>" class="d-none border-top border-warning pt-2 mt-2 small text-dark">
+                                    <div id="orderDetails<?= $ord['id'] ?>" class="d-none border-top border-warning pt-2 mt-2 small text-light">
                                         <p class="mb-1"><strong>Received Time:</strong> <?= $ord['updated_at'] ?? $ord['created_at'] ?? 'Completed' ?></p>
                                         <p class="mb-1"><strong>Delivery Area:</strong> <?= htmlspecialchars($ord['delivery_area']) ?></p>
                                         <p class="mb-2 text-warning fw-bold">Order Summary:</p>
-                                        <ul class="ps-3 mb-2 text-dark">
-                                            <?php foreach ($ord['items'] as$it): ?>
-                                                <li><?= htmlspecialchars($it['item_name']) ?> (x<?=$it['quantity'] ?>) - ₱<?= number_format($it['price'] *$it['quantity'], 2) ?></li>
+                                        <ul class="ps-3 mb-2 text-light">
+                                            <?php foreach ($ord['items'] as $it): ?>
+                                                <li><?= htmlspecialchars($it['item_name']) ?> (x<?= $it['quantity'] ?>) - ₱<?= number_format($it['price'] * $it['quantity'], 2) ?></li>
                                             <?php endforeach; ?>
                                         </ul>
-                                        <p class="mb-0 fw-bold text-dark">Total Paid: ₱<?= number_format($ord['total_amount'], 2) ?></p>
+                                        <p class="mb-0 fw-bold text-warning">Total Paid: ₱<?= number_format($ord['total_amount'], 2) ?></p>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -1018,15 +987,15 @@ try {
                     row.className = 'cart-item-card d-flex justify-content-between align-items-center';
                     row.innerHTML = `
                         <div>
-                            <h6 class="fw-bold text-dark mb-0">${item.name}</h6>
+                            <h6 class="fw-bold text-warning mb-0">${item.name}</h6>
                             ${subtextFormatted}
-                            <div class="text-warning small fw-bold mt-1">
+                            <div class="text-light small fw-bold mt-1">
                                 ₱${item.price.toFixed(2)} x ${item.qty} = ₱${itemSubtotal.toFixed(2)}
                             </div>
                         </div>
                         <div class="d-flex align-items-center gap-2">
                             <button class="qty-btn" onclick="updateQty(${index}, -1)">-</button>
-                            <span class="text-dark fw-bold px-1 small">${item.qty}</span>
+                            <span class="text-light fw-bold px-1 small">${item.qty}</span>
                             <button class="qty-btn" onclick="updateQty(${index}, 1)">+</button>
                             <button class="btn btn-outline-danger btn-sm ms-2" onclick="removeFromCart(${index}, true)" title="Delete Item"><i class="fa-solid fa-trash"></i></button>
                         </div>
@@ -1140,7 +1109,7 @@ try {
             if (!isLoggedIn) {
                 cartModal.hide();
                 alert('Please log in first from the homepage before placing an order.');
-                window.location.href = 'home_page.php';
+                window.location.href = 'Home_Page.php';
                 return;
             }
 
