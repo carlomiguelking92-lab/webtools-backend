@@ -134,19 +134,36 @@ $pos_images = [
     
     <style>
         body {
-            background-color: #f8f9fa;
-            color: #121212;
+            background-color: #2b1d0c;
+            color: #ffffff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 15px;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        /* Fixed Fullscreen Wooden Texture Overlay */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.35)), url('images/Wood .jpg') no-repeat center center;
+            background-size: cover;
+            z-index: -1;
         }
 
         .page-outer-frame {
             border: 2px solid #ffc107;
             border-radius: 12px;
             padding: 20px;
-            background-color: #ffffff;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             max-width: 1350px;
             margin: 0 auto;
         }
@@ -165,8 +182,8 @@ $pos_images = [
 
         .category-btn {
             border: 1px solid #ffc107;
-            background-color: #fffdf0;
-            color: #121212;
+            background-color: rgba(0, 0, 0, 0.4);
+            color: #ffffff;
             font-weight: bold;
             font-size: 0.85rem;
             padding: 8px 16px;
@@ -180,41 +197,48 @@ $pos_images = [
         }
 
         .menu-pos-card {
-            border: 1.5px solid #e0e0e0;
+            border: 1.5px solid #ffc107;
             border-radius: 8px;
             padding: 12px;
-            background: #ffffff;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
             cursor: pointer;
             transition: all 0.2s ease;
             height: 100%;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            color: #ffffff;
         }
 
         .menu-pos-card:hover {
             border-color: #ffc107;
-            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.25);
+            background: rgba(255, 193, 7, 0.2);
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.35);
             transform: translateY(-2px);
         }
 
         .pos-cart-panel {
-            background: #fffdf5;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             border: 2px solid #ffc107;
             border-radius: 8px;
             padding: 20px;
             display: flex;
             flex-direction: column;
             height: 100%;
+            color: #ffffff;
         }
 
         .cart-list-box {
             max-height: 320px;
             overflow-y: auto;
-            border: 1px solid #dee2e6;
+            border: 1px solid #ffc107;
             border-radius: 6px;
             padding: 10px;
-            background-color: #ffffff;
+            background-color: rgba(0, 0, 0, 0.4);
         }
 
         .qty-btn {
@@ -231,22 +255,25 @@ $pos_images = [
         }
 
         .kiosk-order-card {
-            background: #fff8e1;
+            background: rgba(0, 0, 0, 0.5);
             border: 1.5px solid #ffc107;
             border-radius: 8px;
             padding: 12px;
             margin-bottom: 10px;
+            color: #ffffff;
         }
 
         .bottom-full-line {
             border: 1px solid #ffc107;
-            background-color: #ffffff;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             height: 36px;
             border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #555555;
+            color: #ffffff;
             font-size: 0.85rem;
             font-weight: 500;
             margin-top: 20px;
@@ -262,10 +289,7 @@ $pos_images = [
             <div>
                 <h3 class="fw-bold mb-0"><i class="fa-solid fa-cash-register me-2"></i>Cashier POS Terminal</h3>
                 <small class="text-light">Sairene TephTeph Tapsilogan • Counter Operations & Kiosk Sync</small>
-            </div>
-            <div>
-                <a href="Home_Page.php" class="btn btn-outline-warning btn-sm fw-bold"><i class="fa-solid fa-arrow-left me-1"></i> Back to Home</a>
-            </div>
+            </div>          
         </div>
 
         <!-- Alerts -->
@@ -284,15 +308,15 @@ $pos_images = [
 
         <!-- KIOSK LIVE ORDERS BANNER / ACCORDION -->
         <div class="mb-4">
-            <div class="card border-warning shadow-sm">
+            <div class="card border-warning shadow-sm bg-transparent">
                 <div class="card-header bg-warning text-dark fw-bold d-flex justify-content-between align-items-center" data-bs-toggle="collapse" href="#kioskOrdersCollapse" role="button" aria-expanded="true" style="cursor: pointer;">
                     <span><i class="fa-solid fa-tablet-screen-button me-2"></i> Live Tablet Kiosk Orders (<?= count($kiosk_orders) ?>)</span>
                     <small><i class="fa-solid fa-chevron-down"></i> Click to toggle</small>
                 </div>
                 <div class="collapse show" id="kioskOrdersCollapse">
-                    <div class="card-body bg-light" style="max-height: 280px; overflow-y: auto;">
+                    <div class="card-body" style="background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(8px); max-height: 280px; overflow-y: auto;">
                         <?php if (empty($kiosk_orders)): ?>
-                            <p class="text-muted text-center small mb-0 py-3">No active orders placed from the kiosk.</p>
+                            <p class="text-light text-center small mb-0 py-3">No active orders placed from the kiosk.</p>
                         <?php else: ?>
                             <div class="row g-2">
                                 <?php foreach ($kiosk_orders as $k_order): ?>
@@ -300,23 +324,23 @@ $pos_images = [
                                         <div class="kiosk-order-card">
                                             <div class="d-flex justify-content-between align-items-center mb-1">
                                                 <span class="badge bg-dark text-warning fw-bold"><?= htmlspecialchars($k_order['queue_number']) ?></span>
-                                                <span class="small text-muted"><?= htmlspecialchars($k_order['dining_style']) ?></span>
+                                                <span class="small text-warning"><?= htmlspecialchars($k_order['dining_style']) ?></span>
                                             </div>
-                                            <div class="fw-bold small text-dark"><?= htmlspecialchars($k_order['customer_name']) ?></div>
+                                            <div class="fw-bold small text-white"><?= htmlspecialchars($k_order['customer_name']) ?></div>
                                             <?php if (!empty($k_order['table_tag'])): ?>
-                                                <div class="small text-danger fw-bold"><?= htmlspecialchars($k_order['table_tag']) ?></div>
+                                                <div class="small text-warning fw-bold"><?= htmlspecialchars($k_order['table_tag']) ?></div>
                                             <?php endif; ?>
-                                            <div class="border-top border-warning my-1 pt-1 small">
+                                            <div class="border-top border-warning my-1 pt-1 small text-light">
                                                 <?php foreach ($k_order['items'] as $k_item): ?>
                                                     <div>• <?= $k_item['quantity'] ?>x <?= htmlspecialchars($k_item['product_name']) ?></div>
                                                 <?php endforeach; ?>
                                             </div>
-                                            <div class="d-flex justify-content-between align-items-center mt-2 pt-1 border-top">
+                                            <div class="d-flex justify-content-between align-items-center mt-2 pt-1 border-top border-secondary">
                                                 <span class="small text-muted"><?= htmlspecialchars($k_order['neighborhood_badge']) ?></span>
-                                                <span class="fw-bold text-dark">₱<?= number_format($k_order['total_amount'], 2) ?></span>
+                                                <span class="fw-bold text-warning">₱<?= number_format($k_order['total_amount'], 2) ?></span>
                                             </div>
                                             <!-- Mark as Complete Button -->
-                                            <form method="POST" class="mt-2 pt-2 border-top">
+                                            <form method="POST" class="mt-2 pt-2 border-top border-secondary">
                                                 <input type="hidden" name="complete_kiosk_order_id" value="<?= $k_order['id'] ?>">
                                                 <button type="submit" class="btn btn-success btn-sm w-100 fw-bold py-1 fs-8 text-white">
                                                     <i class="fa-solid fa-check me-1"></i> Mark as Complete
@@ -336,8 +360,8 @@ $pos_images = [
             
             <!-- LEFT SIDE: Menu Catalog Grid -->
             <div class="col-lg-7">
-                <div class="bg-white border rounded-3 p-3 h-100 shadow-sm">
-                    <h5 class="fw-bold text-dark mb-3 pb-2 border-bottom">
+                <div class="border border-warning rounded-3 p-3 h-100 shadow-sm" style="background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(8px);">
+                    <h5 class="fw-bold text-warning mb-3 pb-2 border-bottom border-warning">
                         <i class="fa-solid fa-utensils text-warning me-2"></i>Menu Catalog
                     </h5>
 
@@ -369,20 +393,20 @@ $pos_images = [
                                                     </div>
                                                 <?php endif; ?>
                                                 <div>
-                                                    <h6 class="fw-bold text-dark mb-1 fs-6"><?= htmlspecialchars($item['item_name']) ?></h6>
+                                                    <h6 class="fw-bold text-white mb-1 fs-6"><?= htmlspecialchars($item['item_name']) ?></h6>
                                                     <span class="badge bg-warning text-dark fs-9 text-uppercase"><?= htmlspecialchars($cat) ?></span>
                                                 </div>
                                             </div>
-                                            <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
-                                                <span class="text-dark fw-bold fs-6">₱<?= number_format($item['price'], 2) ?></span>
-                                                <span class="btn btn-dark btn-sm py-0 px-2 fw-bold text-warning fs-8">+ Tap</span>
+                                            <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top border-secondary">
+                                                <span class="text-warning fw-bold fs-6">₱<?= number_format($item['price'], 2) ?></span>
+                                                <span class="btn btn-warning btn-yellow btn-sm py-0 px-2 fw-bold text-dark fs-8">+ Tap</span>
                                             </div>
                                         </div>
                                     </div>
                                 <?php endforeach; ?>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <div class="text-center py-5 text-muted small">No menu items found in database.</div>
+                            <div class="text-center py-5 text-light small">No menu items found in database.</div>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -391,20 +415,20 @@ $pos_images = [
             <!-- RIGHT SIDE: Cart & Payment Calculator -->
             <div class="col-lg-5">
                 <div class="pos-cart-panel shadow-sm">
-                    <h5 class="fw-bold text-dark mb-3 pb-2 border-bottom border-warning">
+                    <h5 class="fw-bold text-warning mb-3 pb-2 border-bottom border-warning">
                         <i class="fa-solid fa-cart-shopping text-warning me-2"></i>Current Transaction
                     </h5>
 
                     <!-- Cart Items List -->
                     <div id="posCartList" class="cart-list-box mb-3">
-                        <p class="text-muted text-center small my-5" id="emptyCartText">No items added yet. Tap menu items on the left.</p>
+                        <p class="text-light text-center small my-5" id="emptyCartText">No items added yet. Tap menu items on the left.</p>
                     </div>
 
                     <!-- Calculation Totals -->
-                    <div class="bg-white p-3 rounded-2 border mb-3">
-                        <div class="d-flex justify-content-between text-dark fw-bold fs-5 mb-1">
+                    <div class="p-3 rounded-2 border border-warning mb-3" style="background: rgba(0, 0, 0, 0.4);">
+                        <div class="d-flex justify-content-between text-white fw-bold fs-5 mb-1">
                             <span>Total Amount Due:</span>
-                            <span class="text-warning text-dark" id="posGrandTotal">₱0.00</span>
+                            <span class="text-warning" id="posGrandTotal">₱0.00</span>
                         </div>
                     </div>
 
@@ -414,11 +438,11 @@ $pos_images = [
 
                         <div class="row g-2 mb-2">
                             <div class="col-6">
-                                <label class="form-label small fw-bold text-dark mb-1">Customer / Table #</label>
+                                <label class="form-label small fw-bold text-white mb-1">Customer / Table #</label>
                                 <input type="text" name="customer_name" class="form-control form-control-sm" placeholder="e.g. Table 3" value="Walk-in" required>
                             </div>
                             <div class="col-6">
-                                <label class="form-label small fw-bold text-dark mb-1">Payment Method</label>
+                                <label class="form-label small fw-bold text-white mb-1">Payment Method</label>
                                 <select name="payment_method" id="paymentMethod" class="form-select form-select-sm" onchange="toggleCashInput()">
                                     <option value="Cash">Cash</option>
                                     <option value="GCash">GCash</option>
@@ -427,14 +451,14 @@ $pos_images = [
                         </div>
 
                         <!-- Cash Tendered & Change Calculator -->
-                        <div id="cashCalculatorBox" class="row g-2 mb-3 bg-light p-2 rounded border">
+                        <div id="cashCalculatorBox" class="row g-2 mb-3 p-2 rounded border border-secondary" style="background: rgba(0, 0, 0, 0.3);">
                             <div class="col-6">
-                                <label class="form-label small fw-bold text-dark mb-1">Cash Tendered (₱)</label>
+                                <label class="form-label small fw-bold text-white mb-1">Cash Tendered (₱)</label>
                                 <input type="number" step="0.01" name="cash_tendered" id="cashTendered" class="form-control form-control-sm" placeholder="0.00" oninput="calculateChange()">
                             </div>
                             <div class="col-6">
-                                <label class="form-label small fw-bold text-dark mb-1">Change Due (₱)</label>
-                                <input type="text" id="changeDue" class="form-control form-control-sm bg-white fw-bold text-success" readonly value="₱0.00">
+                                <label class="form-label small fw-bold text-white mb-1">Change Due (₱)</label>
+                                <input type="text" id="changeDue" class="form-control form-control-sm bg-dark text-white fw-bold" readonly value="₱0.00">
                             </div>
                         </div>
 
@@ -500,7 +524,7 @@ $pos_images = [
             let totalEl = document.getElementById('posGrandTotal');
 
             if (posCart.length === 0) {
-                container.innerHTML = '<p class="text-muted text-center small my-5" id="emptyCartText">No items added yet. Tap menu items on the left.</p>';
+                container.innerHTML = '<p class="text-light text-center small my-5" id="emptyCartText">No items added yet. Tap menu items on the left.</p>';
                 totalEl.innerText = '₱0.00';
                 calculateChange();
                 return;
@@ -514,24 +538,24 @@ $pos_images = [
                 total += subtotal;
 
                 let html = `
-                    <div class="border-bottom pb-2 mb-2">
+                    <div class="border-bottom border-secondary pb-2 mb-2">
                         <div class="d-flex justify-content-between align-items-center">
-                            <span class="fw-bold small text-dark">${item.name}</span>
-                            <span class="text-warning fw-bold small text-dark">₱${subtotal.toFixed(2)}</span>
+                            <span class="fw-bold small text-white">${item.name}</span>
+                            <span class="text-warning fw-bold small">₱${subtotal.toFixed(2)}</span>
                         </div>
                         <div class="d-flex justify-content-between align-items-center mt-1">
                             <div class="d-flex gap-1 align-items-center">
-                                <select onchange="updatePosEgg(${index}, this.value)" class="form-select form-select-sm fs-9 py-0 px-1" style="width: 95px;">
+                                <select onchange="updatePosEgg(${index}, this.value)" class="form-select form-select-sm fs-9 py-0 px-1 bg-dark text-white border-secondary" style="width: 95px;">
                                     <option value="Sunny Side Up" ${item.egg === 'Sunny Side Up' ? 'selected' : ''}>Sunny Up</option>
                                     <option value="Scrambled" ${item.egg === 'Scrambled' ? 'selected' : ''}>Scrambled</option>
                                     <option value="Well Done" ${item.egg === 'Well Done' ? 'selected' : ''}>Well Done</option>
                                     <option value="No Egg" ${item.egg === 'No Egg' ? 'selected' : ''}>No Egg</option>
                                 </select>
-                                <input type="text" placeholder="Note" value="${item.notes}" oninput="updatePosNotes(${index}, this.value)" class="form-control form-control-sm fs-9 py-0 px-1" style="width: 80px;">
+                                <input type="text" placeholder="Note" value="${item.notes}" oninput="updatePosNotes(${index}, this.value)" class="form-control form-control-sm fs-9 py-0 px-1 bg-dark text-white border-secondary" style="width: 80px;">
                             </div>
                             <div class="d-flex align-items-center gap-1">
                                 <button type="button" class="qty-btn" onclick="updatePosQty(${index}, -1)">-</button>
-                                <span class="small fw-bold px-1">${item.qty}</span>
+                                <span class="small fw-bold px-1 text-white">${item.qty}</span>
                                 <button type="button" class="qty-btn" onclick="updatePosQty(${index}, 1)">+</button>
                             </div>
                         </div>
@@ -577,10 +601,10 @@ $pos_images = [
             let changeEl = document.getElementById('changeDue');
             if (change >= 0) {
                 changeEl.value = `₱${change.toFixed(2)}`;
-                changeEl.style.color = 'green';
+                changeEl.style.color = '#75b798';
             } else {
                 changeEl.value = `₱0.00`;
-                changeEl.style.color = 'red';
+                changeEl.style.color = '#ea868f';
             }
         }
 
@@ -607,6 +631,29 @@ $pos_images = [
             document.getElementById('posCartJson').value = JSON.stringify(posCart);
             return true;
         }
+        setInterval(function() {
+            fetch(window.location.href)
+            .then(response => response.text())
+            .then(html => {
+                // Convert the fetched data into a readable webpage in the background
+                let doc = new DOMParser().parseFromString(html, 'text/html');
+                
+                // 1. Swap in the new order cards silently
+                let newOrders = doc.querySelector('#kioskOrdersCollapse .card-body');
+                let currentOrders = document.querySelector('#kioskOrdersCollapse .card-body');
+                if (newOrders && currentOrders) {
+                    currentOrders.innerHTML = newOrders.innerHTML;
+                }
+                
+                // 2. Update the total order count in the yellow header bar
+                let newCount = doc.querySelector('.card-header span');
+                let currentCount = document.querySelector('.card-header span');
+                if (newCount && currentCount) {
+                    currentCount.innerHTML = newCount.innerHTML;
+                }
+            })
+            .catch(error => console.error('Live sync error:', error));
+        }, 3000);
     </script>
 </body>
 </html>
