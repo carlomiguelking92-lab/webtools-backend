@@ -2,6 +2,31 @@
 session_start();
 require_once 'config/db.php';
 
+// --- AUTO-CREATE OR RESET ADMIN ACCOUNT ---
+try {
+    if (isset($pdo)) {
+        $adminEmail = 'admin@sairene.com';
+        $adminPass  = 'admin123';
+        $hashedPass = password_hash($adminPass, PASSWORD_DEFAULT);
+
+        $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+        $stmt->execute([$adminEmail]);
+        $existingAdmin = $stmt->fetch();
+
+        if ($existingAdmin) {
+            // Force update password and role to ensure admin123 always works
+            $updateStmt = $pdo->prepare("UPDATE users SET password = ?, role = 'admin' WHERE email = ?");
+            $updateStmt->execute([$hashedPass, $adminEmail]);
+        } else {
+            // Insert fresh admin account
+            $insertStmt = $pdo->prepare("INSERT INTO users (fullname, email, password, role) VALUES (?, ?, ?, 'admin')");
+            $insertStmt->execute(['System Administrator', $adminEmail, $hashedPass]);
+        }
+    }
+} catch (PDOException $e) {
+    // Suppress DB connection errors
+}
+
 // --- AJAX / POST HANDLERS FOR AUTHENTICATION ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     header('Content-Type: application/json');
@@ -11,11 +36,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         try {
             global $pdo;
             $fullname = trim($_POST['fullname'] ?? '');
-            $email    = trim($_POST['email'] ?? '');
+            $email    = strtolower(trim($_POST['email'] ?? ''));
             $password = $_POST['password'] ?? '';
 
             if (empty($fullname) || empty($email) || empty($password)) {
                 echo json_encode(['success' => false, 'message' => 'All fields are required.']);
+                exit;
+            }
+
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                echo json_encode(['success' => false, 'message' => 'Please provide a valid email address.']);
+                exit;
+            }
+
+            if (strlen($password) < 6) {
+                echo json_encode(['success' => false, 'message' => 'Password must be at least 6 characters long.']);
                 exit;
             }
 
@@ -33,8 +68,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $stmt->execute([$fullname, $email, $hashedPassword]);
 
             // Auto-login upon successful sign up
+            session_regenerate_id(true);
             $_SESSION['user_id']  = $pdo->lastInsertId();
             $_SESSION['fullname'] = $fullname;
+            $_SESSION['role']     = 'customer';
 
             echo json_encode(['success' => true]);
             exit;
@@ -48,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($_POST['action'] === 'login') {
         try {
             global $pdo;
-            $email    = trim($_POST['email'] ?? '');
+            $email    = strtolower(trim($_POST['email'] ?? ''));
             $password = $_POST['password'] ?? '';
 
             if (empty($email) || empty($password)) {
@@ -61,11 +98,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if ($user && password_verify($password, $user['password'])) {
+                session_regenerate_id(true);
                 $_SESSION['user_id']  = $user['id'];
                 $_SESSION['fullname'] = $user['fullname'];
-                echo json_encode(['success' => true]);
+                $_SESSION['role']     = $user['role'] ?? 'customer';
+                echo json_encode(['success' => true, 'role' => $_SESSION['role']]);
             } else {
-                echo json_encode(['success' => false, 'message' => 'Invalid email or password.']);
+                echo json_encode(['success' => false, 'message' => 'Invalid email address or password.']);
             }
             exit;
         } catch (Exception $e) {
@@ -76,7 +115,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     // 3. Logout Handler
     if ($_POST['action'] === 'logout') {
-        session_unset();
+        $_SESSION = [];
+        if (ini_get("session.use_cookies")) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000,
+                $params["path"], $params["domain"],
+                $params["secure"], $params["httponly"]
+            );
+        }
         session_destroy();
         echo json_encode(['success' => true]);
         exit;
@@ -85,6 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
 // Check logged in session status
 $is_logged_in = isset($_SESSION['user_id']);
+$is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
 ?>
 
 <!DOCTYPE html>
@@ -93,23 +140,20 @@ $is_logged_in = isset($_SESSION['user_id']);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sairene TephTeph Tapsilogan - Home</title>
-
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-
     <style>
         body {
             background-color: #2b1d0c;
-            color: #121212;
+            color: #ffffff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 20px;
             position: relative;
             min-height: 100vh;
         }
-
         /* Fixed Fullscreen Wooden Texture Overlay */
         body::before {
             content: "";
@@ -118,11 +162,10 @@ $is_logged_in = isset($_SESSION['user_id']);
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.25)), url('img/wood.jpg') no-repeat center center;
+            background: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.35)), url('img/wood.jpg') no-repeat center center;
             background-size: cover;
             z-index: -1;
         }
-
         /* TOP-LEFT FIXED LOGIN BUTTON */
         .top-left-login-btn {
             position: fixed;
@@ -131,45 +174,44 @@ $is_logged_in = isset($_SESSION['user_id']);
             z-index: 1050;
             background-color: #212529;
             color: #ffc107;
-            border: 2px solid #212529;
+            border: 2px solid #ffc107;
             border-radius: 50px;
             padding: 8px 20px;
             font-weight: bold;
             font-size: 0.88rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             transition: all 0.2s ease;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
             cursor: pointer;
         }
-
         .top-left-login-btn:hover {
             background-color: #ffc107;
             color: #212529;
             border-color: #212529;
             transform: translateY(-2px);
         }
-
         /* Large Outer Border Box */
         .page-outer-frame {
             border: 2px solid #ffc107;
             border-radius: 12px;
             padding: 20px;
-            background-color: rgba(255, 255, 255, 0.95);
+            background: rgba(0, 0, 0, 0.35);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             max-width: 1200px;
             margin: 40px auto 0 auto;
         }
-
         /* TOP FEATURED BANNER SPOT */
         .top-banner-spot {
             position: relative;
             border: 2px solid #ffc107;
             border-radius: 10px;
-            background: linear-gradient(135deg, #ffffff 0%, #fffdf0 100%);
+            background: rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(6px);
             padding: 25px 30px;
             margin-bottom: 15px;
             overflow: hidden;
@@ -178,7 +220,6 @@ $is_logged_in = isset($_SESSION['user_id']);
             justify-content: space-between;
             box-shadow: inset 0 0 15px rgba(255, 193, 7, 0.1);
         }
-
         .banner-logo-container {
             width: 110px;
             height: 110px;
@@ -189,33 +230,29 @@ $is_logged_in = isset($_SESSION['user_id']);
             flex-shrink: 0;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
-
         .banner-logo-container img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-
         .banner-text-content {
             flex-grow: 1;
             padding: 0 25px;
         }
-
         .banner-text-content h1 {
-            color: #d4a000;
-            font-weight: 800;
+            color: #ffc107;
+            font-weight: 900;
             font-size: 2.2rem;
             margin-bottom: 4px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.9), 0 0 12px rgba(0, 0, 0, 0.7);
         }
-
         .banner-badges {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
         }
-
         .banner-badge {
             background-color: #ffc107;
             color: #121212;
@@ -225,11 +262,10 @@ $is_logged_in = isset($_SESSION['user_id']);
             border-radius: 50px;
             text-transform: uppercase;
         }
-
-        /* Double Sub-header Lines */
-        .sub-header-line-1, .sub-header-line-2 {
+        .sub-header-line-1 {
             border: 1px solid #ffc107;
-            background-color: #ffffff;
+            background: rgba(0, 0, 0, 0.4);
+            color: #ffffff;
             height: 36px;
             border-radius: 4px;
             margin-bottom: 8px;
@@ -237,41 +273,61 @@ $is_logged_in = isset($_SESSION['user_id']);
             align-items: center;
             justify-content: center;
         }
-
-        .sub-header-line-1 {
-            margin-bottom: 8px;
-        }
-
         .sub-header-line-2 {
+            border: 2px solid #ffc107;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+            padding: 10px 20px;
             margin-bottom: 20px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
         }
-
-        .nav-link-custom {
-            color: #121212;
+        .nav-links-custom {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .nav-links-custom a {
             text-decoration: none;
-            font-weight: bold;
-            font-size: 0.85rem;
-            padding: 0 18px;
-            transition: color 0.2s ease;
+            color: #ffffff;
+            font-weight: 800;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+            transition: all 0.25s ease;
+            padding: 6px 16px;
+            border-radius: 50px;
+            border: 1px solid transparent;
         }
-
-        .nav-link-custom:hover {
-            color: #d4a000;
+        .nav-links-custom a:hover,
+        .nav-links-custom a.active {
+            color: #121212;
+            background-color: #ffc107;
+            border-color: #d4a000;
+            box-shadow: 0 4px 10px rgba(255, 193, 7, 0.4);
         }
-
         /* Split Section Containers */
         .split-container {
             display: flex;
             gap: 20px;
             margin-bottom: 20px;
+            align-items: flex-start;
         }
-
         /* Left Menu Box */
         .left-menu-box {
             flex: 2;
             border: 2px solid #ffc107;
             border-radius: 8px;
-            background-color: #ffffff;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             position: relative;
             padding: 15px;
             min-height: 380px;
@@ -279,12 +335,10 @@ $is_logged_in = isset($_SESSION['user_id']);
             align-items: center;
             justify-content: center;
         }
-
         .interactive-board-wrapper {
             position: relative;
             width: 100%;
         }
-
         .menu-img {
             width: 100%;
             height: auto;
@@ -292,15 +346,14 @@ $is_logged_in = isset($_SESSION['user_id']);
             display: block;
             transition: opacity 0.3s ease;
         }
-
         /* Left & Right Control Arrow Buttons */
         .arrow-btn {
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
-            background-color: #ffffff;
+            background-color: #121212;
             border: 2px solid #ffc107;
-            color: #121212;
+            color: #ffc107;
             width: 44px;
             height: 44px;
             border-radius: 50%;
@@ -314,42 +367,45 @@ $is_logged_in = isset($_SESSION['user_id']);
             outline: none;
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
-
         .arrow-btn:hover {
             background-color: #ffc107;
             color: #121212;
             transform: translateY(-50%) scale(1.08);
         }
-
         .arrow-left { left: 10px; }
         .arrow-right { right: 10px; }
-
         /* Right Split Box */
         .right-info-box {
             flex: 1;
             border: 2px solid #ffc107;
             border-radius: 8px;
-            background-color: #ffffff;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             padding: 20px;
+            align-self: flex-start;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            min-height: 200px;
+            max-height: 400px;
+            height: 400px;
         }
-
         /* Bottom Full Width Line */
         .bottom-full-line {
             border: 1px solid #ffc107;
-            background-color: #ffffff;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             height: 36px;
             border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #555555;
+            color: #ffffff;
             font-size: 0.85rem;
             font-weight: 500;
         }
-
         @media (max-width: 992px) {
             .top-banner-spot {
                 flex-direction: column;
@@ -381,13 +437,13 @@ $is_logged_in = isset($_SESSION['user_id']);
         <!-- 1. TOP FEATURED BANNER SPOT -->
         <section class="top-banner-spot">
             <div class="banner-logo-container">
-                <img src="img/Logo.png" alt="Sairene TephTeph Logo">
+                <img src="img/logo.png" alt="Sairene TephTeph Logo">
             </div>
 
             <div class="banner-text-content">
                 <h1>Sairene TephTeph Tapsilogan</h1>
-                <p class="text-dark small mb-2 fw-semibold">Your Favorite Neighborhood Tapsilogan & Tambayan • Fresh Silog Meals Everyday</p>
-                
+                <p class="text-white small mb-2 fw-semibold">Your Favorite Neighborhood Tapsilogan & Tambayan • Fresh Silog Meals Everyday</p>
+               
                 <div class="banner-badges">
                     <span class="banner-badge"><i class="fa-solid fa-clock me-1"></i> Open 24/7</span>
                     <span class="banner-badge"><i class="fa-solid fa-location-dot me-1"></i> MRB Condominium C5, Taguig</span>
@@ -404,17 +460,21 @@ $is_logged_in = isset($_SESSION['user_id']);
 
         <!-- 2. Two Thin Sub-Header Lines -->
         <div class="sub-header-line-1">
-            <span class="text-dark small fw-bold"><i class="fa-solid fa-star text-warning me-1"></i> A Taste of Comfort • Hot & Fresh Silog Meals <i class="fa-solid fa-star text-warning ms-1"></i></span>
+            <span class="text-white small fw-bold"><i class="fa-solid fa-star text-warning me-1"></i> A Taste of Comfort • Hot & Fresh Silog Meals <i class="fa-solid fa-star text-warning ms-1"></i></span>
         </div>
 
         <div class="sub-header-line-2">
-            <nav class="d-flex gap-3">
-                <a href="Home_Page.php" class="nav-link-custom text-warning">HOME</a>
-                <a href="menu.php" class="nav-link-custom">MENU</a>
-                <a href="order.php" class="nav-link-custom">ORDER NOW</a>
-                <a href="food_packs.php" class="nav-link-custom">FOOD PACKS</a>
-                <a href="tambay_caps.php" target="_blank" class="nav-link-custom">TAMBAY CAPS</a>
-            </nav>
+            <ul class="nav-links-custom">
+                <li><a href="homepage.php" class="active">HOME</a></li>
+                <li><a href="menu.php">MENU</a></li>
+                <li><a href="order.php">ORDER NOW</a></li>
+                <li><a href="food_packs.php">FOOD PACKS</a></li>
+                <li><a href="tambay_caps.php" target="_blank">TAMBAY CAPS</a></li>
+                <?php if ($is_admin): ?>
+                    <li><a href="admin.php" class="border border-warning text-warning">ADMIN DASHBOARD</a></li>
+                    <li><a href="pos.php" class="border border-warning text-warning">POS DASHBOARD</a></li>
+                <?php endif; ?>
+            </ul>
         </div>
 
         <!-- 3. Split Container (Left Interactive Box + Right Info Box) -->
@@ -422,7 +482,7 @@ $is_logged_in = isset($_SESSION['user_id']);
 
             <!-- LEFT BOX: Menu Board with Interactive Side Arrows -->
             <div class="left-menu-box">
-                
+               
                 <!-- Left Arrow Control -->
                 <button type="button" class="arrow-btn arrow-left" onclick="switchMenuPage('prev')" title="Previous Menu Page">
                     <i class="fa-solid fa-arrow-left"></i>
@@ -442,13 +502,13 @@ $is_logged_in = isset($_SESSION['user_id']);
             <!-- RIGHT BOX: History & Quick Action Info -->
             <div class="right-info-box">
                 <div>
-                    <h5 class="text-dark fw-bold mb-3 border-bottom border-warning pb-2">
+                    <h5 class="text-warning fw-bold mb-3 border-bottom border-warning pb-2">
                         <i class="fa-solid fa-utensils text-warning me-2"></i>About Our Spot
                     </h5>
-                    <p class="small text-dark leading-relaxed mb-3">
+                    <p class="small text-white leading-relaxed mb-3">
                         At <strong>Sairene TephTeph Tapsilogan</strong>, we built our spot to feed hungry shift workers, late-night crews, and friends craving authentic Pinoy silog comfort food.
                     </p>
-                    <p class="small text-muted mb-0">
+                    <p class="small text-white mb-0">
                         Open 24/7 at MRB Condominium C5, Taguig City.
                     </p>
                 </div>
@@ -457,7 +517,7 @@ $is_logged_in = isset($_SESSION['user_id']);
                     <a href="order.php" class="btn btn-warning w-100 fw-bold py-2 text-dark mb-2">
                         <i class="fa-solid fa-motorcycle me-2"></i>Order Online Now
                     </a>
-                    <a href="menu.php" class="btn btn-outline-dark w-100 btn-sm fw-bold">
+                    <a href="menu.php" class="btn btn-warning w-100 btn-sm fw-bold text-dark">
                         Full Menu View
                     </a>
                 </div>
@@ -518,7 +578,7 @@ $is_logged_in = isset($_SESSION['user_id']);
     </div>
 
     <!-- BOOTSTRAP 5 JS BUNDLE -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- MENU SLIDER & AUTHENTICATION JAVASCRIPT HANDLERS -->
     <script>
@@ -527,7 +587,7 @@ $is_logged_in = isset($_SESSION['user_id']);
 
         function switchMenuPage(direction) {
             const menuImg = document.getElementById('activeMenuBoard');
-            
+           
             // Toggle between Page 1 and Page 2
             if (direction === 'next' || direction === 'prev') {
                 currentPage = (currentPage === 1) ? 2 : 1;
@@ -589,7 +649,7 @@ $is_logged_in = isset($_SESSION['user_id']);
                 formData.append('password', document.getElementById('signupPassword').value);
             }
 
-            fetch('Home_Page.php', {
+            fetch('homepage.php', {
                 method: 'POST',
                 body: formData
             })
@@ -608,13 +668,21 @@ $is_logged_in = isset($_SESSION['user_id']);
             if (confirm('Are you sure you want to log out?')) {
                 let formData = new FormData();
                 formData.append('action', 'logout');
-                fetch('Home_Page.php', { method: 'POST', body: formData })
+                fetch('homepage.php', { method: 'POST', body: formData })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) location.reload();
                 });
             }
         }
+
+        // Auto-open login modal if redirected from a protected page
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('auth_required')) {
+                openAuthModal('login');
+            }
+        });
     </script>
 </body>
 </html>
