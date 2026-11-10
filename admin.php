@@ -13,6 +13,17 @@ try {
     $pdo->exec("ALTER TABLE website_orders ADD COLUMN inventory_deducted INT DEFAULT 0");
 } catch (PDOException $e) {}
 
+// Ensure food_subtotal and tip_amount columns exist for proper tip separation
+try {
+    $pdo->exec("ALTER TABLE orders ADD COLUMN food_subtotal DECIMAL(10,2) DEFAULT 0.00, ADD COLUMN tip_amount DECIMAL(10,2) DEFAULT 0.00");
+} catch (PDOException $e) {}
+try {
+    $pdo->exec("ALTER TABLE kiosk_orders ADD COLUMN food_subtotal DECIMAL(10,2) DEFAULT 0.00, ADD COLUMN tip_amount DECIMAL(10,2) DEFAULT 0.00");
+} catch (PDOException $e) {}
+try {
+    $pdo->exec("ALTER TABLE website_orders ADD COLUMN food_subtotal DECIMAL(10,2) DEFAULT 0.00, ADD COLUMN tip_amount DECIMAL(10,2) DEFAULT 0.00");
+} catch (PDOException $e) {}
+
 // Auto-deduct inventory for unprocessed POS, Kiosk, and Website orders upon admin page load/refresh
 try {
     // 1. Process unprocessed POS orders
@@ -331,21 +342,28 @@ try {
     $caps = [];
 }
 
-// Fetch Combined Sales Summary Across POS, Kiosk, and Website Orders (Unified Tables)
+// Fetch Combined Sales Summary & Separated Tips Across POS, Kiosk, and Website Orders
 $recent_orders = [];
-$total_kiosk_sales = 0;
+$total_food_revenue = 0;
+$total_tips = 0;
 $total_items_sold = 0;
 
 try {
     $stmt = $pdo->query("SELECT * FROM kiosk_orders ORDER BY created_at DESC LIMIT 10");
     $recent_orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Sum revenue across POS, Kiosk, and Website order tables
-    $posSales = $pdo->query("SELECT SUM(total_amount) FROM orders")->fetchColumn() ?: 0;
-    $kioskSales = $pdo->query("SELECT SUM(total_amount) FROM kiosk_orders")->fetchColumn() ?: 0;
-    $webSales = $pdo->query("SELECT SUM(total_amount) FROM website_orders")->fetchColumn() ?: 0;
+    // Sum food revenue separately from tips across POS, Kiosk, and Website tables
+    $posFood = $pdo->query("SELECT SUM(COALESCE(food_subtotal, total_amount)) FROM orders")->fetchColumn() ?: 0;
+    $posTip = $pdo->query("SELECT SUM(COALESCE(tip_amount, 0)) FROM orders")->fetchColumn() ?: 0;
 
-    $total_kiosk_sales = $posSales + $kioskSales + $webSales;
+    $kioskFood = $pdo->query("SELECT SUM(COALESCE(food_subtotal, total_amount)) FROM kiosk_orders")->fetchColumn() ?: 0;
+    $kioskTip = $pdo->query("SELECT SUM(COALESCE(tip_amount, 0)) FROM kiosk_orders")->fetchColumn() ?: 0;
+
+    $webFood = $pdo->query("SELECT SUM(COALESCE(food_subtotal, total_amount)) FROM website_orders")->fetchColumn() ?: 0;
+    $webTip = $pdo->query("SELECT SUM(COALESCE(tip_amount, 0)) FROM website_orders")->fetchColumn() ?: 0;
+
+    $total_food_revenue = $posFood + $kioskFood + $webFood;
+    $total_tips = $posTip + $kioskTip + $webTip;
 
     // Sum total items sold across all channels
     $posItems = $pdo->query("SELECT SUM(quantity) FROM order_items")->fetchColumn() ?: 0;
@@ -438,7 +456,7 @@ try {
             text-align: center;
         }
         .stat-number {
-            font-size: 1.7rem;
+            font-size: 1.5rem;
             font-weight: 800;
             color: #ffc107;
             font-family: monospace;
@@ -474,23 +492,29 @@ try {
             </div>
         <?php endif; ?>
 
-        <!-- STAT CARDS -->
+        <!-- STAT CARDS (SEPARATED REVENUE & TIPS) -->
         <div class="row g-3 mb-4">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="stat-card">
-                    <span class="text-light small text-uppercase fw-bold">Total Kiosk Revenue</span>
-                    <div class="stat-number">₱<?php echo number_format($total_kiosk_sales, 2); ?></div>
+                    <span class="text-light small text-uppercase fw-bold">Food Revenue</span>
+                    <div class="stat-number">₱<?php echo number_format($total_food_revenue, 2); ?></div>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <span class="text-light small text-uppercase fw-bold">Kitchen Tips</span>
+                    <div class="stat-number">₱<?php echo number_format($total_tips, 2); ?></div>
+                </div>
+            </div>
+            <div class="col-md-3">
                 <div class="stat-card">
                     <span class="text-light small text-uppercase fw-bold">Items Sold</span>
                     <div class="stat-number"><?php echo number_format($total_items_sold); ?> pcs</div>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="stat-card">
-                    <span class="text-light small text-uppercase fw-bold">Cap Merchandise Lineup</span>
+                    <span class="text-light small text-uppercase fw-bold">Cap Merchandise</span>
                     <div class="stat-number"><?php echo count($caps); ?> Items</div>
                 </div>
             </div>
@@ -545,7 +569,7 @@ try {
                     <tbody>
                         <?php foreach ($inventory_items as $item): ?>
                             <tr class="searchable-row" data-category="<?php echo strtolower($item['category']); ?>">
-                                <td><img src="img/<?php echo htmlspecialchars($item['image'] ?? 'logo.png'); ?>" class="item-img-preview" alt="Preview" onerror="this.src='img/logo.png'"></td>
+                                <td><img src="img/<?php echo htmlspecialchars($item['image'] ?? 'logo.png'); ?>" width="45" height="45" class="item-img-preview" alt="Preview" onerror="this.onerror=null; this.src='img/logo.png'"></td>
                                 <td class="fw-bold text-warning item-name"><?php echo htmlspecialchars($item['name']); ?></td>
                                 <td><span class="badge bg-dark border border-warning text-warning"><?php echo htmlspecialchars($item['category']); ?></span></td>
                                 <td class="font-monospace fw-bold"><?php echo $item['stock']; ?> <?php echo $item['unit']; ?></td>
@@ -592,7 +616,7 @@ try {
                     <tbody>
                         <?php foreach ($caps as $cap): ?>
                             <tr class="searchable-row" data-category="cap">
-                                <td><img src="img/<?php echo htmlspecialchars($cap['image_url'] ?? 'logo.png'); ?>" class="item-img-preview" alt="Cap" onerror="this.src='img/logo.png'"></td>
+                                <td><img src="img/<?php echo htmlspecialchars($cap['image_url'] ?? 'logo.png'); ?>" width="45" height="45" class="item-img-preview" alt="Cap" onerror="this.onerror=null; this.src='img/logo.png'"></td>
                                 <td>#<?php echo $cap['id']; ?></td>
                                 <td class="fw-bold text-warning item-name"><?php echo htmlspecialchars($cap['product_name']); ?></td>
                                 <td class="font-monospace">₱<?php echo number_format($cap['price'], 2); ?></td>
