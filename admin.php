@@ -355,7 +355,7 @@ try {
 
     $total_items_sold = $posItems + $kioskItems + $webItems;
 } catch (PDOException $e) {}
-
+?>
 
 <!DOCTYPE html>
 <html lang="en">
