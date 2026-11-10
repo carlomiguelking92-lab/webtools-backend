@@ -7,7 +7,7 @@ try {
     $pdo->exec("ALTER TABLE orders ADD COLUMN inventory_deducted INT DEFAULT 0");
 } catch (PDOException $e) {}
 try {
-    $pdo->exec("ALTER TABLE kiosk_orders ADD COLUMN inventory_deducted INT DEFAULT 0");
+    $pdo->exec("ALTER TABLE kiosk_database.kiosk_orders ADD COLUMN inventory_deducted INT DEFAULT 0");
 } catch (PDOException $e) {}
 try {
     $pdo->exec("ALTER TABLE website_orders ADD COLUMN inventory_deducted INT DEFAULT 0");
@@ -30,11 +30,11 @@ try {
         $pdo->prepare("UPDATE orders SET inventory_deducted = 1 WHERE id = ?")->execute([$orderId]);
     }
 
-    // 2. Process unprocessed Kiosk orders
-    $unprocessedKiosk = $pdo->query("SELECT id FROM kiosk_orders WHERE inventory_deducted = 0 OR inventory_deducted IS NULL");
+    // 2. Process unprocessed Kiosk orders (Fixed with kiosk_database prefix)
+    $unprocessedKiosk = $pdo->query("SELECT id FROM kiosk_database.kiosk_orders WHERE inventory_deducted = 0 OR inventory_deducted IS NULL");
     while ($kioskOrder = $unprocessedKiosk->fetch(PDO::FETCH_ASSOC)) {
         $orderId = $kioskOrder['id'];
-        $itemStmt = $pdo->prepare("SELECT product_name, quantity FROM kiosk_order_items WHERE order_id = ?");
+        $itemStmt = $pdo->prepare("SELECT product_name, quantity FROM kiosk_database.kiosk_order_items WHERE order_id = ?");
         $itemStmt->execute([$orderId]);
         $items = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -42,7 +42,7 @@ try {
             deductInventoryForOrderedItem($pdo, $item['product_name'], $item['quantity']);
         }
 
-        $pdo->prepare("UPDATE kiosk_orders SET inventory_deducted = 1 WHERE id = ?")->execute([$orderId]);
+        $pdo->prepare("UPDATE kiosk_database.kiosk_orders SET inventory_deducted = 1 WHERE id = ?")->execute([$orderId]);
     }
 
     // 3. Process unprocessed Website orders
