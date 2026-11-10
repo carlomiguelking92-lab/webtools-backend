@@ -1,21 +1,23 @@
 <?php
 session_start();
+
+// Redirect user to homepage if they are not logged in
+if (!isset($_SESSION['user_id'])) {
+    header('Location: homepage.php?auth_required=1');
+    exit;
+}
+
 require_once 'config/db.php';
 
-// --- AJAX / POST HANDLERS (Orders Only) ---
+// --- AJAX / POST HANDLERS (Website Orders Only) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     header('Content-Type: application/json');
 
-    // 1. Place Order Handler (Restricted to Logged-In Users)
+    // 1. Place Order Handler
     if ($_POST['action'] === 'place_order') {
-        if (!isset($_SESSION['user_id'])) {
-            echo json_encode(['success' => false, 'message' => 'You must be logged in to place an order.']);
-            exit;
-        }
-
         try {
             global $pdo;
-            $user_id = $_SESSION['user_id'];
+            $user_id = $_SESSION['user_id'] ?? NULL;
             $customer_name = $_POST['customer_name'] ?? 'Guest';
             $phone = $_POST['phone'] ?? '';
             $delivery_area = $_POST['delivery_area'] ?? 'Taguig';
@@ -33,11 +35,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 move_uploaded_file($_FILES['payment_proof']['tmp_name'], $payment_proof_path);
             }
 
-            $stmt = $pdo->prepare("INSERT INTO orders (user_id, customer_name, phone, delivery_area, address, total_amount, payment_method, payment_status, order_status, payment_proof) VALUES (?, ?, ?, ?, ?, ?, 'GCash', 'paid', 'preparing', ?)");
+            // Insert into website_orders table
+            $stmt = $pdo->prepare("INSERT INTO website_orders (user_id, customer_name, phone, delivery_area, address, total_amount, payment_method, payment_status, order_status, payment_proof, created_at) VALUES (?, ?, ?, ?, ?, ?, 'GCash', 'paid', 'preparing', ?, NOW())");
             $stmt->execute([$user_id, $customer_name, $phone, $delivery_area, $address, $total_amount, $payment_proof_path]);
             $order_id = $pdo->lastInsertId();
 
-            $stmt_item = $pdo->prepare("INSERT INTO order_items (order_id, item_name, egg_choice, notes, quantity, price) VALUES (?, ?, ?, ?, ?, ?)");
+            // Insert into website_order_items table
+            $stmt_item = $pdo->prepare("INSERT INTO website_order_items (order_id, item_name, egg_choice, notes, quantity, price) VALUES (?, ?, ?, ?, ?, ?)");
             foreach ($cart as $item) {
                 $stmt_item->execute([
                     $order_id,
@@ -62,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         try {
             global $pdo;
             $order_id = intval($_POST['order_id']);
-            $stmt = $pdo->prepare("UPDATE orders SET order_status = 'completed', updated_at = NOW() WHERE id = ?");
+            $stmt = $pdo->prepare("UPDATE website_orders SET order_status = 'completed', updated_at = NOW() WHERE id = ?");
             $stmt->execute([$order_id]);
             echo json_encode(['success' => true]);
             exit;
@@ -73,35 +77,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 }
 
-// Fetch ongoing & past orders specifically for the logged-in user
+// Fetch active & completed website orders for public display in modal tabs
 $ongoing_orders = [];
 $past_orders = [];
-$is_logged_in = isset($_SESSION['user_id']);
-$logged_in_user_id = $is_logged_in ? $_SESSION['user_id'] : 0;
 
 try {
     global $pdo;
-    if (isset($pdo) && $is_logged_in) {
-        $ongoing_raw = $pdo->prepare("SELECT * FROM orders WHERE user_id = ? AND order_status != 'completed' ORDER BY id DESC");
-        $ongoing_raw->execute([$logged_in_user_id]);
+    if (isset($pdo)) {
+        $ongoing_raw = $pdo->query("SELECT * FROM website_orders WHERE order_status != 'completed' ORDER BY id DESC LIMIT 20");
         foreach ($ongoing_raw->fetchAll(PDO::FETCH_ASSOC) as $ord) {
-            $items_stmt = $pdo->prepare("SELECT * FROM order_items WHERE order_id = ?");
+            $items_stmt = $pdo->prepare("SELECT * FROM website_order_items WHERE order_id = ?");
             $items_stmt->execute([$ord['id']]);
             $ord['items'] = $items_stmt->fetchAll(PDO::FETCH_ASSOC);
             $ongoing_orders[] = $ord;
         }
 
-        $past_raw = $pdo->prepare("SELECT * FROM orders WHERE user_id = ? AND order_status = 'completed' ORDER BY id DESC LIMIT 10");
-        $past_raw->execute([$logged_in_user_id]);
+        $past_raw = $pdo->query("SELECT * FROM website_orders WHERE order_status = 'completed' ORDER BY id DESC LIMIT 10");
         foreach ($past_raw->fetchAll(PDO::FETCH_ASSOC) as $ord) {
-            $items_stmt = $pdo->prepare("SELECT * FROM order_items WHERE order_id = ?");
+            $items_stmt = $pdo->prepare("SELECT * FROM website_order_items WHERE order_id = ?");
             $items_stmt->execute([$ord['id']]);
             $ord['items'] = $items_stmt->fetchAll(PDO::FETCH_ASSOC);
             $past_orders[] = $ord;
         }
     }
 } catch (Exception $e) {
-    // Database tables might not be fully migrated yet
+    // Graceful fallback if database connection is temporary offline
 }
 ?>
 <!DOCTYPE html>
@@ -183,7 +183,7 @@ try {
             box-shadow: 0 4px 10px rgba(255, 193, 7, 0.4);
         }
 
-        /* Main Wrapper Container - White/Cream Layer Removed */
+        /* Main Wrapper Container */
         .main-wrapper-box {
             background: rgba(0, 0, 0, 0.45);
             backdrop-filter: blur(8px);
@@ -430,10 +430,10 @@ try {
     <!-- Top Navigation Box -->
     <nav class="top-nav-box">
         <ul class="nav-links">
-            <li><a href="Home_Page.php" id="homeNavLink">HOME</a></li>
+            <li><a href="homepage.php" id="homeNavLink">HOME</a></li>
             <li><a href="menu.php" id="menuNavLink" class="active">MENU</a></li>
-            <li><a href="food_packs.php" id="foodPacksNavLink">FOOD PACKS</a></li>
             <li><a href="order.php" id="orderNavLink">ORDER NOW</a></li>
+            <li><a href="food_packs.php" id="foodPacksNavLink">FOOD PACKS</a></li>
             <li><a href="tambay_caps.php" id="tambayNavLink">TAMBAY CAPS</a></li>
         </ul>
     </nav>
@@ -457,7 +457,7 @@ try {
 
         <hr class="border-warning opacity-75 my-4">
 
-        <!-- Instant Page Switch Buttons (No Reload) -->
+        <!-- Instant Page Switch Buttons -->
         <div class="d-flex justify-content-center align-items-center gap-3 mb-4">
             <button type="button" id="btn-page-1" class="btn btn-gold active" onclick="switchMenuPage(1)" aria-label="Page 1">
                 <i class="fa-solid fa-chevron-left fs-5"></i>
@@ -467,7 +467,7 @@ try {
             </button>
         </div>
 
-        <!-- Menu Container (Both pages pre-loaded in DOM for instant toggle) -->
+        <!-- Menu Container -->
         <div class="menu-wrapper">
             
             <!-- PAGE 1: SILOG MEALS -->
@@ -531,7 +531,7 @@ try {
                 </div>
             </div>
 
-            <!-- PAGE 2: COMBO MEALS & ALA CARTE (Initially Hidden) -->
+            <!-- PAGE 2: COMBO MEALS & ALA CARTE -->
             <div id="menu-page-2" class="menu-board-container d-none">
                 <img src="img/menu2.png" alt="Sairene Tapsilogan Combos and Ala Carte" class="img-fluid menu-board-img">
 
@@ -758,9 +758,7 @@ try {
 
                     <!-- TAB 2: ONGOING ORDERS -->
                     <div id="tab-ongoing" class="cart-tab-content d-none">
-                        <?php if (!$is_logged_in): ?>
-                            <p class="text-muted text-center my-4">Please <a href="Home_Page.php" class="text-warning fw-bold text-decoration-none">login from the homepage</a> to view your ongoing orders.</p>
-                        <?php elseif (empty($ongoing_orders)): ?>
+                        <?php if (empty($ongoing_orders)): ?>
                             <p class="text-muted text-center my-4">No ongoing active orders found.</p>
                         <?php else: ?>
                             <?php foreach ($ongoing_orders as $ord): ?>
@@ -802,9 +800,7 @@ try {
 
                     <!-- TAB 3: PAST ORDERS -->
                     <div id="tab-past" class="cart-tab-content d-none">
-                        <?php if (!$is_logged_in): ?>
-                            <p class="text-muted text-center my-4">Please <a href="Home_Page.php" class="text-warning fw-bold text-decoration-none">login from the homepage</a> to view your past orders.</p>
-                        <?php elseif (empty($past_orders)): ?>
+                        <?php if (empty($past_orders)): ?>
                             <p class="text-muted text-center my-4">No past completed orders found.</p>
                         <?php else: ?>
                             <?php foreach ($past_orders as $ord): ?>
@@ -846,12 +842,11 @@ try {
     <script>
         let cart = [];
         let currentItemData = { name: '', price: 0, hasEgg: false, description: '' };
-        const isLoggedIn = <?= $is_logged_in ? 'true' : 'false' ?>;
 
         const itemModal = new bootstrap.Modal(document.getElementById('itemModal'));
         const cartModal = new bootstrap.Modal(document.getElementById('cartModal'));
 
-        // Instant Menu Page Toggle Function (No Refresh / Cart Preserved)
+        // Instant Menu Page Toggle Function
         function switchMenuPage(pageNum) {
             const page1 = document.getElementById('menu-page-1');
             const page2 = document.getElementById('menu-page-2');
@@ -1106,13 +1101,6 @@ try {
         }
 
         function proceedToCheckoutForm() {
-            if (!isLoggedIn) {
-                cartModal.hide();
-                alert('Please log in first from the homepage before placing an order.');
-                window.location.href = 'Home_Page.php';
-                return;
-            }
-
             if (cart.length === 0) {
                 alert('Your cart is empty!');
                 return;
