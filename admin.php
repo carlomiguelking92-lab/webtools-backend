@@ -384,7 +384,35 @@ try {
         .page-header { color: #ffc107; font-weight: 900; text-transform: uppercase; }
         .item-img-preview { width: 45px; height: 45px; object-fit: cover; border-radius: 8px; border: 1px solid #ffc107; }
         .search-box-container { background: rgba(0, 0, 0, 0.45); border: 2px solid #ffc107; border-radius: 12px; padding: 20px; margin-bottom: 25px; }
-        .search-input { background-color: #121212 !important; color: #ffc107 !important; border: 1px solid #ffc107 !important; font-weight: bold; }
+        /* White Text Visibility for Stocks Search Bar & Form Controls */
+        .search-input { 
+            background-color: #121212 !important; 
+            color: #ffffff !important; 
+            border: 1px solid #ffc107 !important; 
+            font-weight: bold; 
+        }
+
+        .search-input::placeholder,
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.7) !important;
+        }
+
+        .form-control, 
+        .form-select {
+            color: #ffffff !important;
+        }
+
+        .form-control:focus, 
+        .form-select:focus {
+            color: #ffffff !important;
+            background-color: #1a1a1a !important;
+            border-color: #ffc107 !important;
+            box-shadow: 0 0 10px rgba(255, 193, 7, 0.5) !important;
+        }
+        /* Strictly targets ONLY the Current Stock numbers & unit text in the table */
+        td.font-monospace {
+            color: #ffffff !important;
+        }
         
         .filter-btn-group .btn {
             border-radius: 50px;
