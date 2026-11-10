@@ -56,12 +56,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cashier_checkout'])) 
     }
 }
 
-// Handle Marking Kiosk Order as Complete
+// Handle Marking Kiosk Order as Complete (Prefix removed for unified sairene_tapsilogan database)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['complete_kiosk_order_id'])) {
     try {
         global $pdo;
         $k_order_id = intval($_POST['complete_kiosk_order_id']);
-        $update_stmt = $pdo->prepare("UPDATE kiosk_database.kiosk_orders SET payment_status = 'completed' WHERE id = ?");
+        $update_stmt = $pdo->prepare("UPDATE kiosk_orders SET payment_status = 'completed' WHERE id = ?");
         $update_stmt->execute([$k_order_id]);
         header("Location: pos.php");
         exit;
@@ -82,18 +82,18 @@ try {
     // Fallback
 }
 
-// Fetch Active Live Kiosk Orders from Standalone Kiosk Database
+// Fetch Active Live Kiosk Orders directly from unified sairene_tapsilogan database
 $kiosk_orders = [];
 try {
-    $kiosk_stmt = $pdo->query("SELECT * FROM kiosk_database.kiosk_orders WHERE payment_status = 'paid' ORDER BY id DESC LIMIT 15");
+    $kiosk_stmt = $pdo->query("SELECT * FROM kiosk_orders WHERE payment_status = 'paid' ORDER BY id DESC LIMIT 15");
     while ($k_row = $kiosk_stmt->fetch(PDO::FETCH_ASSOC)) {
-        $k_item_stmt = $pdo->prepare("SELECT * FROM kiosk_database.kiosk_order_items WHERE order_id = ?");
+        $k_item_stmt = $pdo->prepare("SELECT * FROM kiosk_order_items WHERE order_id = ?");
         $k_item_stmt->execute([$k_row['id']]);
         $k_row['items'] = $k_item_stmt->fetchAll(PDO::FETCH_ASSOC);
         $kiosk_orders[] = $k_row;
     }
 } catch (Exception $e) {
-    // Kiosk DB table might not exist yet
+    // Table might not exist yet
 }
 
 // Map database item names to their respective image filenames in the kiosk/image/ folder
@@ -635,17 +635,12 @@ $pos_images = [
             fetch(window.location.href)
             .then(response => response.text())
             .then(html => {
-                // Convert the fetched data into a readable webpage in the background
                 let doc = new DOMParser().parseFromString(html, 'text/html');
-                
-                // 1. Swap in the new order cards silently
                 let newOrders = doc.querySelector('#kioskOrdersCollapse .card-body');
                 let currentOrders = document.querySelector('#kioskOrdersCollapse .card-body');
                 if (newOrders && currentOrders) {
                     currentOrders.innerHTML = newOrders.innerHTML;
                 }
-                
-                // 2. Update the total order count in the yellow header bar
                 let newCount = doc.querySelector('.card-header span');
                 let currentCount = document.querySelector('.card-header span');
                 if (newCount && currentCount) {
