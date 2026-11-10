@@ -7,7 +7,7 @@ try {
     $pdo->exec("ALTER TABLE orders ADD COLUMN inventory_deducted INT DEFAULT 0");
 } catch (PDOException $e) {}
 try {
-    $pdo->exec("ALTER TABLE kiosk_database.kiosk_orders ADD COLUMN inventory_deducted INT DEFAULT 0");
+    $pdo->exec("ALTER TABLE kiosk_orders ADD COLUMN inventory_deducted INT DEFAULT 0");
 } catch (PDOException $e) {}
 try {
     $pdo->exec("ALTER TABLE website_orders ADD COLUMN inventory_deducted INT DEFAULT 0");
@@ -30,11 +30,11 @@ try {
         $pdo->prepare("UPDATE orders SET inventory_deducted = 1 WHERE id = ?")->execute([$orderId]);
     }
 
-    // 2. Process unprocessed Kiosk orders (Fixed with kiosk_database prefix)
-    $unprocessedKiosk = $pdo->query("SELECT id FROM kiosk_database.kiosk_orders WHERE inventory_deducted = 0 OR inventory_deducted IS NULL");
+    // 2. Process unprocessed Kiosk orders (Unified table access)
+    $unprocessedKiosk = $pdo->query("SELECT id FROM kiosk_orders WHERE inventory_deducted = 0 OR inventory_deducted IS NULL");
     while ($kioskOrder = $unprocessedKiosk->fetch(PDO::FETCH_ASSOC)) {
         $orderId = $kioskOrder['id'];
-        $itemStmt = $pdo->prepare("SELECT product_name, quantity FROM kiosk_database.kiosk_order_items WHERE order_id = ?");
+        $itemStmt = $pdo->prepare("SELECT product_name, quantity FROM kiosk_order_items WHERE order_id = ?");
         $itemStmt->execute([$orderId]);
         $items = $itemStmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -42,7 +42,7 @@ try {
             deductInventoryForOrderedItem($pdo, $item['product_name'], $item['quantity']);
         }
 
-        $pdo->prepare("UPDATE kiosk_database.kiosk_orders SET inventory_deducted = 1 WHERE id = ?")->execute([$orderId]);
+        $pdo->prepare("UPDATE kiosk_orders SET inventory_deducted = 1 WHERE id = ?")->execute([$orderId]);
     }
 
     // 3. Process unprocessed Website orders
@@ -275,7 +275,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
     }
 
-        // 2. RESTOCK TAMBAY CAPS IN DATABASE
+    // 2. RESTOCK TAMBAY CAPS IN DATABASE
     if ($action === 'restock_cap') {
         $cap_id  = intval($_POST['cap_id']);
         $set_qty = isset($_POST['set_qty']) ? intval($_POST['set_qty']) : null;
@@ -295,7 +295,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
         }
     }
-
 
     // 3. RESTOCK INGREDIENTS / CONTAINERS
     if ($action === 'restock_inventory') {
@@ -332,7 +331,7 @@ try {
     $caps = [];
 }
 
-// Fetch Combined Sales Summary Across POS, Kiosk, and Website Orders
+// Fetch Combined Sales Summary Across POS, Kiosk, and Website Orders (Unified Tables)
 $recent_orders = [];
 $total_kiosk_sales = 0;
 $total_items_sold = 0;
@@ -356,7 +355,6 @@ try {
     $total_items_sold = $posItems + $kioskItems + $webItems;
 } catch (PDOException $e) {}
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -396,24 +394,20 @@ try {
         .page-header { color: #ffc107; font-weight: 900; text-transform: uppercase; }
         .item-img-preview { width: 45px; height: 45px; object-fit: cover; border-radius: 8px; border: 1px solid #ffc107; }
         .search-box-container { background: rgba(0, 0, 0, 0.45); border: 2px solid #ffc107; border-radius: 12px; padding: 20px; margin-bottom: 25px; }
-        /* White Text Visibility for Stocks Search Bar & Form Controls */
         .search-input { 
             background-color: #121212 !important; 
             color: #ffffff !important; 
             border: 1px solid #ffc107 !important; 
             font-weight: bold; 
         }
-
         .search-input::placeholder,
         .form-control::placeholder {
             color: rgba(255, 255, 255, 0.7) !important;
         }
-
         .form-control, 
         .form-select {
             color: #ffffff !important;
         }
-
         .form-control:focus, 
         .form-select:focus {
             color: #ffffff !important;
@@ -421,11 +415,9 @@ try {
             border-color: #ffc107 !important;
             box-shadow: 0 0 10px rgba(255, 193, 7, 0.5) !important;
         }
-        /* Strictly targets ONLY the Current Stock numbers & unit text in the table */
         td.font-monospace {
             color: #ffffff !important;
         }
-        
         .filter-btn-group .btn {
             border-radius: 50px;
             font-weight: 700;
@@ -438,7 +430,6 @@ try {
             color: #121212 !important;
             box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
         }
-
         .stat-card {
             background: rgba(0, 0, 0, 0.45);
             border: 1px solid #ffc107;
@@ -559,15 +550,14 @@ try {
                                 <td><span class="badge bg-dark border border-warning text-warning"><?php echo htmlspecialchars($item['category']); ?></span></td>
                                 <td class="font-monospace fw-bold"><?php echo $item['stock']; ?> <?php echo $item['unit']; ?></td>
                                 <td>
-    <?php if ($item['stock'] <= 0): ?>
-        <span class="badge bg-danger text-white px-2 py-1 rounded-pill fw-bold fs-8"><i class="fa-solid fa-circle-xmark me-1"></i> Out of Stock</span>
-    <?php elseif ($item['stock'] <= 15): ?>
-        <span class="badge-low-stock"><i class="fa-solid fa-triangle-exclamation me-1"></i> Low Stock</span>
-    <?php else: ?>
-        <span class="badge-in-stock"><i class="fa-solid fa-circle-check me-1"></i> In Stock</span>
-    <?php endif; ?>
-</td>
-
+                                    <?php if ($item['stock'] <= 0): ?>
+                                        <span class="badge bg-danger text-white px-2 py-1 rounded-pill fw-bold fs-8"><i class="fa-solid fa-circle-xmark me-1"></i> Out of Stock</span>
+                                    <?php elseif ($item['stock'] <= 15): ?>
+                                        <span class="badge-low-stock"><i class="fa-solid fa-triangle-exclamation me-1"></i> Low Stock</span>
+                                    <?php else: ?>
+                                        <span class="badge-in-stock"><i class="fa-solid fa-circle-check me-1"></i> In Stock</span>
+                                    <?php endif; ?>
+                                </td>
                                 <td>
                                     <form action="admin.php" method="POST" class="d-flex justify-content-center align-items-center gap-2">
                                         <input type="hidden" name="action" value="restock_inventory">
@@ -608,15 +598,14 @@ try {
                                 <td class="font-monospace">₱<?php echo number_format($cap['price'], 2); ?></td>
                                 <td class="font-monospace fw-bold"><?php echo $cap['stock']; ?> pcs</td>
                                 <td>
-    <?php if ($cap['stock'] <= 0): ?>
-        <span class="badge bg-danger text-white px-2 py-1 rounded-pill fw-bold fs-8"><i class="fa-solid fa-circle-xmark me-1"></i> Out of Stock</span>
-    <?php elseif ($cap['stock'] <= 5): ?>
-        <span class="badge-low-stock"><i class="fa-solid fa-triangle-exclamation me-1"></i> Low Stock</span>
-    <?php else: ?>
-        <span class="badge-in-stock"><i class="fa-solid fa-circle-check me-1"></i> In Stock</span>
-    <?php endif; ?>
-</td>
-
+                                    <?php if ($cap['stock'] <= 0): ?>
+                                        <span class="badge bg-danger text-white px-2 py-1 rounded-pill fw-bold fs-8"><i class="fa-solid fa-circle-xmark me-1"></i> Out of Stock</span>
+                                    <?php elseif ($cap['stock'] <= 5): ?>
+                                        <span class="badge-low-stock"><i class="fa-solid fa-triangle-exclamation me-1"></i> Low Stock</span>
+                                    <?php else: ?>
+                                        <span class="badge-in-stock"><i class="fa-solid fa-circle-check me-1"></i> In Stock</span>
+                                    <?php endif; ?>
+                                </td>
                                 <td>
                                     <form action="admin.php" method="POST" class="d-flex justify-content-center align-items-center gap-2">
                                         <input type="hidden" name="action" value="restock_cap">
@@ -744,32 +733,30 @@ try {
             document.getElementById('priceFieldContainer').style.display = (type === 'cap') ? 'block' : 'none';
         }
 
-// Validate stock values in Add Item Modal & Restock forms to block 0 or negative stocks
-document.addEventListener('DOMContentLoaded', function() {
-    const addItemForm = document.querySelector('#addItemModal form');
-    if (addItemForm) {
-        addItemForm.addEventListener('submit', function(e) {
-            const stockInput = addItemForm.querySelector('input[name="initial_stock"]');
-            if (stockInput && parseInt(stockInput.value) <= 0) {
-                e.preventDefault();
-                alert('Invalid Stock Quantity! You cannot set zero or negative initial stock.');
+        document.addEventListener('DOMContentLoaded', function() {
+            const addItemForm = document.querySelector('#addItemModal form');
+            if (addItemForm) {
+                addItemForm.addEventListener('submit', function(e) {
+                    const stockInput = addItemForm.querySelector('input[name="initial_stock"]');
+                    if (stockInput && parseInt(stockInput.value) <= 0) {
+                        e.preventDefault();
+                        alert('Invalid Stock Quantity! You cannot set zero or negative initial stock.');
+                    }
+                });
             }
-        });
-    }
 
-    document.querySelectorAll('form').forEach(form => {
-        const setQtyInput = form.querySelector('input[name="set_qty"]');
-        if (setQtyInput) {
-            form.addEventListener('submit', function(e) {
-                if (parseInt(setQtyInput.value) <= 0) {
-                    e.preventDefault();
-                    alert('Invalid Quantity! Stock cannot be updated to zero or a negative value.');
+            document.querySelectorAll('form').forEach(form => {
+                const setQtyInput = form.querySelector('input[name="set_qty"]');
+                if (setQtyInput) {
+                    form.addEventListener('submit', function(e) {
+                        if (parseInt(setQtyInput.value) <= 0) {
+                            e.preventDefault();
+                            alert('Invalid Quantity! Stock cannot be updated to zero or a negative value.');
+                        }
+                    });
                 }
             });
-        }
-    });
-});
-
+        });
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
