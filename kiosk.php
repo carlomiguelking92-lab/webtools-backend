@@ -100,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Catch any schema inspection exception silently
     }
 
-    try {
+try {
         $input = json_decode(file_get_contents('php://input'), true);
         if (!$input) {
             echo json_encode(['success' => false, 'error' => 'Invalid JSON payload received.']);
@@ -124,13 +124,85 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
+        // Comprehensive Stock Validation Check (Protein + Rice + Egg + Extras)
+        if (!empty($input['items']) && is_array($input['items'])) {
+            // Aggregate required quantities across all cart items first
+            $requiredIngredients = [];
+
+            foreach ($input['items'] as $item) {
+                $itemName = strtolower($item['name'] ?? '');
+                $reqQty = intval($item['qty'] ?? 1);
+                
+                // 1. Determine Protein / Main Item
+                $proteinName = '';
+                if (strpos($itemName, 'tapsilog') !== false || strpos($itemName, 'tapa portion') !== false) {
+                    $proteinName = 'Tapa Portion';
+                } elseif (strpos($itemName, 'bagnet') !== false) {
+                    $proteinName = 'Pork Bagnet';
+                } elseif (strpos($itemName, 'sisig') !== false) {
+                    $proteinName = 'Sisig Portion';
+                } elseif (strpos($itemName, 'liempo') !== false || strpos($itemName, 'porkchop') !== false) {
+                    $proteinName = 'Porkchop Portion';
+                } elseif (strpos($itemName, 'tocino') !== false) {
+                    $proteinName = 'Tocino Portion';
+                } elseif (strpos($itemName, 'hungarian') !== false) {
+                    $proteinName = 'Hungarian Sausage';
+                } elseif (strpos($itemName, 'hotdog') !== false) {
+                    $proteinName = 'Hotdog';
+                } elseif (strpos($itemName, 'maling') !== false) {
+                    $proteinName = 'Maling';
+                }
+
+                if ($proteinName) {
+                    $requiredIngredients[$proteinName] = ($requiredIngredients[$proteinName] ?? 0) + $reqQty;
+                }
+
+                // 2. Determine Rice Option (Silogs and combos include rice)
+                if (strpos($itemName, 'silog') !== false || strpos($itemName, 'combo') !== false || strpos($itemName, 'rice') !== false) {
+                    $riceChoice = strtolower($item['rice'] ?? 'garlic rice');
+                    $riceDbName = (strpos($riceChoice, 'plain') !== false) ? 'Garlic Rice (Portions)' : 'Garlic Rice (Portions)'; // Adjust if plain rice has its own row
+                    $requiredIngredients[$riceDbName] = ($requiredIngredients[$riceDbName] ?? 0) + $reqQty;
+                }
+
+                // 3. Determine Egg Option (Silogs and combos include an egg)
+                if (strpos($itemName, 'silog') !== false || strpos($itemName, 'combo') !== false || strpos($itemName, 'egg') !== false) {
+                    $eggDbName = 'Eggs (Fresh Batch)';
+                    $requiredIngredients[$eggDbName] = ($requiredIngredients[$eggDbName] ?? 0) + $reqQty;
+                }
+            }
+
+            // Verify stock levels in database against required ingredients
+            foreach ($requiredIngredients as $ingName => $neededQty) {
+                $stockStmt = $pdo->prepare("SELECT name, stock FROM inventory_items WHERE name = ? LIMIT 1");
+                $stockStmt->execute([$ingName]);
+                $invRow = $stockStmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($invRow) {
+                    $availableStock = intval($invRow['stock']);
+                    if ($availableStock < $neededQty) {
+                        echo json_encode([
+                            'success' => false, 
+                            'error' => "Insufficient stock for '{$ingName}'! Required: {$neededQty}, Available: {$availableStock}."
+                        ]);
+                        exit;
+                    }
+                } else {
+                    echo json_encode([
+                        'success' => false, 
+                        'error' => "Inventory item '{$ingName}' could not be found in the database."
+                    ]);
+                    exit;
+                }
+            }
+        }
+
         $pdo->beginTransaction();
 
-        // 1. Generate robust sequential daily queue number (prevents duplicate A-001ing)
+        // 1. Generate sequential daily queue number
         $stmt = $pdo->query("SELECT MAX(CAST(SUBSTRING(queue_number, 3) AS UNSIGNED)) as max_seq FROM kiosk_orders WHERE DATE(created_at) = CURDATE()");
         $row = $stmt ? $stmt->fetch() : null;
         $seq = ($row && isset($row['max_seq'])) ? intval($row['max_seq']) + 1 : 1;
-        $queueNumber = 'A-' . str_pad($seq, 3, '0', STR_PAD_LEFT);
+        $queueNumber = 'K-' . str_pad($seq, 3, '0', STR_PAD_LEFT);
 
         $foodSubtotal = floatval($input['food'] ?? 0);
         $tipAmount = floatval($input['tip'] ?? 0);
@@ -141,10 +213,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $diningStyle = $input['dining'] ?? 'Dine-In';
         $tableTag = trim($input['tableTag'] ?? null);
         $neighborhoodBadge = $input['neighborhood'] ?? 'Night Shift Hero';
+        $paymentMethod = trim($input['paymentMethod'] ?? 'GCash');
+        $paymentStatus = 'paid';
 
-        // 2. Insert into kiosk_orders table with inventory_deducted flag set to 0
+        // 2. Insert order with dynamic payment method & inventory_deducted = 1
         $orderSql = "INSERT INTO kiosk_orders (queue_number, customer_name, phone, dining_style, table_tag, neighborhood_badge, food_subtotal, tip_amount, total_amount, payment_method, payment_status, inventory_deducted, created_at) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'GCash', 'paid', 0, NOW())";
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW())";
         
         $stmt = $pdo->prepare($orderSql);
         $stmt->execute([
@@ -156,7 +230,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $neighborhoodBadge,
             $foodSubtotal,
             $tipAmount,
-            $totalAmount
+            $totalAmount,
+            $paymentMethod,
+            $paymentStatus
         ]);
         
         $orderId = $pdo->lastInsertId();
@@ -186,7 +262,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // 4. Handle Saved Customer Profile if requested
+        // 4. Deduct actual stock from inventory_items table
+        if (!empty($requiredIngredients)) {
+            $updateStockStmt = $pdo->prepare("UPDATE inventory_items SET stock = stock - ? WHERE name = ?");
+            foreach ($requiredIngredients as $ingName => $neededQty) {
+                $updateStockStmt->execute([$neededQty, $ingName]);
+            }
+        }
+
+        // 5. Handle Saved Customer Profile if requested
         if (!empty($input['saveOrder']) && !empty($phone)) {
             $profileStmt = $pdo->prepare("INSERT INTO kiosk_saved_profiles (phone_number, customer_name, neighborhood_badge, last_order_json) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE customer_name = VALUES(customer_name), neighborhood_badge = VALUES(neighborhood_badge), last_order_json = VALUES(last_order_json)");
             $profileStmt->execute([
@@ -206,8 +290,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
     }
-    exit;
+  exit;
 }
+
 ?>
 <!doctype html>
 <html lang="en">
@@ -764,7 +849,29 @@ button,input{font:inherit}
   </div>
   <div class="fw-bold text-warning">A little extra love?</div><div class="small muted">Totally optional</div>
 </div>
-<div class="col-md-7"><div class="d-flex justify-content-between align-items-center"><label for="tipSlider" class="fw-bold text-warning">Kitchen tip</label><strong id="tipDisplay" class="text-warning">₱0.00</strong></div><input id="tipSlider" class="form-range mt-3" type="range" min="0" max="200" step="5" value="0" oninput="setTip(this.value)"><div class="d-flex flex-wrap gap-2 mt-2"><button class="btn btn-outline-gold tip-chip" onclick="setTip(0)">No tip</button><button class="btn btn-outline-gold tip-chip" onclick="setTip(20)">₱20</button><button class="btn btn-outline-gold tip-chip" onclick="setTip(50)">₱50</button><button class="btn btn-outline-gold tip-chip" onclick="setTip(100)">₱100</button><button class="btn btn-outline-gold tip-chip" onclick="setTip(150)">₱150</button><button class="btn btn-outline-gold tip-chip" onclick="setTip(200)">₱200</button></div></div></div></div><div class="panel p-3 p-md-4 mb-3"><div class="summary-line"><span class="muted">Food bill</span><strong id="paymentFood" class="text-warning">₱0.00</strong></div><div class="summary-line"><span class="muted">Tip</span><strong id="paymentTip" class="text-warning">₱0.00</strong></div><div class="summary-line border-top mt-2 pt-3"><span class="muted">Calculation</span><span id="paymentCalculation" class="fw-semibold text-end text-light">₱0.00 + ₱0.00</span></div><div class="summary-line align-items-center mb-0"><span class="h5 fw-bold mb-0 text-warning">Total Bill</span><span class="h3 fw-bold mb-0 text-warning" id="paymentTotal">₱0.00</span></div></div><div class="panel p-3 p-md-4 mb-3"><div class="d-flex align-items-center gap-3 mb-3"><div class="qr-mark"><i class="bi bi-qr-code"></i></div><div><h2 class="h5 fw-bold mb-1 text-warning">GCash</h2><div class="small muted">Payment details</div></div></div><div class="summary-line"><span class="muted">GCash number</span><strong class="text-warning">09270466231</strong></div><div class="summary-line"><span class="muted">Account name</span><strong class="text-warning">Sarippudin Aming</strong></div><button class="btn btn-outline-gold w-100 mt-2" onclick="copyGcash()"><i class="bi bi-copy me-1"></i>Copy GCash Number</button></div><div class="panel p-3 p-md-4"><div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="paymentAcknowledged"><label class="form-check-label text-light" for="paymentAcknowledged">I have completed the payment.</label></div><button class="btn btn-gold btn-lg w-100" onclick="confirmPayment()">Confirm Order <i class="bi bi-check2 ms-1"></i></button></div><div class="panel p-3 mt-3"><button class="btn btn-outline-gold w-100" onclick="toggleSplit()"><i class="bi bi-people me-1"></i>Split the bill (optional)</button><div id="splitPanel" class="mt-3 d-none"><label class="form-label fw-semibold text-warning" for="splitCount">How many people are sharing?</label><input class="form-control" id="splitCount" type="number" min="1" step="1" value="2" oninput="updateSplit()"><div class="mt-2 fw-bold text-warning" id="splitResult">Estimated share: ₱0.00 per person</div></div></div></div></section>
+<div class="col-md-7"><div class="d-flex justify-content-between align-items-center"><label for="tipSlider" class="fw-bold text-warning">Kitchen tip</label><strong id="tipDisplay" class="text-warning">₱0.00</strong></div><input id="tipSlider" class="form-range mt-3" type="range" min="0" max="200" step="5" value="0" oninput="setTip(this.value)"><div class="d-flex flex-wrap gap-2 mt-2"><button class="btn btn-outline-gold tip-chip" onclick="setTip(0)">No tip</button><button class="btn btn-outline-gold tip-chip" onclick="setTip(20)">₱20</button><button class="btn btn-outline-gold tip-chip" onclick="setTip(50)">₱50</button><button class="btn btn-outline-gold tip-chip" onclick="setTip(100)">₱100</button><button class="btn btn-outline-gold tip-chip" onclick="setTip(150)">₱150</button><button class="btn btn-outline-gold tip-chip" onclick="setTip(200)">₱200</button></div></div></div></div><div class="panel p-3 p-md-4 mb-3"><div class="summary-line"><span class="muted">Food bill</span><strong id="paymentFood" class="text-warning">₱0.00</strong></div><div class="summary-line"><span class="muted">Tip</span><strong id="paymentTip" class="text-warning">₱0.00</strong></div><div class="summary-line border-top mt-2 pt-3"><span class="muted">Calculation</span><span id="paymentCalculation" class="fw-semibold text-end text-light">₱0.00 + ₱0.00</span></div><div class="summary-line align-items-center mb-0"><span class="h5 fw-bold mb-0 text-warning">Total Bill</span><span class="h3 fw-bold mb-0 text-warning" id="paymentTotal">₱0.00</span></div></div>
+
+<!-- Payment Method Dropdown Selection -->
+<div class="panel p-3 p-md-4 mb-3">
+  <label class="form-label fw-semibold text-warning" for="paymentMethodSelect">Payment Method</label>
+  <select id="paymentMethodSelect" class="form-select bg-dark text-white border-warning" onchange="togglePaymentMethod()">
+    <option value="GCash" selected>GCash</option>
+    <option value="Cash">Cash / Counter Payment</option>
+  </select>
+</div>
+
+<!-- GCash Panel with id="gcashPanel" -->
+<div class="panel p-3 p-md-4 mb-3" id="gcashPanel">
+  <div class="d-flex align-items-center gap-3 mb-3">
+    <div class="qr-mark"><i class="bi bi-qr-code"></i></div>
+    <div><h2 class="h5 fw-bold mb-1 text-warning">GCash</h2><div class="small muted">Payment details</div></div>
+  </div>
+  <div class="summary-line"><span class="muted">GCash number</span><strong class="text-warning">09270466231</strong></div>
+  <div class="summary-line"><span class="muted">Account name</span><strong class="text-warning">Sarippudin Aming</strong></div>
+  <button class="btn btn-outline-gold w-100 mt-2" onclick="copyGcash()"><i class="bi bi-copy me-1"></i>Copy GCash Number</button>
+</div>
+
+<div class="panel p-3 p-md-4"><div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="paymentAcknowledged"><label class="form-check-label text-light" for="paymentAcknowledged">I have completed the payment.</label></div><button class="btn btn-gold btn-lg w-100" onclick="confirmPayment()">Confirm Order <i class="bi bi-check2 ms-1"></i></button></div><div class="panel p-3 mt-3"><button class="btn btn-outline-gold w-100" onclick="toggleSplit()"><i class="bi bi-people me-1"></i>Split the bill (optional)</button><div id="splitPanel" class="mt-3 d-none"><label class="form-label fw-semibold text-warning" for="splitCount">How many people are sharing?</label><input class="form-control" id="splitCount" type="number" min="1" step="1" value="2" oninput="updateSplit()"><div class="mt-2 fw-bold text-warning" id="splitResult">Estimated share: ₱0.00 per person</div></div></div></div></section>
 <section id="screen-success" class="screen"><div class="panel p-4 p-md-5 mx-auto text-center" style="max-width:650px"><div class="display-3" style="color:var(--gold)"><i class="bi bi-check-circle-fill"></i></div><h1 class="h-title h2 mt-2">Order confirmed!</h1><p class="muted">Thank you for choosing Sairene Tephteph Tapsilogan.</p><div class="my-4 p-4 rounded-4" style="background:rgba(0,0,0,0.6);border:2px solid var(--gold)"><div class="mini-label">Your queue number</div><div class="receipt-number" id="queueNumber">—</div><div class="fw-bold text-warning" id="successName"></div><span class="badge-neighborhood d-inline-block mt-2" id="successBadge"></span><div class="mt-2 text-light" id="successDining"></div><div class="muted small" id="successTag"></div></div><div class="text-start panel p-3 mb-3"><h2 class="h6 fw-bold text-warning">Order summary</h2><div id="successItems"></div><div class="summary-line"><span class="muted">Food bill</span><strong id="successFood" class="text-warning"></strong></div><div class="summary-line"><span class="muted">Tip</span><strong id="successTip" class="text-warning"></strong></div><div class="summary-line border-top pt-3"><strong class="text-warning">Total bill</strong><strong id="successTotal" class="text-warning"></strong></div></div><button class="btn btn-gold btn-lg w-100" onclick="resetKiosk()">Start New Order</button></div></section>
 </main><div id="cartNotifications" class="cart-notifications" aria-live="polite" aria-atomic="false"></div><div class="cart-bar" id="cartBar"><div class="container inner"><div><div class="fw-bold text-warning"><i class="bi bi-basket2 me-1" style="color:var(--gold)"></i><span id="cartCount">0 items</span></div><div class="muted small" id="cartTotal">₱0.00</div></div><button class="btn btn-gold" onclick="openReview()">View Order <i class="bi bi-arrow-right ms-1"></i></button></div></div>
 <div class="modal fade" id="customModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h2 class="modal-title h5 fw-bold text-warning" id="customTitle">Customize your meal</h2><button class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body"><div id="customItemName" class="fw-bold mb-1 text-warning"></div><p id="customItemDesc" class="food-desc mb-3"></p><div id="riceSection" class="mb-3"><label class="form-label fw-semibold text-warning"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 24 24" class="me-1" style="vertical-align: -0.125em;"><path d="M12 3a3 3 0 0 0-3 3h6a3 3 0 0 0-3-3zm8.5 5h-17a1.5 1.5 0 0 0-1.5 1.5c0 4.35 3.12 7.95 7.25 8.75V20a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1.75c4.13-.8 7.25-4.4 7.25-8.75a1.5 1.5 0 0 0-1.5-1.5z"/></svg>Rice Option</label><div class="d-grid gap-2"><label class="btn btn-outline-gold text-start"><input class="form-check-input me-2" type="radio" name="rice" value="Garlic Rice" checked>Garlic Rice</label><label class="btn btn-outline-gold text-start"><input class="form-check-input me-2" type="radio" name="rice" value="Plain Rice">Plain Rice</label></div></div><div id="eggSection" class="mb-3"><label class="form-label fw-semibold text-warning"><i class="bi bi-egg-fried me-1" aria-hidden="true"></i>Egg Option</label><div class="d-grid gap-2"><label class="btn btn-outline-gold text-start"><input class="form-check-input me-2" type="radio" name="rice-egg" value="Sunny-side up" checked>Sunny-side up</label><label class="btn btn-outline-gold text-start"><input class="form-check-input me-2" type="radio" name="rice-egg" value="Scrambled">Scrambled</label><label class="btn btn-outline-gold text-start"><input class="form-check-input me-2" type="radio" name="rice-egg" value="Well-done">Well-done</label></div></div><div id="duoSection" class="mb-3 d-none"><div class="form-label fw-semibold text-warning"><i class="bi bi-people-fill me-1" aria-hidden="true"></i>Combo Upgrade <span class="muted fw-normal">(optional)</span></div><div id="duoOptions" class="duo-options"></div><input type="hidden" id="duoCombo" value=""><div class="small muted mt-2">Tap an option to upgrade, or keep your solo meal.</div></div><label class="form-label fw-semibold d-block text-warning">Quantity</label><div class="quantity-stepper"><button type="button" class="qty-btn" onclick="changeCustomQty(-1)" aria-label="Decrease quantity">−</button><output id="customQtyDisplay" class="qty-num">1</output><button type="button" class="qty-btn" onclick="changeCustomQty(1)" aria-label="Increase quantity">+</button></div><input id="customQty" type="hidden" value="1"></div><div class="modal-footer"><button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button><button class="btn btn-gold" onclick="addCustomizedItem()">Add to Order</button></div></div></div></div>
@@ -1221,6 +1328,14 @@ button,input{font:inherit}
     document.querySelectorAll('.tip-chip').forEach(b => b.classList.toggle('active', b.textContent.trim() === (tip === 0 ? 'No tip' : '₱' + tip)));
   };
 
+  window.togglePaymentMethod = function() {
+    const method = $('paymentMethodSelect').value;
+    const gcashPanel = $('gcashPanel');
+    if (gcashPanel) {
+      gcashPanel.style.display = (method === 'GCash') ? 'block' : 'none';
+    }
+  };
+
   function updatePayment() {
     const food = subtotal(), total = food + tip;
     $('paymentFood').textContent = money(food);
@@ -1292,7 +1407,8 @@ button,input{font:inherit}
       food: subtotal(),
       tip,
       total: subtotal() + tip,
-      saveOrder: $('saveOrder').checked
+      saveOrder: $('saveOrder').checked,
+      paymentMethod: $('paymentMethodSelect') ? $('paymentMethodSelect').value : 'GCash'
     };
 
     if (payload.saveOrder && payload.phone) {
@@ -1315,7 +1431,7 @@ button,input{font:inherit}
         if (data.success) {
             displaySuccessScreen(data.queueNumber, payload);
         } else {
-            popup('Database Error', data.error || 'Could not save order to database.');
+            popup('Sorry for the inconvenience!', data.error || 'Could not save order to database.');
         }
     })
     .catch(() => {
@@ -1341,7 +1457,7 @@ button,input{font:inherit}
     $('successTag').textContent = order.tableTag ? 'Table / group: ' + order.tableTag : '';
     $('successItems').innerHTML = order.items.map(x => {
       const opts = [];
-      if (x.rice) opts.push('<span class="d-inline-block me-2"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 24 24" class="me-1" style="vertical-align: -0.125em;"><path d="M12 3a3 3 0 0 0-3 3h6a3 3 0 0 0-3-3zm8.5 5h-17a1.5 1.5 0 0 0-1.5 1.5c0 4.35 3.12 7.95 7.25 8.75V20a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1.75c4.13-.8 7.25-4.4 7.25-8.75a1.5 1.5 0 00-1.5-1.5z"/></svg>' + x.rice + '</span>');
+      if (x.rice) opts.push('<span class="d-inline-block me-2"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill="currentColor" viewBox="0 0 24 24" class="me-1" style="vertical-align: -0.125em;"><path d="M12 3a3 3 0 0 0-3 3h6a3 3 0 0 0-3-3zm8.5 5h-17a1.5 1.5 0 0 0-1.5 1.5c0 4.35 3.12 7.95 7.25 8.75V20a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1.75c4.13-.8 7.25-4.4 7.25-8.75a1.5 1.5 0 0 0-1.5-1.5z"/></svg>' + x.rice + '</span>');
       if (x.egg) opts.push('<span class="d-inline-block me-2"><i class="bi bi-egg-fried me-1" aria-hidden="true"></i>' + x.egg + '</span>');
       return `<div class="summary-line align-items-start"><span class="text-light"><span class="fw-semibold text-warning">${x.qty} × ${x.name}</span>${opts.length ? '<div class="small muted mt-1">' + opts.join('') + '</div>' : ''}</span><strong class="text-warning">${money(x.qty * x.price)}</strong></div>`;
     }).join('');
