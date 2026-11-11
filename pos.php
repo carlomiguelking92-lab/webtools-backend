@@ -70,6 +70,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['complete_kiosk_order_
     }
 }
 
+// === Handle Marking Website Order as Complete ===
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['complete_website_order_id'])) {
+    try {
+        global $pdo;
+        $w_order_id = intval($_POST['complete_website_order_id']);
+        $update_stmt = $pdo->prepare("UPDATE website_orders SET order_status = 'completed', updated_at = NOW() WHERE id = ?");
+        $update_stmt->execute([$w_order_id]);
+        header("Location: pos.php");
+        exit;
+    } catch (Exception $e) {
+        $error_msg = 'Error updating website order: ' . $e->getMessage();
+    }
+}
+
 // Fetch Menu Items from Database
 global $pdo;
 $menu_categories = [];
@@ -90,11 +104,38 @@ try {
         $k_item_stmt = $pdo->prepare("SELECT * FROM kiosk_order_items WHERE order_id = ?");
         $k_item_stmt->execute([$k_row['id']]);
         $k_row['items'] = $k_item_stmt->fetchAll(PDO::FETCH_ASSOC);
+        $k_row['source'] = 'kiosk'; // Tag source
         $kiosk_orders[] = $k_row;
     }
 } catch (Exception $e) {
     // Table might not exist yet
 }
+
+// === Fetch Active Live Website Orders placed from menu.php ===
+try {
+    $web_stmt = $pdo->query("SELECT * FROM website_orders WHERE order_status != 'completed' ORDER BY id DESC LIMIT 15");
+    while ($w_row = $web_stmt->fetch(PDO::FETCH_ASSOC)) {
+        $w_item_stmt = $pdo->prepare("SELECT * FROM website_order_items WHERE order_id = ?");
+        $w_item_stmt->execute([$w_row['id']]);
+        $w_row['items'] = $w_item_stmt->fetchAll(PDO::FETCH_ASSOC);
+        $w_row['source'] = 'website'; // Tag source
+        $w_row['dining_style'] = 'Take-Out';
+        $w_row['table_tag'] = $w_row['address'] ?? '';
+        $w_row['neighborhood_badge'] = $w_row['delivery_area'] ?? '';
+        foreach ($w_row['items'] as &$it) {
+            $it['product_name'] = $it['item_name'];
+        }
+        unset($it);
+        $kiosk_orders[] = $w_row;
+    }
+} catch (Exception $e) {
+    // Table might not exist yet
+}
+
+// Sort combined orders by ID descending so newest appear at the top
+usort($kiosk_orders, function($a, $b) {
+    return $b['id'] - $a['id'];
+});
 
 // Map database item names to their respective image filenames in the kiosk/image/ folder
 $pos_images = [
@@ -310,7 +351,7 @@ $pos_images = [
         <div class="mb-4">
             <div class="card border-warning shadow-sm bg-transparent">
                 <div class="card-header bg-warning text-dark fw-bold d-flex justify-content-between align-items-center" data-bs-toggle="collapse" href="#kioskOrdersCollapse" role="button" aria-expanded="true" style="cursor: pointer;">
-                    <span><i class="fa-solid fa-tablet-screen-button me-2"></i> Live Tablet Kiosk Orders (<?= count($kiosk_orders) ?>)</span>
+                    <span><i class="fa-solid fa-tablet-screen-button me-2"></i> Tablet Kiosk and Online Website Orders </span>
                     <small><i class="fa-solid fa-chevron-down"></i> Click to toggle</small>
                 </div>
                 <div class="collapse show" id="kioskOrdersCollapse">
@@ -336,16 +377,20 @@ $pos_images = [
                                                 <?php endforeach; ?>
                                             </div>
                                             <div class="d-flex justify-content-between align-items-center mt-2 pt-1 border-top border-secondary">
-                                                <span class="small text-muted"><?= htmlspecialchars($k_order['neighborhood_badge']) ?></span>
+                                                <span class="small text"><?= htmlspecialchars($k_order['neighborhood_badge']) ?></span>
                                                 <span class="fw-bold text-warning">₱<?= number_format($k_order['total_amount'], 2) ?></span>
                                             </div>
                                             <!-- Mark as Complete Button -->
-                                            <form method="POST" class="mt-2 pt-2 border-top border-secondary">
-                                                <input type="hidden" name="complete_kiosk_order_id" value="<?= $k_order['id'] ?>">
-                                                <button type="submit" class="btn btn-success btn-sm w-100 fw-bold py-1 fs-8 text-white">
-                                                    <i class="fa-solid fa-check me-1"></i> Mark as Complete
-                                                </button>
-                                            </form>
+<form method="POST" class="mt-2 pt-2 border-top border-secondary">
+    <?php if (($k_order['source'] ?? 'kiosk') === 'website'): ?>
+        <input type="hidden" name="complete_website_order_id" value="<?= $k_order['id'] ?>">
+    <?php else: ?>
+        <input type="hidden" name="complete_kiosk_order_id" value="<?= $k_order['id'] ?>">
+    <?php endif; ?>
+    <button type="submit" class="btn btn-success btn-sm w-100 fw-bold py-1 fs-8 text-white">
+        <i class="fa-solid fa-check me-1"></i> Mark as Complete
+    </button>
+</form>
                                         </div>
                                     </div>
                                 <?php endforeach; ?>
