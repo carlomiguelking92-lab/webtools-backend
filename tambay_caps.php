@@ -1,8 +1,42 @@
 <?php
 session_start();
+// Redirect user to homepage if they are not logged in
+if (!isset($_SESSION['user_id'])) {
+    header('Location: homepage.php?auth_required=1');
+    exit;
+}
 
 // Database connection
 require_once 'config/db.php'; 
+
+// Check logged-in session status & user name
+$is_logged_in = isset($_SESSION['user_id']);
+$user_fullname = $_SESSION['fullname'] ?? 'User';
+if (isset($_GET['logout']) || (isset($_POST['action']) && $_POST['action'] === 'logout')) {
+    $_SESSION = [];
+    if (ini_get("session.use_cookies")) {
+        $params = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000,
+            $params["path"], $params["domain"],
+            $params["secure"], $params["httponly"]
+        );
+    }
+    session_destroy();
+    if (isset($_POST['action'])) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true]);
+        exit;
+    }
+    header('Location: homepage.php');
+    exit;
+}
+
+// Redirect user to homepage if they are not logged in
+if (!isset($_SESSION['user_id'])) {
+    header('Location: homepage.php?auth_required=1');
+    exit;
+}
+
 
 // Initialize cart if not set
 if (!isset($_SESSION['cart'])) {
@@ -89,8 +123,8 @@ if (empty($caps)) {
             'description' => 'Classic snapback cap with embroidered Tambay signature.',
             'price' => 350.00,
             'stock' => 15,
-            'image_url' => 'tambay5.png',
-            'back_image_url' => 'tambay6.png'
+            'image_url' => 'img/tambay5.png',
+            'back_image_url' => 'img/tambay6.png'
         ],
         [
             'id' => 102,
@@ -98,8 +132,8 @@ if (empty($caps)) {
             'description' => 'Vibrant urban style cap with premium adjustable strap.',
             'price' => 380.00,
             'stock' => 10,
-            'image_url' => 'tambay6.png',
-            'back_image_url' => 'tambay5.png'
+            'image_url' => 'img/tambay6.png',
+            'back_image_url' => 'img/tambay5.png'
         ],
         [
             'id' => 103,
@@ -107,8 +141,8 @@ if (empty($caps)) {
             'description' => 'Special edition cap for everyday tambayan.',
             'price' => 399.00,
             'stock' => 8,
-            'image_url' => 'tambay5.png',
-            'back_image_url' => 'tambay6.png'
+            'image_url' => 'img/tambay5.png',
+            'back_image_url' => 'img/tambay6.png'
         ]
     ];
 }
@@ -148,6 +182,33 @@ if (empty($caps)) {
             background: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.35)), url('img/wood.jpg') no-repeat center center;
             background-size: cover;
             z-index: -1;
+        }
+        /* TOP-LEFT FIXED LOGIN / LOGOUT BUTTON */
+        .top-left-login-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1050;
+            background-color: #212529;
+            color: #ffc107;
+            border: 2px solid #ffc107;
+            border-radius: 50px;
+            padding: 8px 20px;
+            font-weight: bold;
+            font-size: 0.88rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .top-left-login-btn:hover {
+            background-color: #ffc107;
+            color: #212529;
+            border-color: #212529;
+            transform: translateY(-2px);
         }
 
         /* Top Navigation Box */
@@ -339,16 +400,27 @@ if (empty($caps)) {
 </head>
 <body>
 
-    <!-- Top Navigation Box -->
-    <nav class="top-nav-box">
-        <ul class="nav-links">
-            <li><a href="Home_Page.php">HOME</a></li>
-            <li><a href="menu.php">MENU</a></li>
-            <li><a href="food_packs.php">FOOD PACKS</a></li>
-            <li><a href="order.php">ORDER NOW</a></li>
-            <li><a href="tambay_caps.php" class="active">TAMBAY CAPS</a></li>
-        </ul>
-    </nav>
+    <!-- TOP-LEFT CORNER LOGIN / LOGOUT BUTTON -->
+<?php if ($is_logged_in): ?>
+    <button type="button" class="top-left-login-btn" onclick="confirmLogout()">
+        <i class="fa-solid fa-right-from-bracket me-2"></i>Logout (<?= htmlspecialchars($user_fullname) ?>)
+    </button>
+<?php else: ?>
+    <a href="homepage.php?auth_required=1" class="top-left-login-btn">
+        <i class="fa-solid fa-user me-2"></i>Login / Register
+    </a>
+<?php endif; ?>
+
+<!-- Top Navigation Box -->
+<nav class="top-nav-box">
+    <ul class="nav-links">
+        <li><a href="homepage.php">HOME</a></li>
+        <li><a href="menu.php">MENU</a></li>
+        <li><a href="order.php">ORDER NOW</a></li>
+        <li><a href="food_packs.php">FOOD PACKS</a></li>
+        <li><a href="tambay_caps.php" class="active">TAMBAY CAPS</a></li>
+    </ul>
+</nav>
 
     <!-- Main Wrapper Box -->
     <main class="main-wrapper-box">
@@ -498,6 +570,28 @@ if (empty($caps)) {
     </footer>
 
     <!-- Bootstrap 5 JS Bundle -->
+    <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom Logout Handler Script -->
+    <script>
+        function confirmLogout() {
+            if (confirm('Are you sure you want to log out?')) {
+                let formData = new FormData();
+                formData.append('action', 'logout');
+                fetch('tambay_caps.php', { method: 'POST', body: formData })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = 'homepage.php';
+                    }
+                })
+                .catch(() => {
+                    window.location.href = 'tambay_caps.php?logout=1';
+                });
+            }
+        }
+    </script>
+    </script>
 </body>
 </html>
