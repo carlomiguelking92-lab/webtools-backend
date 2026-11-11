@@ -1,24 +1,45 @@
 <?php
+// 
+// STEP 1: PHP SESSION INITIALIZATION & DATABASE CONFIGURATION
+// 
+
+// Step 1.1: Start or resume the active PHP session to track user state
 session_start();
+if (!isset($_SESSION['user_id'])) {
+    header('Location: homepage.php?auth_required=1');
+    exit;
+}
+
+// Step 1.2: Include database connection configuration (PDO instance)
 require_once 'config/db.php';
 
-// --- AJAX / POST HANDLERS FOR AUTHENTICATION ---
+// 
+// STEP 2: BACKEND POST / AJAX HANDLERS FOR AUTHENTICATION & ORDERS
+// 
+
+// Step 2.1: Intercept incoming POST requests containing an 'action' parameter
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    // Set response content type to JSON for AJAX consumption
     header('Content-Type: application/json');
 
-    // 1. Sign Up Handler
+    // 
+    // STEP 2.A: CUSTOMER SIGN UP HANDLER
+    // 
     if ($_POST['action'] === 'signup') {
         try {
             global $pdo;
+            // Step 2.A.1: Sanitize input parameters
             $fullname = trim($_POST['fullname'] ?? '');
             $email    = trim($_POST['email'] ?? '');
             $password = $_POST['password'] ?? '';
 
+            // Step 2.A.2: Validate non-empty fields
             if (empty($fullname) || empty($email) || empty($password)) {
                 echo json_encode(['success' => false, 'message' => 'All fields are required.']);
                 exit;
             }
 
+            // Step 2.A.3: Check if email already exists in database
             $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
             $stmt->execute([$email]);
             if ($stmt->fetch()) {
@@ -26,10 +47,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 exit;
             }
 
+            // Step 2.A.4: Hash password and insert customer record
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
             $stmt = $pdo->prepare("INSERT INTO users (fullname, email, password, role) VALUES (?, ?, ?, 'customer')");
             $stmt->execute([$fullname, $email, $hashedPassword]);
 
+            // Step 2.A.5: Set active user session
             $_SESSION['user_id']  = $pdo->lastInsertId();
             $_SESSION['fullname'] = $fullname;
 
@@ -41,22 +64,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
     }
 
-    // 2. Login Handler
+    // 
+    // STEP 2.B: CUSTOMER LOGIN HANDLER
+    // 
     if ($_POST['action'] === 'login') {
         try {
             global $pdo;
+            // Step 2.B.1: Clean user credentials
             $email    = trim($_POST['email'] ?? '');
             $password = $_POST['password'] ?? '';
 
+            // Step 2.B.2: Validate empty inputs
             if (empty($email) || empty($password)) {
                 echo json_encode(['success' => false, 'message' => 'Please fill in both email and password.']);
                 exit;
             }
 
+            // Step 2.B.3: Fetch matching user profile
             $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
             $stmt->execute([$email]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
+            // Step 2.B.4: Verify password hash and set session
             if ($user && password_verify($password, $user['password'])) {
                 $_SESSION['user_id']  = $user['id'];
                 $_SESSION['fullname'] = $user['fullname'];
@@ -71,40 +100,152 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
     }
 
-    // 3. Logout Handler
+    // 
+    // STEP 2.C: LOGOUT HANDLER
+    // 
     if ($_POST['action'] === 'logout') {
+        // Step 2.C.1: Unset session variables and destroy active session
         session_unset();
         session_destroy();
         echo json_encode(['success' => true]);
         exit;
     }
+
+    // 
+    // STEP 2.D: PLACE ORDER HANDLER (POS & KIOSK LIVE SYNC)
+    // 
+    if ($_POST['action'] === 'place_order') {
+        try {
+            global $pdo;
+            // Step 2.D.1: Gather session customer name and submitted checkout payload
+            $customer_name = $_SESSION['fullname'] ?? 'Customer';
+            $phone         = trim($_POST['phone'] ?? '');
+            $address       = trim($_POST['address'] ?? 'Pickup / C5 Taguig');
+            $total_amount  = floatval($_POST['total_amount'] ?? 0);
+            $cart          = $_SESSION['cart'] ?? [];
+
+            // Step 2.D.2: Check if cart contains items
+            if (empty($cart)) {
+                echo json_encode(['success' => false, 'message' => 'Your order cart is empty.']);
+                exit;
+            }
+
+            // Step 2.D.3: Generate daily sequential queue number (e.g. FP-001)
+            $stmt = $pdo->query("SELECT COUNT(*) as count FROM kiosk_orders WHERE DATE(created_at) = CURDATE()");
+            $row = $stmt->fetch();
+            $seq = ($row['count'] ?? 0) + 1;
+            $queueNumber = 'FP-' . str_pad($seq, 3, '0', STR_PAD_LEFT);
+
+            // Step 2.D.4: Begin SQL transaction
+            $pdo->beginTransaction();
+
+            // Step 2.D.5: Insert main order summary record into kiosk_orders table
+            $sql = "INSERT INTO kiosk_orders (queue_number, customer_name, phone, table_tag, dining_style, food_subtotal, total_amount, payment_method, payment_status, created_at) 
+                    VALUES (?, ?, ?, ?, 'Online Food Pack', ?, ?, 'GCash', 'paid', NOW())";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$queueNumber, $customer_name, $phone, $address, $total_amount, $total_amount]);
+            $order_id = $pdo->lastInsertId();
+
+            // Step 2.D.6: Insert itemized cart breakdown into kiosk_order_items table
+            $item_stmt = $pdo->prepare("INSERT INTO kiosk_order_items (order_id, product_name, custom_options, quantity, price) VALUES (?, ?, ?, ?, ?)");
+            foreach ($cart as $item) {
+                $item_title = $item['title'] ?? $item['name'] ?? 'Custom Item';
+                $item_details = $item['details'] ?? $item['notes'] ?? '';
+                $item_qty = intval($item['qty'] ?? 1);
+                $item_price = floatval($item['unit_price'] ?? $item['price'] ?? 0);
+
+                $item_stmt->execute([
+                    $order_id,
+                    $item_title,
+                    $item_details,
+                    $item_qty,
+                    $item_price
+                ]);
+            }
+
+            // Step 2.D.7: Commit transaction
+            $pdo->commit();
+
+            // Step 2.D.8: Clear active order cart session after successful placement
+            unset($_SESSION['cart']);
+
+            echo json_encode(['success' => true, 'queue_number' => $queueNumber]);
+            exit;
+        } catch (Exception $e) {
+            // Rollback transaction on failure
+            if (isset($pdo) && $pdo->inTransaction()) $pdo->rollBack();
+            echo json_encode(['success' => false, 'message' => 'Failed to place order: ' . $e->getMessage()]);
+            exit;
+        }
+    }
 }
 
-$is_logged_in = isset($_SESSION['user_id']);
+// 
+// STEP 3: HANDLE GET ACTIONS (ADD CUSTOM FOOD PACK & CLEAR CART)
+// 
 
-// Optional: Fetch delivery zones from 'delivery_zones' table if available
-$delivery_zones = [];
-try {
-    $stmt = $pdo->query("SELECT * FROM delivery_zones");
-    $delivery_zones = $stmt->fetchAll();
-} catch (PDOException $e) {
-    // Fallback handled gracefully in HTML dropdown
+// Step 3.1: Catch redirected custom food pack parameters from food_packs.php
+if (isset($_GET['add_custom_pack']) && $_GET['add_custom_pack'] == '1') {
+    if (!isset($_SESSION['cart']) || !is_array($_SESSION['cart'])) {
+        $_SESSION['cart'] = [];
+    }
+
+    $newItem = [
+        'title'       => $_GET['title'] ?? 'Custom Food Pack',
+        'details'     => $_GET['details'] ?? '',
+        'unit_price'  => floatval($_GET['unit_price'] ?? 120.00),
+        'qty'         => intval($_GET['qty'] ?? 1),
+        'total'       => floatval($_GET['unit_price'] ?? 120.00) * intval($_GET['qty'] ?? 1)
+    ];
+
+    $_SESSION['cart'][] = $newItem;
+}
+
+// Step 3.2: Catch Clear Cart request
+if (isset($_GET['clear_cart'])) {
+    unset($_SESSION['cart']);
+    header('Location: order.php');
+    exit;
+}
+
+// 
+// STEP 4: CART & USER SESSION EVALUATION FOR UI RENDERING
+// 
+
+// Step 4.1: Check session user status and fetch cart items
+$is_logged_in = isset($_SESSION['user_id']);
+$cart_items = $_SESSION['cart'] ?? [];
+$cart_total = 0;
+
+// Step 4.2: Calculate total cart price
+foreach ($cart_items as $ci) {
+    if (is_array($ci)) {
+        $item_price = floatval($ci['total'] ?? (($ci['price'] ?? 0) * ($ci['qty'] ?? 1)));
+        $cart_total += $item_price;
+    }
 }
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!--  -->
+    <!-- STEP 5: DOCUMENT METADATA & EXTERNAL CSS LIBRARIES -->
+    <!--  -->
+    <!-- Step 5.1: Set document charset, viewport, and title -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Now - Sairene TephTeph Tapsilogan</title>
+    <title>Order Checkout - Sairene TephTeph Tapsilogan</title>
 
-    <!-- Bootstrap 5 CSS -->
+    <!-- Step 5.2: External Stylesheets (Bootstrap 5 & FontAwesome Icons) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
+    <!--  -->
+    <!-- STEP 6: EMBEDDED CSS STYLING RULES WITH STEP-BY-STEP COMMENTS -->
+    <!--  -->
     <style>
+        /* Step 6.1: Base page background and typography setup */
         body {
             background-color: #2b1d0c;
             color: #ffffff;
@@ -115,7 +256,7 @@ try {
             min-height: 100vh;
         }
 
-        /* Fixed Fullscreen Wooden Texture Overlay */
+        /* Step 6.2: Fixed Fullscreen Wooden Texture Overlay */
         body::before {
             content: "";
             position: fixed;
@@ -123,12 +264,12 @@ try {
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.35)), url('img/wood.jpg') no-repeat center center;
+            background: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.35)), url(img/wood.jpg) no-repeat center center;
             background-size: cover;
             z-index: -1;
         }
 
-        /* TOP-LEFT FIXED LOGIN BUTTON */
+        /* Step 6.3: Fixed floating top-left login / logout button */
         .top-left-login-btn {
             position: fixed;
             top: 20px;
@@ -149,6 +290,7 @@ try {
             cursor: pointer;
         }
 
+        /* Step 6.4: Hover transition state for top-left button */
         .top-left-login-btn:hover {
             background-color: #ffc107;
             color: #212529;
@@ -156,12 +298,12 @@ try {
             transform: translateY(-2px);
         }
 
-        /* Large Outer Border Box */
+        /* Step 6.5: Large Outer Glassmorphism Frame Box */
         .page-outer-frame {
             border: 2px solid #ffc107;
             border-radius: 12px;
             padding: 20px;
-            background: rgba(0, 0, 0, 0.45);
+            background: rgba(0, 0, 0, 0.35);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
@@ -169,12 +311,14 @@ try {
             margin: 40px auto 0 auto;
         }
 
-        /* TOP FEATURED BANNER SPOT */
+        /* Step 6.6: Top Featured Header Banner Box */
         .top-banner-spot {
             position: relative;
             border: 2px solid #ffc107;
             border-radius: 10px;
-            background: rgba(0, 0, 0, 0.55);
+            background: rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(6px);
             padding: 25px 30px;
             margin-bottom: 15px;
             overflow: hidden;
@@ -184,6 +328,7 @@ try {
             box-shadow: inset 0 0 15px rgba(255, 193, 7, 0.1);
         }
 
+        /* Step 6.7: Circular Logo Avatar */
         .banner-logo-container {
             width: 110px;
             height: 110px;
@@ -192,35 +337,41 @@ try {
             background-color: #ffffff;
             overflow: hidden;
             flex-shrink: 0;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
+        /* Step 6.8: Banner logo image sizing */
         .banner-logo-container img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
+        /* Step 6.9: Banner text flex layout */
         .banner-text-content {
             flex-grow: 1;
             padding: 0 25px;
         }
 
+        /* Step 6.10: Banner primary title styling with text-shadow */
         .banner-text-content h1 {
             color: #ffc107;
-            font-weight: 800;
+            font-weight: 900;
             font-size: 2.2rem;
             margin-bottom: 4px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.9), 0 0 12px rgba(0, 0, 0, 0.7);
         }
 
+        /* Step 6.11: Badge row wrapper inside banner */
         .banner-badges {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
         }
 
+        /* Step 6.12: Pill badge styling for key features */
         .banner-badge {
             background-color: #ffc107;
             color: #121212;
@@ -231,12 +382,12 @@ try {
             text-transform: uppercase;
         }
 
-        /* Double Sub-header Lines */
-        .sub-header-line-1, .sub-header-line-2 {
+        /* Step 6.13: First sub-header divider line styling */
+        .sub-header-line-1 {
             border: 1px solid #ffc107;
             background: rgba(0, 0, 0, 0.4);
-            height: auto;
-            padding: 6px 0;
+            color: #ffffff;
+            height: 36px;
             border-radius: 4px;
             margin-bottom: 8px;
             display: flex;
@@ -244,82 +395,63 @@ try {
             justify-content: center;
         }
 
-        .sub-header-line-1 {
-            margin-bottom: 8px;
-        }
-
+        /* Step 6.14: Second sub-header navigation line container */
         .sub-header-line-2 {
+            border: 2px solid #ffc107;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+            padding: 10px 20px;
             margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
         }
 
+        /* Step 6.15: Custom navigation list menu layout */
         .nav-link-custom {
-            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* Step 6.16: Custom navigation menu item links styling */
+        .nav-link-custom a {
             text-decoration: none;
-            font-weight: bold;
-            font-size: 0.85rem;
-            padding: 6px 14px;
-            border-radius: 6px;
-            border: 1px solid transparent;
+            color: #ffffff;
+            font-weight: 800;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
             transition: all 0.25s ease;
+            padding: 6px 16px;
+            border-radius: 50px;
+            border: 1px solid transparent;
         }
 
-        .nav-link-custom.active, .nav-link-custom.text-warning {
-            color: #ffc107 !important;
-            border-color: #ffc107;
+        /* Step 6.17: Custom navigation hover and active link highlight states */
+        .nav-link-custom a:hover, .nav-link-custom a.active {
+            color: #121212;
+            background-color: #ffc107;
+            border-color: #d4a000;
+            box-shadow: 0 4px 10px rgba(255, 193, 7, 0.4);
         }
 
-        /* 1. Home Button Hover Preview */
-        #homeNavLink:hover {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/Best Seller (Landscape) (1) (1).png');
-            background-size: cover;
-            background-position: center;
-            color: #ffc107 !important;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
-            border: 1px solid #ffc107;
+        /* Step 6.18: Active Order Summary Container Box */
+        .order-summary-box {
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid #ffc107;
+            border-radius: 14px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
         }
 
-        /* 2. Menu Button Hover Preview */
-        #menuNavLink:hover {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/menu_page_1.png');
-            background-size: cover;
-            background-position: center;
-            color: #ffc107 !important;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
-            border: 1px solid #ffc107;
-        }
-
-        /* 3. Food Packs Button Hover Preview */
-        #foodPacksNavLink:hover {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/.png');
-            background-size: cover;
-            background-position: center;
-            color: #ffc107 !important;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
-            border: 1px solid #ffc107;
-        }
-
-        /* 4. Order Now Button Hover Preview */
-        #orderNavLink:hover {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/.png');
-            background-size: cover;
-            background-position: center;
-            color: #ffc107 !important;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
-            border: 1px solid #ffc107;
-        }
-
-        /* 5. Tambay Caps Button Hover Preview */
-        #tambayNavLink:hover {
-            background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('images/tambay5.png');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            color: #ffc107 !important;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
-            border: 1px solid #ffc107;
-        }
-
-        /* Map and Location Card Styles */
+        /* Step 6.19: Interactive Google Map responsive aspect ratio container */
         .map-responsive {
             overflow: hidden;
             padding-bottom: 70%;
@@ -330,6 +462,7 @@ try {
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
         }
 
+        /* Step 6.20: Google Map iFrame absolute positioning */
         .map-responsive iframe {
             left: 0;
             top: 0;
@@ -338,6 +471,7 @@ try {
             position: absolute;
         }
 
+        /* Step 6.21: Delivery location sidebar details card styling */
         .location-card {
             background: rgba(0, 0, 0, 0.55);
             border: 2px solid #ffc107;
@@ -347,6 +481,7 @@ try {
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         }
 
+        /* Step 6.22: Custom gold styled select dropdown element */
         .form-select-gold {
             background-color: #212529;
             color: #ffffff;
@@ -355,6 +490,7 @@ try {
             border-radius: 8px;
         }
 
+        /* Step 6.23: Custom gold select dropdown focus state */
         .form-select-gold:focus {
             background-color: #212529;
             color: #ffffff;
@@ -362,7 +498,7 @@ try {
             box-shadow: 0 0 10px rgba(255, 193, 7, 0.4);
         }
 
-        /* Bottom Full Width Line */
+        /* Step 6.24: Bottom Full-Width Footer Line */
         .bottom-full-line {
             border: 1px solid #ffc107;
             background: rgba(0, 0, 0, 0.4);
@@ -377,6 +513,7 @@ try {
             margin-top: 25px;
         }
 
+        /* Step 6.25: Mobile Breakpoint Adjustments */
         @media (max-width: 992px) {
             .top-banner-spot {
                 flex-direction: column;
@@ -390,24 +527,30 @@ try {
 </head>
 <body>
 
-    <!-- TOP-LEFT CORNER LOGIN / LOGOUT BUTTON -->
+    <!--  -->
+    <!-- STEP 7: TOP-LEFT LOGIN / LOGOUT FLOATING BUTTON -->
+    <!--  -->
     <?php if ($is_logged_in): ?>
+        <!-- Step 7.1: Render Logout button if user session exists -->
         <button type="button" class="top-left-login-btn" onclick="confirmLogout()">
             <i class="fa-solid fa-right-from-bracket me-2"></i>Logout (<?= htmlspecialchars($_SESSION['fullname']) ?>)
         </button>
     <?php else: ?>
+        <!-- Step 7.2: Render Login / Register trigger for guest users -->
         <button type="button" class="top-left-login-btn" onclick="openAuthModal('login')">
             <i class="fa-solid fa-user me-2"></i>Login / Register
         </button>
     <?php endif; ?>
 
-    <!-- Large Outer Wireframe Frame -->
+    <!--  -->
+    <!-- STEP 8: MAIN PAGE WRAPPER FRAME -->
+    <!--  -->
     <div class="page-outer-frame">
 
-        <!-- 1. TOP FEATURED BANNER SPOT -->
+        <!-- Step 8.1: Top Featured Brand Banner -->
         <section class="top-banner-spot">
             <div class="banner-logo-container">
-                <img src="img/Logo.png" alt="Sairene TephTeph Logo">
+                <img src="images/Logo.png" alt="Sairene TephTeph Logo" onerror="this.src='img/Logo.png';">
             </div>
 
             <div class="banner-text-content">
@@ -422,28 +565,85 @@ try {
             </div>
 
             <div>
-                <a href="order.php" class="btn btn-warning fw-bold px-4 py-2 text-dark shadow-sm rounded-pill text-nowrap">
-                    <i class="fa-solid fa-cart-shopping me-1"></i> Order Now
+                <a href="food_packs.php" class="btn btn-warning fw-bold px-4 py-2 text-dark shadow-sm rounded-pill text-nowrap">
+                    <i class="fa-solid fa-box-open me-1"></i> Build Food Pack
                 </a>
             </div>
         </section>
 
-        <!-- 2. Two Thin Sub-Header Lines -->
+        <!-- Step 8.2: Double Sub-Header Navigation -->
         <div class="sub-header-line-1">
             <span class="text-light small fw-bold"><i class="fa-solid fa-star text-warning me-1"></i> A Taste of Comfort • Hot & Fresh Silog Meals <i class="fa-solid fa-star text-warning ms-1"></i></span>
         </div>
 
         <div class="sub-header-line-2">
-            <nav class="d-flex gap-3 flex-wrap justify-content-center align-items-center">
-                <a href="Home_Page.php" id="homeNavLink" class="nav-link-custom">HOME</a>
-                <a href="menu.php" id="menuNavLink" class="nav-link-custom">MENU</a>
-                <a href="food_packs.php" id="foodPacksNavLink" class="nav-link-custom">FOOD PACKS</a>
-                <a href="order.php" id="orderNavLink" class="nav-link-custom text-warning active">ORDER NOW</a>
-                <a href="tambay_caps.php" id="tambayNavLink" class="nav-link-custom">TAMBAY CAPS</a>
+            <nav class="nav-link-custom">
+                <a href="homepage.php" id="homeNavLink">HOME</a>
+                <a href="menu.php" id="menuNavLink">MENU</a>
+                <a href="order.php" id="orderNavLink" class="active">ORDER NOW</a>
+                <a href="food_packs.php" id="foodPacksNavLink">FOOD PACKS</a>
+                <a href="tambay_caps.php" id="tambayNavLink">TAMBAY CAPS</a>
             </nav>
         </div>
 
-        <!-- 3. Main Content Container (Map + Delivery Area Selector) -->
+        <!-- Step 8.3: Active Cart Summary Table (Only displayed when cart is not empty) -->
+        <?php if (!empty($cart_items)): ?>
+            <section class="order-summary-box">
+                <div class="d-flex justify-content-between align-items-center mb-3 border-bottom border-warning pb-2">
+                    <h3 class="h5 fw-bold text-warning mb-0">
+                        <i class="fa-solid fa-receipt me-2"></i>Your Active Order Items
+                    </h3>
+                    <a href="order.php?clear_cart=1" class="btn btn-outline-danger btn-sm text-white fw-bold">
+                        <i class="fa-solid fa-trash me-1"></i> Clear Cart
+                    </a>
+                </div>
+
+                <!-- Itemized Cart Table -->
+                <div class="table-responsive mb-3">
+                    <table class="table table-dark table-hover border-warning align-middle mb-0">
+                        <thead>
+                            <tr class="text-warning">
+                                <th>Item Title</th>
+                                <th>Meal Configuration Details</th>
+                                <th class="text-center">Pax / Qty</th>
+                                <th class="text-end">Total Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($cart_items as $item): ?>
+                                <?php
+                                    $title   = $item['title'] ?? $item['name'] ?? 'Food Item';
+                                    $details = $item['details'] ?? $item['notes'] ?? 'N/A';
+                                    $qty     = intval($item['qty'] ?? 1);
+                                    $total   = floatval($item['total'] ?? (($item['price'] ?? 0) * $qty));
+                                ?>
+                                <tr>
+                                    <td class="fw-bold text-warning"><?= htmlspecialchars($title) ?></td>
+                                    <td class="small text-light"><?= htmlspecialchars($details) ?></td>
+                                    <td class="text-center fw-bold"><?= htmlspecialchars($qty) ?> pack(s)</td>
+                                    <td class="text-end fw-bold text-warning">₱<?= number_format($total, 2) ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Grand Order Subtotal Banner -->
+                <div class="d-flex justify-content-between align-items-center bg-dark p-3 rounded border border-warning mb-3">
+                    <span class="fs-5 fw-bold text-white">Grand Order Total:</span>
+                    <span class="fs-3 fw-bold text-warning font-monospace">₱<?= number_format($cart_total, 2) ?></span>
+                </div>
+
+                <!-- Order Confirmation Button -->
+                <div class="text-end">
+                    <button type="button" class="btn btn-warning btn-lg fw-bold px-5 text-dark rounded-pill shadow-sm" onclick="handleCheckoutClick()">
+                        <i class="fa-solid fa-check-circle me-2"></i>Confirm & Complete Order
+                    </button>
+                </div>
+            </section>
+        <?php endif; ?>
+
+        <!-- Step 8.4: Interactive Map and Delivery Location Section -->
         <div class="my-4">
             <section class="text-center mb-4">
                 <h2 class="h4 fw-bold text-warning text-uppercase">Delivery Location & Store Map</h2>
@@ -451,7 +651,7 @@ try {
             </section>
 
             <div class="row g-4">
-                <!-- Left Side: Interactive Map -->
+                <!-- Left Column: Google Map iFrame -->
                 <div class="col-lg-7">
                     <div class="map-responsive">
                         <iframe 
@@ -464,7 +664,7 @@ try {
                     </div>
                 </div>
 
-                <!-- Right Side: Location Selector & Delivery Details -->
+                <!-- Right Column: Delivery Area Dropdown Selector -->
                 <div class="col-lg-5">
                     <div class="location-card">
                         <h5 class="text-warning fw-bold mb-3 border-bottom border-warning pb-2"><i class="fa-solid fa-map-pin text-warning me-2"></i>Choose Delivery Area</h5>
@@ -479,7 +679,7 @@ try {
                             </select>
                         </div>
 
-                        <!-- Dynamic Zone Info Container -->
+                        <!-- Dynamic Delivery Information Badges -->
                         <div class="p-3 rounded bg-dark border border-warning mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <span class="text-light small">Estimated Delivery Fee:</span>
@@ -491,7 +691,7 @@ try {
                             </div>
                         </div>
 
-                        <!-- Store Info & GCash Payment -->
+                        <!-- Operating Hours & Payment Account Details -->
                         <div class="border-top border-warning pt-3 mb-3">
                             <h6 class="text-warning fw-bold mb-2 small"><i class="fa-solid fa-clock me-2"></i>24/7 Operations</h6>
                             <p class="small text-light mb-2">Open all day & late nights for shift workers.</p>
@@ -501,23 +701,65 @@ try {
                             <p class="small text-light mb-0"><strong>Account Name:</strong> Sarippudin Aming</p>
                         </div>
 
-                        <!-- Proceed Button -->
-                        <a href="menu.php" class="btn btn-warning w-100 fw-bold py-2 text-dark rounded-pill shadow-sm">
-                            <i class="fa-solid fa-utensils me-2"></i>Browse Menu & Order Food
+                        <!-- Action Button to Custom Food Pack Page -->
+                        <a href="food_packs.php" class="btn btn-warning w-100 fw-bold py-2 text-dark rounded-pill shadow-sm">
+                            <i class="fa-solid fa-box-open me-2"></i>Build Custom Food Pack
                         </a>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 4. Bottom Full-Width Divider Line -->
+        <!-- Step 8.5: Bottom Footer Bar -->
         <div class="bottom-full-line">
             <span>&copy; <?php echo date('Y'); ?> Sairene TephTeph Tapsilogan &bull; All Rights Reserved</span>
         </div>
 
     </div>
 
-    <!-- LOGIN & SIGNUP POPUP MODAL -->
+    <!--  -->
+    <!-- STEP 9: ORDER CHECKOUT MODAL DIALOG -->
+    <!--  -->
+    <div class="modal fade" id="checkoutModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-3 border-warning bg-dark text-white">
+                <div class="modal-header border-warning">
+                    <h5 class="modal-title fw-bold text-warning"><i class="fa-solid fa-receipt me-2"></i>Complete Order Checkout</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <!-- Step 9.1: Form inputs for contact number and delivery address -->
+                    <form id="checkoutForm" onsubmit="submitFinalOrder(event)">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-white">Contact Phone Number</label>
+                            <input type="tel" id="checkoutPhone" class="form-control bg-dark text-white border-warning" placeholder="0912 345 6789" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-white">Delivery Address / Table Tag</label>
+                            <textarea id="checkoutAddress" class="form-control bg-dark text-white border-warning" rows="2" placeholder="e.g. Unit 4B MRB Condominium C5 Taguig" required></textarea>
+                        </div>
+
+                        <!-- Step 9.2: GCash total payment summary box and submit action button -->
+                        <div class="p-3 bg-secondary bg-opacity-25 rounded border border-warning mb-3">
+                            <div class="d-flex justify-content-between text-warning fw-bold">
+                                <span>Total Payment (GCash):</span>
+                                <span>₱<?= number_format($cart_total, 2) ?></span>
+                            </div>
+                            <small class="text-light opacity-75 d-block mt-1">Pay via GCash: 09270466231 (Sarippudin Aming)</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-warning w-100 fw-bold py-2 text-dark">
+                            <i class="fa-solid fa-paper-plane me-1"></i> Submit Order
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--  -->
+    <!-- STEP 10: CUSTOMER AUTHENTICATION MODAL (LOGIN & SIGNUP) -->
+    <!--  -->
     <div class="modal fade" id="authModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-3 border-warning bg-dark text-white">
@@ -526,7 +768,7 @@ try {
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <!-- Login Form -->
+                    <!-- Step 10.1: Login Form Component -->
                     <form id="loginForm" onsubmit="handleAuthSubmit(event, 'login')">
                         <div class="mb-3">
                             <label class="form-label small fw-bold text-white">Email Address</label>
@@ -540,7 +782,7 @@ try {
                         <p class="small text-center mb-0">Don't have an account? <button type="button" onclick="toggleAuthForm('signup')" class="btn btn-link text-warning fw-bold p-0 text-decoration-none">Sign Up</button></p>
                     </form>
 
-                    <!-- Signup Form -->
+                    <!-- Step 10.2: Signup Form Component (Initially Hidden) -->
                     <form id="signupForm" class="d-none" onsubmit="handleAuthSubmit(event, 'signup')">
                         <div class="mb-3">
                             <label class="form-label small fw-bold text-white">Full Name</label>
@@ -562,8 +804,55 @@ try {
         </div>
     </div>
 
-    <!-- JavaScript to Swap Map & Fees dynamically based on user selection -->
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!--  -->
+    <!-- STEP 11: FRONTEND JAVASCRIPT CONTROLLERS -->
+    <!--  -->
     <script>
+        // Check session login state
+        const isLoggedIn = <?= $is_logged_in ? 'true' : 'false' ?>;
+
+        // Step 11.1: Guard checkout click against guest users
+        function handleCheckoutClick() {
+            if (!isLoggedIn) {
+                openAuthModal('login');
+                return;
+            }
+            openCheckoutModal();
+        }
+
+        // Step 11.2: Display checkout modal instance
+        function openCheckoutModal() {
+            var modalEl = document.getElementById('checkoutModal');
+            var modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+            modal.show();
+        }
+
+        // Step 11.3: Submit order request via AJAX POST
+        function submitFinalOrder(e) {
+            e.preventDefault();
+            let formData = new FormData();
+            formData.append('action', 'place_order');
+            formData.append('phone', document.getElementById('checkoutPhone').value);
+            formData.append('address', document.getElementById('checkoutAddress').value);
+            formData.append('total_amount', '<?= $cart_total ?>');
+
+            fetch('order.php', { method: 'POST', body: formData })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`Order Placed Successfully!\nYour Queue Number is: ${data.queue_number}`);
+                    window.location.href = 'order.php';
+                } else {
+                    alert(data.message || 'Error placing order.');
+                }
+            })
+            .catch(err => console.error(err));
+        }
+
+        // Step 11.4: Update interactive Google map iFrame source and fees based on selection
         function updateMapLocation(locationKey) {
             const mapIframe = document.getElementById('locationMap');
             const feeBadge = document.getElementById('feeBadge');
@@ -588,6 +877,7 @@ try {
             }
         }
 
+        // Step 11.5: Open authentication modal popup
         function openAuthModal(type) {
             toggleAuthForm(type);
             var modalEl = document.getElementById('authModal');
@@ -595,6 +885,7 @@ try {
             modal.show();
         }
 
+        // Step 11.6: Toggle between login and signup form panels
         function toggleAuthForm(type) {
             let loginForm = document.getElementById('loginForm');
             let signupForm = document.getElementById('signupForm');
@@ -611,6 +902,7 @@ try {
             }
         }
 
+        // Step 11.7: Process authentication form submission via AJAX
         function handleAuthSubmit(e, action) {
             e.preventDefault();
             let formData = new FormData();
@@ -625,10 +917,7 @@ try {
                 formData.append('password', document.getElementById('signupPassword').value);
             }
 
-            fetch('order.php', {
-                method: 'POST',
-                body: formData
-            })
+            fetch('order.php', { method: 'POST', body: formData })
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
@@ -640,6 +929,7 @@ try {
             .catch(err => console.error(err));
         }
 
+        // Step 11.8: Process customer logout
         function confirmLogout() {
             if (confirm('Are you sure you want to log out?')) {
                 let formData = new FormData();
@@ -652,8 +942,5 @@ try {
             }
         }
     </script>
-
-    <!-- Bootstrap 5 JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
