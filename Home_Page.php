@@ -1,60 +1,80 @@
 <?php
+// STEP 1: PHP SESSION INITIALIZATION & DATABASE CONNECTION
+
+// Step 1.1: Start or resume the PHP session to track user authentication status
 session_start();
+
+// Step 1.2: Include the database configuration file for MySQL PDO connection access
 require_once 'config/db.php';
 
-// --- AUTO-CREATE OR RESET ADMIN ACCOUNT ---
+// STEP 2: AUTOMATIC ADMIN ACCOUNT SEEDING & CREDENTIAL RESET
+
 try {
+    // Step 2.1: Verify if the PDO database object is initialized
     if (isset($pdo)) {
+        // Step 2.2: Define default system administrator credentials
         $adminEmail = 'admin@sairene.com';
         $adminPass  = 'admin123';
+        
+        // Step 2.3: Hash the default password using standard password hashing
         $hashedPass = password_hash($adminPass, PASSWORD_DEFAULT);
 
+        // Step 2.4: Prepare and execute SQL query to check if the admin user exists
         $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
         $stmt->execute([$adminEmail]);
         $existingAdmin = $stmt->fetch();
 
         if ($existingAdmin) {
-            // Force update password and role to ensure admin123 always works
+            // Step 2.5: If admin exists, force update password and role to ensure admin123 always works
             $updateStmt = $pdo->prepare("UPDATE users SET password = ?, role = 'admin' WHERE email = ?");
             $updateStmt->execute([$hashedPass, $adminEmail]);
         } else {
-            // Insert fresh admin account
+            // Step 2.6: If admin does not exist, insert a fresh administrator account
             $insertStmt = $pdo->prepare("INSERT INTO users (fullname, email, password, role) VALUES (?, ?, ?, 'admin')");
             $insertStmt->execute(['System Administrator', $adminEmail, $hashedPass]);
         }
     }
 } catch (PDOException $e) {
-    // Suppress DB connection errors
+    // Step 2.7: Suppress database errors during auto-creation
 }
 
-// --- AJAX / POST HANDLERS FOR AUTHENTICATION ---
+// STEP 3: BACKEND AJAX AUTHENTICATION HANDLERS (POST REQUESTS)
+
+// Step 3.1: Intercept incoming POST requests containing an 'action' parameter
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    
+    // Step 3.2: Set response content type header to JSON format
     header('Content-Type: application/json');
 
-    // 1. Sign Up Handler
+    // STEP 3.A: CUSTOMER SIGN UP HANDLER
     if ($_POST['action'] === 'signup') {
         try {
             global $pdo;
+            
+            // Step 3.A.1: Sanitize and clean input fields
             $fullname = trim($_POST['fullname'] ?? '');
             $email    = strtolower(trim($_POST['email'] ?? ''));
             $password = $_POST['password'] ?? '';
 
+            // Step 3.A.2: Validate non-empty fields
             if (empty($fullname) || empty($email) || empty($password)) {
                 echo json_encode(['success' => false, 'message' => 'All fields are required.']);
                 exit;
             }
 
+            // Step 3.A.3: Validate email address format
             if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 echo json_encode(['success' => false, 'message' => 'Please provide a valid email address.']);
                 exit;
             }
 
+            // Step 3.A.4: Enforce minimum password length (at least 6 characters)
             if (strlen($password) < 6) {
                 echo json_encode(['success' => false, 'message' => 'Password must be at least 6 characters long.']);
                 exit;
             }
 
-            // Check if email already exists
+            // Step 3.A.5: Check if the email address is already in use
             $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
             $stmt->execute([$email]);
             if ($stmt->fetch()) {
@@ -62,17 +82,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 exit;
             }
 
-            // Hash password and insert user into database
+            // Step 3.A.6: Hash password and insert user into database with customer role
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
             $stmt = $pdo->prepare("INSERT INTO users (fullname, email, password, role) VALUES (?, ?, ?, 'customer')");
             $stmt->execute([$fullname, $email, $hashedPassword]);
 
-            // Auto-login upon successful sign up
+            // Step 3.A.7: Auto-login customer upon successful sign up
             session_regenerate_id(true);
             $_SESSION['user_id']  = $pdo->lastInsertId();
             $_SESSION['fullname'] = $fullname;
             $_SESSION['role']     = 'customer';
 
+            // Step 3.A.8: Output success response in JSON
             echo json_encode(['success' => true]);
             exit;
         } catch (Exception $e) {
@@ -81,22 +102,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
     }
 
-    // 2. Login Handler
+    // STEP 3.B: CUSTOMER & ADMIN LOGIN HANDLER
     if ($_POST['action'] === 'login') {
         try {
             global $pdo;
+            
+            // Step 3.B.1: Clean input credentials
             $email    = strtolower(trim($_POST['email'] ?? ''));
             $password = $_POST['password'] ?? '';
 
+            // Step 3.B.2: Validate required fields are filled
             if (empty($email) || empty($password)) {
                 echo json_encode(['success' => false, 'message' => 'Please fill in both email and password.']);
                 exit;
             }
 
+            // Step 3.B.3: Fetch user record matching the email address
             $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
             $stmt->execute([$email]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
+            // Step 3.B.4: Verify input password against the hashed password stored in database
             if ($user && password_verify($password, $user['password'])) {
                 session_regenerate_id(true);
                 $_SESSION['user_id']  = $user['id'];
@@ -113,9 +139,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
     }
 
-    // 3. Logout Handler
+    // STEP 3.C: LOGOUT HANDLER
     if ($_POST['action'] === 'logout') {
+        // Step 3.C.1: Reset active session array
         $_SESSION = [];
+
+        // Step 3.C.2: Expire session cookie on browser client if active
         if (ini_get("session.use_cookies")) {
             $params = session_get_cookie_params();
             setcookie(session_name(), '', time() - 42000,
@@ -123,28 +152,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $params["secure"], $params["httponly"]
             );
         }
+
+        // Step 3.C.3: Destroy session state on server
         session_destroy();
         echo json_encode(['success' => true]);
         exit;
     }
 }
 
-// Check logged in session status
+// STEP 4: FRONTEND SESSION CHECKS & AUTOMATIC ADMIN REDIRECT
+
+// Step 4.1: Check logged in session status
 $is_logged_in = isset($_SESSION['user_id']);
+
+// Step 4.2: Check if current logged-in user holds admin privileges
 $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
+
+// Step 4.3: Automatically redirect logged-in admin users directly to pos.php
+if ($is_admin) {
+    header("Location: pos.php");
+    exit;
+}
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Step 5: Document Metadata & Page Title Setup -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sairene TephTeph Tapsilogan - Home</title>
-    <!-- Bootstrap 5 CSS -->
+
+    <!-- Step 6: External CDN Stylesheets (Bootstrap 5 & FontAwesome Icons) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <!-- STEP 7: EMBEDDED CSS STYLING RULES WITH STEP-BY-STEP COMMENTS -->
     <style>
+        /* Step 7.1: Global Body base styles and dark background setup */
         body {
             background-color: #2b1d0c;
             color: #ffffff;
@@ -154,7 +199,8 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
             position: relative;
             min-height: 100vh;
         }
-        /* Fixed Fullscreen Wooden Texture Overlay */
+
+        /* Step 7.2: Fixed fullscreen background pseudo-element with dark wooden texture overlay */
         body::before {
             content: "";
             position: fixed;
@@ -166,7 +212,8 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
             background-size: cover;
             z-index: -1;
         }
-        /* TOP-LEFT FIXED LOGIN BUTTON */
+
+        /* Step 7.3: Top-left fixed floating button for login and logout triggers */
         .top-left-login-btn {
             position: fixed;
             top: 20px;
@@ -186,13 +233,16 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
             align-items: center;
             cursor: pointer;
         }
+
+        /* Step 7.4: Hover transition state for floating top-left button */
         .top-left-login-btn:hover {
             background-color: #ffc107;
             color: #212529;
             border-color: #212529;
             transform: translateY(-2px);
         }
-        /* Large Outer Border Box */
+
+        /* Step 7.5: Large outer glassmorphism frame container */
         .page-outer-frame {
             border: 2px solid #ffc107;
             border-radius: 12px;
@@ -204,7 +254,8 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
             max-width: 1200px;
             margin: 40px auto 0 auto;
         }
-        /* TOP FEATURED BANNER SPOT */
+
+        /* Step 7.6: Top featured hero banner spot container */
         .top-banner-spot {
             position: relative;
             border: 2px solid #ffc107;
@@ -220,6 +271,8 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
             justify-content: space-between;
             box-shadow: inset 0 0 15px rgba(255, 193, 7, 0.1);
         }
+
+        /* Step 7.7: Circular logo container inside top banner */
         .banner-logo-container {
             width: 110px;
             height: 110px;
@@ -230,15 +283,21 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
             flex-shrink: 0;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
+
+        /* Step 7.8: Logo image formatting inside container */
         .banner-logo-container img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
+
+        /* Step 7.9: Banner text content wrapper */
         .banner-text-content {
             flex-grow: 1;
             padding: 0 25px;
         }
+
+        /* Step 7.10: Main headline style with gold text-shadow effect */
         .banner-text-content h1 {
             color: #ffc107;
             font-weight: 900;
@@ -248,11 +307,15 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
             letter-spacing: 0.5px;
             text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.9), 0 0 12px rgba(0, 0, 0, 0.7);
         }
+
+        /* Step 7.11: Badge row flex wrapper inside banner */
         .banner-badges {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
         }
+
+        /* Step 7.12: Pill badge styling for store feature tags */
         .banner-badge {
             background-color: #ffc107;
             color: #121212;
@@ -262,6 +325,8 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
             border-radius: 50px;
             text-transform: uppercase;
         }
+
+        /* Step 7.13: First thin sub-header tagline strip */
         .sub-header-line-1 {
             border: 1px solid #ffc107;
             background: rgba(0, 0, 0, 0.4);
@@ -273,6 +338,8 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
             align-items: center;
             justify-content: center;
         }
+
+        /* Step 7.14: Main sub-header navigation bar container */
         .sub-header-line-2 {
             border: 2px solid #ffc107;
             background: rgba(0, 0, 0, 0.4);
@@ -285,6 +352,8 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
             justify-content: center;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
         }
+
+        /* Step 7.15: Custom navigation list flex alignment */
         .nav-links-custom {
             display: flex;
             justify-content: center;
@@ -295,6 +364,8 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
             align-items: center;
             flex-wrap: wrap;
         }
+
+        /* Step 7.16: Navigation menu item link base styling */
         .nav-links-custom a {
             text-decoration: none;
             color: #ffffff;
@@ -306,6 +377,8 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
             border-radius: 50px;
             border: 1px solid transparent;
         }
+
+        /* Step 7.17: Hover and active highlight styling for navbar links */
         .nav-links-custom a:hover,
         .nav-links-custom a.active {
             color: #121212;
@@ -313,14 +386,16 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
             border-color: #d4a000;
             box-shadow: 0 4px 10px rgba(255, 193, 7, 0.4);
         }
-        /* Split Section Containers */
+
+        /* Step 7.18: Split section containers layout wrapper */
         .split-container {
             display: flex;
             gap: 20px;
             margin-bottom: 20px;
             align-items: flex-start;
         }
-        /* Left Menu Box */
+
+        /* Step 7.19: Left box container holding the menu board */
         .left-menu-box {
             flex: 2;
             border: 2px solid #ffc107;
@@ -335,10 +410,14 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
             align-items: center;
             justify-content: center;
         }
+
+        /* Step 7.20: Interactive board image wrapper */
         .interactive-board-wrapper {
             position: relative;
             width: 100%;
         }
+
+        /* Step 7.21: Menu board image default display and transition effect */
         .menu-img {
             width: 100%;
             height: auto;
@@ -346,7 +425,8 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
             display: block;
             transition: opacity 0.3s ease;
         }
-        /* Left & Right Control Arrow Buttons */
+
+        /* Step 7.22: Circular control arrow button styling for switching menu pages */
         .arrow-btn {
             position: absolute;
             top: 50%;
@@ -367,14 +447,21 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
             outline: none;
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
+
+        /* Step 7.23: Arrow control button hover animation state */
         .arrow-btn:hover {
             background-color: #ffc107;
             color: #121212;
             transform: translateY(-50%) scale(1.08);
         }
+
+        /* Step 7.24: Left arrow absolute placement */
         .arrow-left { left: 10px; }
+
+        /* Step 7.25: Right arrow absolute placement */
         .arrow-right { right: 10px; }
-        /* Right Split Box */
+
+        /* Step 7.26: Right split box for store details & actions */
         .right-info-box {
             flex: 1;
             border: 2px solid #ffc107;
@@ -391,7 +478,8 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
             max-height: 400px;
             height: 400px;
         }
-        /* Bottom Full Width Line */
+
+        /* Step 7.27: Bottom full-width footer line styling */
         .bottom-full-line {
             border: 1px solid #ffc107;
             background: rgba(0, 0, 0, 0.4);
@@ -406,6 +494,8 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
             font-size: 0.85rem;
             font-weight: 500;
         }
+
+        /* Step 7.28: Mobile and tablet responsive breakpoint adjustments */
         @media (max-width: 992px) {
             .top-banner-spot {
                 flex-direction: column;
@@ -420,21 +510,23 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
 </head>
 <body>
 
-    <!-- TOP-LEFT CORNER LOGIN / LOGOUT BUTTON -->
+    <!-- STEP 8: TOP-LEFT CORNER FLOATING LOGIN / LOGOUT BUTTON -->
     <?php if ($is_logged_in): ?>
+        <!-- Step 8.1: Display Logout button if session is currently active -->
         <button type="button" class="top-left-login-btn" onclick="confirmLogout()">
             <i class="fa-solid fa-right-from-bracket me-2"></i>Logout (<?= htmlspecialchars($_SESSION['fullname']) ?>)
         </button>
     <?php else: ?>
+        <!-- Step 8.2: Display Login/Register button if guest -->
         <button type="button" class="top-left-login-btn" onclick="openAuthModal('login')">
             <i class="fa-solid fa-user me-2"></i>Login / Register
         </button>
     <?php endif; ?>
 
-    <!-- Large Outer Wireframe Frame -->
+    <!-- STEP 9: LARGE OUTER WIREFRAME FRAME -->
     <div class="page-outer-frame">
 
-        <!-- 1. TOP FEATURED BANNER SPOT -->
+        <!-- Step 9.1: Top Featured Hero Banner Spot -->
         <section class="top-banner-spot">
             <div class="banner-logo-container">
                 <img src="img/logo.png" alt="Sairene TephTeph Logo">
@@ -458,32 +550,29 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
             </div>
         </section>
 
-        <!-- 2. Two Thin Sub-Header Lines -->
+        <!-- Step 9.2: Sub-Header Tagline Strip Line 1 -->
         <div class="sub-header-line-1">
             <span class="text-white small fw-bold"><i class="fa-solid fa-star text-warning me-1"></i> A Taste of Comfort • Hot & Fresh Silog Meals <i class="fa-solid fa-star text-warning ms-1"></i></span>
         </div>
 
+        <!-- Step 9.3: Navigation Sub-Header Bar Line 2 -->
         <div class="sub-header-line-2">
             <ul class="nav-links-custom">
                 <li><a href="homepage.php" class="active">HOME</a></li>
                 <li><a href="menu.php">MENU</a></li>
                 <li><a href="order.php">ORDER NOW</a></li>
                 <li><a href="food_packs.php">FOOD PACKS</a></li>
-                <li><a href="tambay_caps.php" target="_blank">TAMBAY CAPS</a></li>
-                <?php if ($is_admin): ?>
-                    <li><a href="admin.php" class="border border-warning text-warning">ADMIN DASHBOARD</a></li>
-                    <li><a href="pos.php" class="border border-warning text-warning">POS DASHBOARD</a></li>
-                <?php endif; ?>
+                <li><a href="tambay_caps.php">TAMBAY CAPS</a></li>
             </ul>
         </div>
 
-        <!-- 3. Split Container (Left Interactive Box + Right Info Box) -->
+        <!-- Step 9.4: Split Container (Left Interactive Box + Right Info Box) -->
         <div class="split-container">
 
             <!-- LEFT BOX: Menu Board with Interactive Side Arrows -->
             <div class="left-menu-box">
                
-                <!-- Left Arrow Control -->
+                <!-- Left Arrow Control Button -->
                 <button type="button" class="arrow-btn arrow-left" onclick="switchMenuPage('prev')" title="Previous Menu Page">
                     <i class="fa-solid fa-arrow-left"></i>
                 </button>
@@ -492,7 +581,7 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
                     <img id="activeMenuBoard" src="img/menu1.png" alt="Silog Meals Menu" class="menu-img">
                 </div>
 
-                <!-- Right Arrow Control -->
+                <!-- Right Arrow Control Button -->
                 <button type="button" class="arrow-btn arrow-right" onclick="switchMenuPage('next')" title="Next Menu Page">
                     <i class="fa-solid fa-arrow-right"></i>
                 </button>
@@ -525,14 +614,14 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
 
         </div>
 
-        <!-- 4. Bottom Full-Width Divider Line -->
+        <!-- Step 9.5: Bottom Full-Width Copyright Divider Line -->
         <div class="bottom-full-line">
             <span>&copy; <?php echo date('Y'); ?> Sairene TephTeph Tapsilogan • All Rights Reserved</span>
         </div>
 
     </div>
 
-    <!-- LOGIN & SIGNUP POPUP MODAL -->
+    <!-- STEP 10: LOGIN & SIGNUP POPUP MODAL DIALOG -->
     <div class="modal fade" id="authModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-3 border-warning bg-dark text-white">
@@ -541,7 +630,7 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <!-- Login Form -->
+                    <!-- Step 10.1: Login Form -->
                     <form id="loginForm" onsubmit="handleAuthSubmit(event, 'login')">
                         <div class="mb-3">
                             <label class="form-label small fw-bold text-white">Email Address</label>
@@ -555,7 +644,7 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
                         <p class="small text-center mb-0">Don't have an account? <button type="button" onclick="toggleAuthForm('signup')" class="btn btn-link text-warning fw-bold p-0 text-decoration-none">Sign Up</button></p>
                     </form>
 
-                    <!-- Signup Form -->
+                    <!-- Step 10.2: Signup Form (Hidden by default via d-none class) -->
                     <form id="signupForm" class="d-none" onsubmit="handleAuthSubmit(event, 'signup')">
                         <div class="mb-3">
                             <label class="form-label small fw-bold text-white">Full Name</label>
@@ -577,14 +666,15 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
         </div>
     </div>
 
-    <!-- BOOTSTRAP 5 JS BUNDLE -->
+    <!-- Step 11: Load Bootstrap 5 JS Bundle CDN -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- MENU SLIDER & AUTHENTICATION JAVASCRIPT HANDLERS -->
+    <!-- STEP 12: MENU SLIDER & AUTHENTICATION JAVASCRIPT HANDLERS -->
     <script>
-        // Track currently visible menu image page
+        // Step 12.1: Track currently visible menu image page
         let currentPage = 1;
 
+        // Step 12.2: Switch menu page image with fade transition effect
         function switchMenuPage(direction) {
             const menuImg = document.getElementById('activeMenuBoard');
            
@@ -607,6 +697,7 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
             }, 150);
         }
 
+        // Step 12.3: Open auth modal window
         function openAuthModal(type) {
             toggleAuthForm(type);
             var modalEl = document.getElementById('authModal');
@@ -619,6 +710,7 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
             }
         }
 
+        // Step 12.4: Toggle form views inside authentication modal
         function toggleAuthForm(type) {
             let loginForm = document.getElementById('loginForm');
             let signupForm = document.getElementById('signupForm');
@@ -635,6 +727,7 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
             }
         }
 
+        // Step 12.5: Submit authentication form via AJAX fetch request to homepage.php
         function handleAuthSubmit(e, action) {
             e.preventDefault();
             let formData = new FormData();
@@ -656,7 +749,12 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    location.reload();
+                    // Redirect admin users directly to pos.php upon login
+                    if (data.role === 'admin') {
+                        window.location.href = 'pos.php';
+                    } else {
+                        location.reload();
+                    }
                 } else {
                     alert(data.message || 'An error occurred during authentication.');
                 }
@@ -664,6 +762,7 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
             .catch(err => console.error(err));
         }
 
+        // Step 12.6: Handle user logout prompt and POST request
         function confirmLogout() {
             if (confirm('Are you sure you want to log out?')) {
                 let formData = new FormData();
@@ -676,7 +775,7 @@ $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
             }
         }
 
-        // Auto-open login modal if redirected from a protected page
+        // Step 12.7: Auto-open login modal if redirected from a protected page with auth_required URL parameter
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.has('auth_required')) {
